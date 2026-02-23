@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Separation of Compute and Storage — Study Guide</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../css/styles.css" />
+</head>
+<body data-guide-id="study-separation">
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../../index.html" class="logo">❄️ Snowflake Learn</a>
+      <nav class="topic-nav" aria-label="Study topics">
+        <a href="../../index.html">Home</a>
+        <a href="../index.html">Study Guide</a>
+        <a href="index.html">Data Architecture & AI Data Cloud</a>
+      </nav>
+      <button type="button" class="nav-toggle" aria-label="Open menu" aria-expanded="false">
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+      </button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar" aria-label="Study guide navigation">
+      <details class="sidebar-group" open>
+        <summary>Guides — Core Architecture</summary>
+        <div class="sidebar-group-content">
+          <ul class="guide-list chapter-list">
+            <li><a href="index.html">Category index</a></li>
+            <li><a href="three-layer-model.html">Three-Layer Architecture</a></li>
+            <li><a href="separation-compute-storage.html" class="is-active">Separation of Compute &amp; Storage</a></li>
+            <li><a href="multi-cluster.html">Multi-Cluster Shared Data</a></li>
+            <li><a href="snowflake-editions.html">Snowflake Editions</a></li>
+            <li><a href="cloud-deployment.html">Deployment on AWS, Azure, GCP</a></li>
+          </ul>
+        </div>
+      </details>
+      <details class="sidebar-group" open>
+        <summary>In this guide</summary>
+        <div class="sidebar-group-content">
+          <ul class="chapter-list">
+            <li><a href="#the-problem" class="nav-link" data-section="the-problem">The Problem Snowflake Was Designed to Solve</a></li>
+            <li><a href="#what-separated-means" class="nav-link" data-section="what-separated-means">What "Separated" Actually Means</a></li>
+            <li><a href="#lifecycle-comparison" class="nav-link" data-section="lifecycle-comparison">Storage vs. Compute: Independent Lifecycles</a></li>
+            <li><a href="#what-it-means-for-scaling" class="nav-link" data-section="what-it-means-for-scaling">What It Means for Scaling</a></li>
+            <li><a href="#what-it-means-for-cost" class="nav-link" data-section="what-it-means-for-cost">What It Means for Cost</a></li>
+            <li><a href="#the-exam-angle" class="nav-link" data-section="the-exam-angle">The Exam Angle</a></li>
+          </ul>
+        </div>
+      </details>
+      <div class="sidebar-footer">
+        <p class="progress-label">Your progress</p>
+        <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="6" aria-label="Sections completed">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <p class="progress-count" id="progress-count">0/6 sections</p>
+      </div>
+    </aside>
+
+    <main id="main" class="content">
+      <article class="guide">
+        <p class="breadcrumb"><a href="../../index.html">Home</a> <span>›</span> <a href="../index.html">Study Guide</a> <span>›</span> <a href="index.html">Data Architecture & AI Data Cloud</a> <span>›</span> Separation of Compute and Storage</p>
+        <div class="guide-header">
+          <h1>Separation of Compute and Storage — Why It Matters for Scaling and Cost</h1>
+          <p class="lead">Independent lifecycles, scaling, and cost implications of decoupled storage and compute.</p>
+        </div>
+
+        <section id="the-problem" class="section" data-section="the-problem">
+          <h2>The Problem Snowflake Was Designed to Solve</h2>
+          <p>Before cloud-native data warehouses existed, the dominant model was the <strong>shared-nothing architecture</strong> used by systems like Teradata, Netezza, and early Hadoop clusters. In a shared-nothing system, each node owns both a slice of the data and the compute required to process it. This design delivers strong performance when your workload is predictable and your data fits neatly across the cluster — but it falls apart the moment your needs change.</p>
+          <p>If your data grows, you add nodes. But each new node brings compute you may not need. If your query load spikes — say, a hundred analysts run reports simultaneously at end of quarter — you need more compute, but adding nodes means also adding storage you may not need. The two resources are permanently welded together, and every scaling decision is a blunt instrument. You cannot solve a compute problem without also buying more storage, and vice versa. This is the core inefficiency that Snowflake's architecture was explicitly designed to eliminate.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="the-problem" aria-label="Mark section as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="what-separated-means" class="section" data-section="what-separated-means">
+          <h2>What "Separated" Actually Means</h2>
+          <p>In Snowflake, data lives permanently in the <strong>Storage layer</strong> — a managed cloud object store (S3, Azure Blob, or GCS) that exists independently of any compute resource. Virtual Warehouses — the compute clusters that execute queries — connect to that storage on demand, read what they need, process it, and return results. The data does not move to the warehouse. The warehouse reaches out to where the data already lives.</p>
+          <p>This means storage and compute have completely independent lifecycles. You can delete a Virtual Warehouse and your data is entirely unaffected. You can add a new Virtual Warehouse — of any size, for any team — and it immediately has access to every table in your account, because the data was never tied to any specific warehouse to begin with. Storage persists. Compute is ephemeral.</p>
+
+          <h3>A concrete walkthrough</h3>
+          <p>It helps to slow this down to the level of a single query. Imagine you run <code>SELECT * FROM sales WHERE region = 'EMEA'</code>. Here is what actually happens:</p>
+          <p>First, the Cloud Services layer receives the query and looks up metadata — its global index of every micro-partition in the <code>sales</code> table, recording the minimum and maximum <code>region</code> values in each one. Any micro-partition whose min/max range cannot possibly contain 'EMEA' is immediately eliminated. Only the relevant micro-partition IDs are passed forward. No data has moved yet.</p>
+          <p>Next, the Virtual Warehouse receives a list of micro-partitions to fetch. It makes network calls to the cloud object store — S3, Azure Blob, or GCS — and pulls only those specific partitions. Notice what is happening: the warehouse is reaching across the network to where the data has always lived. The micro-partitions were sitting in object storage before your query, and they will still be sitting there after it completes. The warehouse is a temporary visitor to the data, not its home.</p>
+          <p>Once the micro-partitions land in the warehouse's memory and local SSD cache, the query executes, results are returned, and the warehouse goes idle. If auto-suspend kicks in, the warehouse shuts down — the VMs are released. The data in S3 is completely undisturbed. You could spin up a brand new warehouse the next morning and immediately run the exact same query against the exact same data. Nothing needs to be migrated or moved.</p>
+          <p>This is what "separation" means in practice. The warehouse is a lens that temporarily focuses on a subset of the data, then disappears. The data itself is stationary.</p>
+
+          <label class="section-done">
+            <input type="checkbox" name="done" value="what-separated-means" aria-label="Mark section as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="lifecycle-comparison" class="section" data-section="lifecycle-comparison">
+          <h2>Storage vs. Compute: Independent Lifecycles</h2>
+          <p>One of the cleanest ways to internalize compute-storage separation is to think about what it means for each resource to have its own independent lifecycle — what it means for each one to "exist," to "grow," and to "go away."</p>
+          <p><strong>Storage's lifecycle</strong> is passive and continuous. Storage comes into existence the moment you load data. It grows incrementally as you add more rows, more tables, more historical snapshots. It shrinks when you delete data, expire Time Travel, or drop tables. It has no notion of "running" or "suspended." It does not need to be started. It is always accessible. A table you loaded two years ago and never touched since is just as available today as the day you created it — at exactly the same cost per compressed byte, regardless of how many queries you have or haven't run against it. Storage is simply a fact of your account, persisting quietly in the background.</p>
+          <p><strong>Compute's lifecycle</strong> is active and transient. A Virtual Warehouse does not exist until you create it. It does not consume resources until you resume it. When it runs, it is borrowing a pool of cloud VMs — CPUs, RAM, local SSD — from the underlying cloud provider's infrastructure. When you suspend it, those VMs are released back into the cloud provider's shared pool and you stop being charged for them. You can delete a warehouse entirely and recreate it later with a different size. You can have ten warehouses today and zero tomorrow. Compute is not a persistent entity. It is a temporarily claimed slice of cloud capacity, held only for as long as you need it.</p>
+          <p>The practical consequence is that these two resources cannot constrain each other. Storage does not wait for compute to exist before accepting data. Compute does not need to "reattach" to storage after being suspended — it simply makes network calls to the object store when the next query arrives. Neither one knows or cares about the other's state. This independence is not incidental — it is the entire point of the architectural design.</p>
+
+          <div class="callout callout-note">
+            <span class="callout-label">Independent failure modes</span>
+            <p>Because compute and storage are decoupled, failures in one do not cause failures in the other. If a Virtual Warehouse crashes mid-query, the underlying data is completely unaffected — no data is lost, no corruption, no recovery process. You re-run the query on a new or restarted warehouse. If a warehouse is terminated or deleted, storage is untouched; a new warehouse can immediately query yesterday's data.</p>
+            <p>This is fundamentally different from a shared-nothing cluster, where a node failure means that node's data shard is unavailable until the node recovers. In Snowflake, a compute failure is a compute problem only. The storage layer does not notice.</p>
+          </div>
+
+          <label class="section-done">
+            <input type="checkbox" name="done" value="lifecycle-comparison" aria-label="Mark section as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="what-it-means-for-scaling" class="section" data-section="what-it-means-for-scaling">
+          <h2>What It Means for Scaling</h2>
+          <h3>Scaling Compute Independently</h3>
+          <p>In a traditional system, scaling compute means adding nodes — which takes time, requires data redistribution, and often takes the system offline during the process. In Snowflake, scaling compute is instantaneous and completely transparent. You resize a Virtual Warehouse from a Medium to an X-Large, and the next query that runs benefits from the additional compute. There is no rebalancing, no data movement, no downtime. The data already lives where it needs to be.</p>
+          <p>More importantly, you can scale compute back down just as quickly. Run a complex transformation that requires an X-Large, finish the job, and drop back to a Small for routine queries. The cost difference between those two sizes is significant — an X-Large consumes 16x the credits of an X-Small — and in a traditional architecture you would have no mechanism to dynamically reclaim that compute capacity once provisioned.</p>
+          <h3>Scaling Storage Independently</h3>
+          <p>Storage in Snowflake scales completely passively. You load more data, it takes up more storage space, and you pay for that incremental storage. There is no capacity planning exercise, no hardware procurement, no migration. The cloud object store handles petabyte scale natively, and Snowflake's automatic compression and columnar encoding means the actual bytes stored are typically far smaller than the raw input data. You never need to think about running out of storage space or pre-provisioning headroom.</p>
+          <h3>Workload Isolation — The Most Underappreciated Benefit</h3>
+          <p>Separate compute resources can operate simultaneously against the same data without any interference. This is the architectural basis for <strong>workload isolation</strong>, one of the most operationally valuable properties Snowflake's architecture provides — and one that is almost impossible to achieve cleanly in a traditional shared-nothing system.</p>
+          <p>Consider a realistic organization with four groups hitting Snowflake every day. A data engineering team runs overnight ETL pipelines that load and transform large volumes of raw data. An analytics team runs ad-hoc SQL throughout the day — exploratory queries of wildly variable complexity and duration. A data science team runs long, memory-intensive queries as part of model training and feature engineering. A finance team runs scheduled reports at month-end that would otherwise compete with everyone else. In a traditional cluster, all four groups share the same hardware. When the data engineering pipeline saturates the I/O, the analytics team's queries slow down. When the month-end finance reports run, the data scientists start seeing queue timeouts. The groups are in constant, invisible competition for the same fixed pool of resources.</p>
+          <p>In Snowflake, you give each group their own warehouse — or separate each workload type into its own warehouse. Data engineering gets a dedicated X-Large that runs overnight and suspends during business hours. Analytics gets a Medium that auto-suspends and auto-resumes on demand. Data science gets a Snowpark-optimized warehouse with higher memory ratios. Finance gets a separate warehouse that runs only at month-end. All four are reading from exactly the same tables in exactly the same storage layer. None of them can see each other's query queues. None of them can exhaust each other's local cache. None of them slow each other down.</p>
+          <p>And critically: you get cost attribution by group automatically. The credits each warehouse consumes are tracked separately. Finance can see exactly how much their month-end reporting costs. Engineering can optimize their ETL pipeline's warehouse usage independently of what the analytics team is doing. This is not a configuration trick — it is a direct consequence of compute being fully decoupled from shared storage.</p>
+          <p>In a shared-nothing system, the only way to achieve this kind of isolation would be to maintain entirely separate database clusters with separate copies of the data — which introduces consistency nightmares, storage duplication, and massive operational overhead. In Snowflake, the isolation is native to the architecture. You create a new warehouse, point it at the same data, and the isolation is automatic.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="what-it-means-for-scaling" aria-label="Mark section as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="what-it-means-for-cost" class="section" data-section="what-it-means-for-cost">
+          <h2>What It Means for Cost</h2>
+
+          <h3>Why per-second billing is only possible with separated compute</h3>
+          <p>It is worth understanding <em>why</em> Snowflake can bill compute per second when traditional warehouses could not. Traditional on-premise hardware was always on. Whether you were running queries or not, the servers were humming, consuming power, requiring maintenance staff. There was no mechanism to "pause" them — they were physical machines bolted to the floor. The cost was fixed and continuous regardless of utilization. Even cloud-lifted versions of traditional databases (like provisioned RDS instances) inherited this model: you reserved capacity up front and paid for it continuously whether or not you used it.</p>
+          <p>Snowflake can bill per second because a "warehouse" is not a physical machine — it is a dynamically allocated pool of cloud VMs. When you resume a warehouse, Snowflake requests a set of VMs from the underlying cloud provider (AWS, Azure, GCP). When you suspend it, those VMs are released back into the cloud provider's shared pool. Snowflake stops being charged for them and passes that directly through to you. The meter starts when the VMs are claimed and stops the moment they are released. This is only possible because the data — which must persist — is stored separately, in object storage that exists independently of any VM lifecycle. Storage persists even when there is no compute to serve it, because they are genuinely different things managed by different systems.</p>
+
+          <h3>Pay for what you use, nothing more</h3>
+          <p>Virtual Warehouses are billed by the second with a 60-second minimum per start. When a warehouse is suspended — either manually or via auto-suspend — the billing meter stops completely. You are not paying for idle capacity. There is no reservation, no minimum commitment on the compute side. A warehouse that runs two hours per day costs roughly 8% of what a warehouse running 24 hours per day would cost, for identical work performed.</p>
+
+          <h3>Right-sizing as a new operational pattern</h3>
+          <p>In a traditional on-premise data warehouse, the hardware configuration was a multi-year commitment made during a procurement cycle. If you under-provisioned, you were stuck with slow queries until the next hardware refresh. If you over-provisioned, you wasted budget for the lifetime of the equipment. The idea of "try a bigger size for this job, then scale back down" was simply not available as an operational pattern. The hardware was the hardware.</p>
+          <p>In Snowflake, the compute tier is completely fungible. You can resize a warehouse between queries — the next query that runs uses the new size, with no data movement and no downtime. You can spin up a second warehouse at a different size for comparison. You can run the same transformation at a Large and at an X-Large, measure wall-clock time and credits consumed, and make an empirical decision. Right-sizing becomes an iterative, data-driven process rather than a one-time guess made years before you know your actual workload. This is a fundamentally different operational relationship with your data infrastructure, and it is only possible because compute is a separate, elastic resource that the data does not depend on.</p>
+
+          <h3>Storage costs are consistently cheap</h3>
+          <p>Cloud object storage is among the cheapest forms of storage available at scale, and Snowflake's automatic compression makes the effective cost lower still. Typical compression ratios range from 3:1 to 10:1 depending on data type and cardinality — a 1 TB dataset might occupy only 100–300 GB of actual object storage. Snowflake charges on the compressed footprint, not the raw input size. Long-term retention of large datasets is economical in a way that maintaining spinning-disk clusters simply is not.</p>
+
+          <h3>The hidden cost trap: zombie warehouses</h3>
+          <p>The flip side of consumption-based pricing is that waste is always one misconfiguration away. A warehouse left running with auto-suspend disabled or set to an overly long timeout accumulates credits continuously, even with zero query activity. This is one of the most common real-world cost issues Snowflake operators encounter. The solution is <strong>resource monitors</strong> — an account-level or warehouse-level construct that lets you define credit limits and trigger notifications or automatic suspension when those limits are approached or exceeded. On the exam, resource monitors are the primary mechanism for controlling unexpected compute spend. They do not optimize performance; they govern cost.</p>
+
+          <label class="section-done">
+            <input type="checkbox" name="done" value="what-it-means-for-cost" aria-label="Mark section as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="the-exam-angle" class="section" data-section="the-exam-angle">
+          <h2>The Exam Angle</h2>
+          <p>Questions about compute and storage separation appear in two forms: conceptual questions that test whether you understand <em>why</em> the architecture works this way, and scenario-based questions that ask you to apply that understanding to a specific situation.</p>
+          <p>For conceptual questions, the key insight is that compute and storage scale independently, bill independently, and fail independently. One does not affect the other. Multiple warehouses can read the same data simultaneously without locking or interference. Deleting a warehouse does not affect data. Suspending a warehouse does not affect data. These are all consequences of the same architectural fact: the two resources have no dependency on each other's existence.</p>
+          <p>Compute-storage separation is not a discrete exam topic so much as the underlying lens through which nearly every performance and cost question should be read. Once you internalize that storage is always-on and passive while compute is transient and metered, most of the platform's specific behaviors become deducible from first principles rather than memorizable facts.</p>
+
+          <div class="callout callout-tip">
+            <span class="callout-label">Exam scenario patterns — compute vs. storage</span>
+            <ul style="margin:var(--space-sm) 0 0; padding-left:1.25rem;">
+              <li><em>"Queries are slow and spilling to disk"</em> → <strong>compute problem</strong>; size the warehouse up.</li>
+              <li><em>"ETL jobs are slowing down the analytics team's queries"</em> → <strong>workload isolation</strong>; give each team a dedicated warehouse against the same data.</li>
+              <li><em>"Our monthly bill doubled but query volume didn't change"</em> → <strong>zombie warehouse</strong>; check auto-suspend config; use resource monitors.</li>
+              <li><em>"What happens to our data if we delete the warehouse?"</em> → <strong>nothing</strong>; data lives in Layer 1 independently of any warehouse lifecycle.</li>
+              <li><em>"How do we control runaway credit usage?"</em> → <strong>resource monitors</strong>; set credit limits with notification or auto-suspension actions.</li>
+              <li><em>"Two teams run the same heavy query simultaneously — does one block the other?"</em> → <strong>no</strong>; separate warehouses read the same storage concurrently without locking.</li>
+            </ul>
+          </div>
+
+          <label class="section-done">
+            <input type="checkbox" name="done" value="the-exam-angle" aria-label="Mark section as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <footer class="guide-footer">
+          <p>End of Separation of Compute and Storage. <a href="index.html">All Data Architecture & AI Data Cloud guides</a></p>
+          <p class="guide-footer-links"><a href="three-layer-model.html">Three-Layer Architecture</a> · <a href="multi-cluster.html">Multi-Cluster Shared Data</a> · <a href="snowflake-editions.html">Snowflake Editions</a> · <a href="cloud-deployment.html">Cloud Deployment</a></p>
+        </footer>
+      </article>
+    </main>
+  </div>
+
+  <script src="../../js/app.js"></script>
+</body>
+</html>

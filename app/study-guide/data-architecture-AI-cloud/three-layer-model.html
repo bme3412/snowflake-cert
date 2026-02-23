@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>The Three-Layer Architecture — Study Guide</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../css/styles.css" />
+</head>
+<body data-guide-id="study-three-layer">
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../../index.html" class="logo">❄️ Snowflake Learn</a>
+      <nav class="topic-nav" aria-label="Study topics">
+        <a href="../../index.html">Home</a>
+        <a href="../index.html">Study Guide</a>
+        <a href="index.html">Data Architecture & AI Data Cloud</a>
+      </nav>
+      <button type="button" class="nav-toggle" aria-label="Open menu" aria-expanded="false">
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+      </button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar" aria-label="Study guide navigation">
+      <details class="sidebar-group" open>
+        <summary>Guides — Core Architecture</summary>
+        <div class="sidebar-group-content">
+          <ul class="guide-list chapter-list">
+            <li><a href="index.html">Category index</a></li>
+            <li><a href="three-layer-model.html" class="is-active">Three-Layer Architecture</a></li>
+            <li><a href="separation-compute-storage.html">Separation of Compute &amp; Storage</a></li>
+            <li><a href="multi-cluster.html">Multi-Cluster Shared Data</a></li>
+            <li><a href="snowflake-editions.html">Snowflake Editions</a></li>
+            <li><a href="cloud-deployment.html">Deployment on AWS, Azure, GCP</a></li>
+          </ul>
+        </div>
+      </details>
+      <details class="sidebar-group" open>
+        <summary>In this guide</summary>
+        <div class="sidebar-group-content">
+          <ul class="chapter-list">
+            <li><a href="#how-snowflake-reimagined" class="nav-link" data-section="how-snowflake-reimagined">How Snowflake Reimagined the Data Warehouse</a></li>
+            <li><a href="#layer-1-database-storage" class="nav-link" data-section="layer-1-database-storage">Layer 1: Database Storage</a></li>
+            <li><a href="#layer-2-query-processing" class="nav-link" data-section="layer-2-query-processing">Layer 2: Query Processing</a></li>
+            <li><a href="#layer-3-cloud-services" class="nav-link" data-section="layer-3-cloud-services">Layer 3: Cloud Services</a></li>
+            <li><a href="#cache-comparison" class="nav-link" data-section="cache-comparison">Cache Comparison</a></li>
+            <li><a href="#why-the-separation-matters" class="nav-link" data-section="why-the-separation-matters">Why the Separation Matters</a></li>
+            <li><a href="#quick-reference" class="nav-link" data-section="quick-reference">Quick Reference</a></li>
+          </ul>
+        </div>
+      </details>
+      <div class="sidebar-footer">
+        <p class="progress-label">Your progress</p>
+        <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="7" aria-label="Sections completed">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <p class="progress-count" id="progress-count">0/7 sections</p>
+      </div>
+    </aside>
+
+    <main id="main" class="content">
+      <article class="guide">
+        <p class="breadcrumb"><a href="../../index.html">Home</a> <span>›</span> <a href="../index.html">Study Guide</a> <span>›</span> <a href="index.html">Data Architecture & AI Data Cloud</a> <span>›</span> Three-Layer Architecture</p>
+        <div class="guide-header">
+          <h1>The Three-Layer Architecture of Snowflake</h1>
+          <p class="lead">Storage, Compute (Virtual Warehouses), and Cloud Services — independently scalable and billed.</p>
+        </div>
+
+        <section id="how-snowflake-reimagined" class="section" data-section="how-snowflake-reimagined">
+          <h2>How Snowflake Fundamentally Reimagined the Data Warehouse</h2>
+          <p>To understand Snowflake, you first have to let go of how traditional databases work. In a conventional on-premise data warehouse, storage and compute are tightly coupled — they live on the same physical machine. If you need more processing power, you add more hardware. If you need more storage, you do the same. Scaling one almost always means scaling the other, whether you need to or not. Snowflake was built from the ground up to break this assumption apart.</p>
+          <p>Snowflake's architecture is organized into three distinct, independently scalable layers: the <strong>Database Storage layer</strong>, the <strong>Query Processing layer</strong> (powered by Virtual Warehouses), and the <strong>Cloud Services layer</strong>. These three layers communicate with each other seamlessly, but they operate, scale, and bill independently. This separation is not merely a technical detail — it is the core architectural decision that makes Snowflake fundamentally different from everything that came before it.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="how-snowflake-reimagined" aria-label="Mark section as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="layer-1-database-storage" class="section" data-section="layer-1-database-storage">
+          <h2>Layer 1: Database Storage</h2>
+          <p>The foundation of the stack is the Storage layer. When you load data into Snowflake, it is persisted in a centralized cloud object store — Amazon S3, Azure Blob Storage, or Google Cloud Storage, depending on your deployment. Snowflake manages this storage entirely on your behalf. From your perspective, data simply exists in tables; the underlying object store is invisible to you.</p>
+          <p>What makes this layer interesting is not just <em>where</em> the data lives, but <em>how</em> it is organized. Snowflake automatically converts all ingested data into a highly optimized, compressed, columnar format using a proprietary internal structure. Data is broken into small chunks called <strong>micro-partitions</strong> — contiguous storage units each containing between 50 MB and 500 MB of uncompressed data. Snowflake continuously tracks rich metadata about every micro-partition, including the minimum and maximum values for each column within it. This metadata becomes the engine behind one of Snowflake's most powerful performance features: <strong>partition pruning</strong>, where the query engine skips entire micro-partitions that cannot possibly contain rows matching your filter conditions — without ever reading them.</p>
+          <p>Because the Storage layer is fully decoupled from compute, multiple Virtual Warehouses can read from the same underlying data simultaneously without contention or locking. One team can run heavy ETL jobs while another runs live dashboards against the exact same tables, completely independently. The data is the shared source of truth. Compute is just the lens through which different teams look at it.</p>
+
+          <div class="callout callout-note">
+            <span class="callout-label">Layer 1 key facts</span>
+            <ul style="margin:var(--space-sm) 0 0; padding-left:1.25rem;">
+              <li><strong>Micro-partitions are immutable</strong> once written — Snowflake creates new micro-partitions for updates/deletes rather than modifying in place.</li>
+              <li><strong>Size:</strong> 50 MB – 500 MB of uncompressed data per micro-partition; metadata (min/max per column) is maintained globally by Cloud Services.</li>
+              <li><strong>Columnar, compressed format:</strong> typical compression ratios are 3:1 – 10:1; <em>storage is billed on the compressed size</em>, not raw input.</li>
+              <li><strong>No locking between warehouses:</strong> multiple warehouses can read the same table concurrently without blocking each other.</li>
+            </ul>
+          </div>
+
+          <label class="section-done">
+            <input type="checkbox" name="done" value="layer-1-database-storage" aria-label="Mark section as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="layer-2-query-processing" class="section" data-section="layer-2-query-processing">
+          <h2>Layer 2: Query Processing — Virtual Warehouses</h2>
+          <p>The middle layer is where all computation happens, and it is organized around a concept called the <strong>Virtual Warehouse</strong>. A Virtual Warehouse is a named cluster of compute nodes — servers provisioned in the cloud and managed entirely by Snowflake — that are dedicated to executing queries. When a query runs, the warehouse reads the relevant micro-partitions from the Storage layer, processes the data in memory, and returns results. When idle, the warehouse can be suspended, and a suspended warehouse costs zero compute credits. This auto-suspend / auto-resume behavior means you only pay for compute when work is actually happening.</p>
+          <p>Each Virtual Warehouse maintains its own <strong>local disk cache</strong> on its SSD layer. As the warehouse processes queries, it caches the micro-partitions it pulls from remote storage locally. <strong>This cache is cleared when the warehouse suspends</strong> — one of the most frequently tested behaviors on the exam. For workloads with repetitive query patterns, keeping a warehouse alive yields better cache hit rates at the cost of continuous credit consumption.</p>
+          <p>Multi-cluster warehouses scale <em>out</em> (more clusters, same size) to absorb concurrent users. They are the exam's answer to "users are queuing." Scaling <em>up</em> (larger warehouse size) is the answer to "individual queries are slow." These are orthogonal problems with orthogonal solutions.</p>
+
+          <div class="table-wrap" role="region" aria-label="Warehouse sizes reference">
+            <table class="data-table">
+              <caption>Warehouse size quick reference (Gen1 standard)</caption>
+              <thead>
+                <tr><th>Size</th><th>Nodes</th><th>Credits/hr</th><th>Use when…</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><strong>X-Small</strong></td><td>1</td><td>1</td><td>Dev, small ad-hoc queries</td></tr>
+                <tr><td><strong>Small</strong></td><td>2</td><td>2</td><td>Light ETL, small datasets</td></tr>
+                <tr><td><strong>Medium</strong></td><td>4</td><td>4</td><td>BI dashboards, typical workloads</td></tr>
+                <tr><td><strong>Large</strong></td><td>8</td><td>8</td><td>Larger ETL, moderate complexity</td></tr>
+                <tr><td><strong>X-Large</strong></td><td>16</td><td>16</td><td>Heavy transformations</td></tr>
+                <tr><td><strong>2X-Large</strong></td><td>32</td><td>32</td><td>Very large batch jobs</td></tr>
+                <tr><td><strong>3X–6X-Large</strong></td><td>64–512</td><td>64–512</td><td>Massive parallel processing</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="callout callout-note" style="margin-top:var(--space-md);">
+            <span class="callout-label">Scale up vs. scale out</span>
+            <p><strong>Scale up</strong> (bigger warehouse size) → individual queries are slow or resource-intensive.<br>
+            <strong>Scale out</strong> (multi-cluster) → too many users are queuing; concurrency is the bottleneck.<br>
+            Multi-cluster requires <strong>Enterprise edition or above</strong>.</p>
+          </div>
+
+          <label class="section-done">
+            <input type="checkbox" name="done" value="layer-2-query-processing" aria-label="Mark section as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="layer-3-cloud-services" class="section" data-section="layer-3-cloud-services">
+          <h2>Layer 3: Cloud Services</h2>
+          <p>The top layer is the least visible but arguably the most sophisticated. The Cloud Services layer is a collection of always-on, globally coordinated services that tie the entire platform together. It handles <strong>authentication and access control</strong>, <strong>query compilation and optimization</strong> (parsing, execution planning, cost-based optimizations), the <strong>global metadata store</strong> (tracking micro-partition min/max values — no full table scans needed for pruning), and <strong>transaction management</strong> (ACID compliance).</p>
+          <p>The Cloud Services layer also maintains the <strong>result cache</strong> — distinct from the warehouse disk cache. When a query completes, its result is cached here for <strong>24 hours</strong>. If the exact same query is re-submitted by <em>any user</em> and the underlying data has not changed, Snowflake returns the cached result instantly — <strong>no Virtual Warehouse is needed, zero compute credits are consumed</strong>. The cache is invalidated automatically the moment the underlying data changes (DML or DDL).</p>
+          <p>Cloud Services is shared and multi-tenant — Snowflake manages it entirely. You pay for Cloud Services usage only when it exceeds <strong>10% of your daily compute credits</strong>. For most workloads it stays well below that threshold, making it effectively free.</p>
+
+          <div class="callout callout-note">
+            <span class="callout-label">Result cache rules (exam favorite)</span>
+            <ul style="margin:var(--space-sm) 0 0; padding-left:1.25rem;">
+              <li>Identical SQL text + unchanged data = cache hit.</li>
+              <li>Any DML/DDL on the underlying table = cache invalidated immediately.</li>
+              <li>Any user can get a cache hit, not just the original querier.</li>
+              <li>No warehouse spins up; credits consumed = 0.</li>
+              <li>TTL: 24 hours from when the result was first cached.</li>
+            </ul>
+          </div>
+
+          <label class="section-done">
+            <input type="checkbox" name="done" value="layer-3-cloud-services" aria-label="Mark section as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="cache-comparison" class="section" data-section="cache-comparison">
+          <h2>Cache Comparison — The Three Caches</h2>
+          <p class="key-takeaway">Caching is one of the highest-yield topics on the SnowPro Core exam. Know exactly which layer each cache lives in, what invalidates it, and whether a warehouse is needed to serve it.</p>
+
+          <div class="table-wrap" role="region" aria-label="Snowflake cache comparison">
+            <table class="data-table">
+              <caption>The three Snowflake caches at a glance</caption>
+              <thead>
+                <tr>
+                  <th>Cache</th>
+                  <th>Layer</th>
+                  <th>Where it lives</th>
+                  <th>TTL / persistence</th>
+                  <th>Invalidated by</th>
+                  <th>Warehouse needed?</th>
+                  <th>Credits consumed?</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Result cache</strong></td>
+                  <td>Cloud Services (Layer 3)</td>
+                  <td>Cloud Services layer — shared across all users</td>
+                  <td>24 hours from last use</td>
+                  <td>Any DML or DDL on underlying table</td>
+                  <td>No</td>
+                  <td>No</td>
+                </tr>
+                <tr>
+                  <td><strong>Local disk cache</strong></td>
+                  <td>Virtual Warehouse (Layer 2)</td>
+                  <td>SSD on each warehouse's compute nodes</td>
+                  <td>Persists while warehouse is <em>running</em>; <strong>cleared on suspend</strong></td>
+                  <td>Warehouse suspend or resize</td>
+                  <td>Yes (warehouse must be running)</td>
+                  <td>Yes (warehouse runs while cache is warm)</td>
+                </tr>
+                <tr>
+                  <td><strong>Remote disk cache</strong></td>
+                  <td>Storage (Layer 1)</td>
+                  <td>Cloud object store — persistent metadata/data</td>
+                  <td>Persistent (survives warehouse suspend)</td>
+                  <td>Data changes (new micro-partitions)</td>
+                  <td>Yes</td>
+                  <td>Yes</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="callout callout-tip" style="margin-top:var(--space-md);">
+            <span class="callout-label">Exam scenario patterns</span>
+            <ul style="margin:var(--space-sm) 0 0; padding-left:1.25rem;">
+              <li><em>"Same query runs instantly without the warehouse being active"</em> → <strong>Result cache</strong> (Cloud Services).</li>
+              <li><em>"Query was fast yesterday but slow today — the warehouse was suspended overnight"</em> → <strong>Local disk cache was cleared</strong> on suspend.</li>
+              <li><em>"Two teams run the same query, the second team gets results instantly"</em> → <strong>Result cache</strong> hit.</li>
+              <li><em>"How can I reduce egress costs for repetitive queries on a running warehouse?"</em> → <strong>Local disk cache</strong>.</li>
+            </ul>
+          </div>
+
+          <label class="section-done">
+            <input type="checkbox" name="done" value="cache-comparison" aria-label="Mark section as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="why-the-separation-matters" class="section" data-section="why-the-separation-matters">
+          <h2>Why the Separation Matters</h2>
+          <p>The three-layer model is not just an architectural curiosity — it has direct, practical implications for how you design and operate on Snowflake. Storage is cheap and persistent; compute is elastic and ephemeral. This means you should think of compute as a dial you turn up when you need it and down when you do not, rather than a fixed resource you provision and maintain.</p>
+          <p>Cost optimization and performance optimization often pull in opposite directions, and understanding which layer a given knob lives in tells you which trade-off you are making:</p>
+          <ul>
+            <li>Keeping a warehouse running → better local cache hit rates (Layer 2), but higher compute spend.</li>
+            <li>Clustering a large table → better partition pruning (Layer 1), but maintenance overhead and cost.</li>
+            <li>Result cache (Layer 3) → free, automatic, but only applies to identical repeated queries on unchanged data.</li>
+          </ul>
+          <p>The exam probes these trade-offs constantly. The answers always flow from the same insight: storage, compute, and coordination are three separate concerns, each managed and billed independently.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="why-the-separation-matters" aria-label="Mark section as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="quick-reference" class="section" data-section="quick-reference">
+          <h2>Quick Reference — Exam-Focused Takeaways</h2>
+
+          <div class="callout callout-tip">
+            <span class="callout-label">Layer 1 — Storage</span>
+            <ul style="margin:var(--space-sm) 0 0; padding-left:1.25rem;">
+              <li>Data stored in cloud object store (S3 / Azure Blob / GCS) as compressed columnar micro-partitions.</li>
+              <li>Micro-partitions: 50 MB – 500 MB uncompressed; immutable; min/max metadata per column.</li>
+              <li>Storage billed on <em>compressed</em> size (3:1–10:1 compression typical).</li>
+              <li>Multiple warehouses can read same data simultaneously — no locking.</li>
+            </ul>
+          </div>
+
+          <div class="callout callout-tip" style="margin-top:var(--space-md);">
+            <span class="callout-label">Layer 2 — Virtual Warehouses (Compute)</span>
+            <ul style="margin:var(--space-sm) 0 0; padding-left:1.25rem;">
+              <li>Billed per second; 60-second minimum per start; zero cost when suspended.</li>
+              <li>Local disk cache (SSD) is per warehouse — <strong>cleared when warehouse suspends</strong>.</li>
+              <li>Scale <em>up</em> (bigger size) for slow individual queries. Scale <em>out</em> (multi-cluster) for concurrency/queuing.</li>
+              <li>Multi-cluster requires Enterprise edition or above.</li>
+              <li>Resizing requires no data movement; data lives in Layer 1 independently.</li>
+            </ul>
+          </div>
+
+          <div class="callout callout-tip" style="margin-top:var(--space-md);">
+            <span class="callout-label">Layer 3 — Cloud Services</span>
+            <ul style="margin:var(--space-sm) 0 0; padding-left:1.25rem;">
+              <li>Always-on; handles auth, query parsing/optimization, metadata, transactions.</li>
+              <li><strong>Result cache:</strong> 24-hour TTL; any user; no warehouse; zero credits; invalidated by data change.</li>
+              <li>Cloud Services billed only above 10% of daily compute credits (usually free for typical workloads).</li>
+              <li>No query data is stored in Cloud Services — only result sets and metadata.</li>
+            </ul>
+          </div>
+
+          <label class="section-done">
+            <input type="checkbox" name="done" value="quick-reference" aria-label="Mark section as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <footer class="guide-footer">
+          <p>End of Three-Layer Architecture. <a href="index.html">All Data Architecture & AI Data Cloud guides</a></p>
+          <p class="guide-footer-links"><a href="separation-compute-storage.html">Separation of Compute &amp; Storage</a> · <a href="multi-cluster.html">Multi-Cluster Shared Data</a> · <a href="snowflake-editions.html">Snowflake Editions</a> · <a href="cloud-deployment.html">Cloud Deployment</a></p>
+        </footer>
+      </article>
+    </main>
+  </div>
+
+  <script src="../../js/app.js"></script>
+</body>
+</html>

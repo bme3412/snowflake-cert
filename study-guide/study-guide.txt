@@ -1,0 +1,199 @@
+Domain 1 — Architecture & AI Data Cloud (31%)
+This is the biggest domain — don't skim it.
+Core Architecture
+
+The 3-layer model: Storage, Compute (Virtual Warehouses), Cloud Services
+Separation of compute and storage — why it matters for scaling and cost
+Multi-cluster shared data architecture
+Snowflake editions: Standard, Enterprise, Business Critical, Virtual Private Snowflake
+Deployment on AWS, Azure, GCP — regions and cross-cloud concepts
+
+Virtual Warehouses
+
+Sizes (XS → 6XL) and credit consumption
+Auto-suspend and auto-resume behavior
+Multi-cluster warehouses: auto-scaling vs. maximized mode
+Query queuing and concurrency slots
+Resource monitors — setting credit limits and alerts
+
+Storage Layer
+
+Columnar storage, compression, micro-partitions
+Automatic clustering vs. explicit clustering keys
+When to use clustering (large tables, frequent range filters)
+Search Optimization Service
+
+Caching (critical exam topic)
+
+Result cache — 24-hour reuse, when it invalidates
+Local disk cache (SSD) — warehouse-level, evicts on suspend
+Remote disk cache (S3/Blob/GCS) — persistent metadata/data cache
+Metadata cache in Cloud Services layer
+
+Snowflake AI & Cortex (new C03 focus)
+
+Cortex AI SQL functions: COMPLETE, SENTIMENT, SUMMARIZE, CLASSIFY_TEXT, EXTRACT_ANSWER, TRANSLATE
+Cortex Search — semantic search on unstructured text
+Cortex Analyst — natural language to SQL
+Document AI — extract structured data from PDFs
+Snowflake Notebooks — interactive Python/SQL notebooks
+Streamlit in Snowflake — building data apps
+Snowpark — Python/Java/Scala DataFrames running inside Snowflake
+ML Model Registry, Feature Store basics
+
+
+Domain 2 — Performance Optimization, Querying & Transformation (21%)
+Query Performance
+
+Query Profile — reading the execution plan, identifying bottlenecks
+Spilling to disk vs. spilling to remote — causes and fixes
+Pruning via micro-partitions — how predicates on clustering keys prune data
+Avoiding full table scans
+
+Warehouse Optimization
+
+Right-sizing warehouses for different workloads (ETL vs. ad-hoc vs. BI)
+Separate warehouses per workload type for isolation
+Multi-cluster for concurrency vs. scaling up for complex queries
+
+SQL & Transformation
+
+DDL: CREATE, ALTER, DROP, TRUNCATE, UNDROP
+DML: INSERT, UPDATE, DELETE, MERGE, COPY INTO
+Window functions, lateral joins, FLATTEN for semi-structured
+CTEs, subqueries, QUALIFY clause
+Tasks — scheduling SQL/Stored Procedures, DAG-based task graphs
+Streams — CDC (Change Data Capture): standard, append-only, insert-only streams
+Stored Procedures (JavaScript, Python, Snowpark)
+UDFs — scalar, tabular (UDTFs), JavaScript and Python
+
+Semi-Structured Data
+
+VARIANT, ARRAY, OBJECT data types
+Querying JSON using colon notation: src:key::string
+FLATTEN function for nested arrays
+PARSE_JSON, TRY_PARSE_JSON, OBJECT_CONSTRUCT
+
+
+Domain 3 — Account Management & Data Governance (20%)
+Account Structure
+
+Organizations, Accounts, Databases, Schemas, Objects hierarchy
+Account identifiers — locator vs. org-based
+Snowflake URL formats
+
+Access Control (RBAC)
+
+Role hierarchy: ORGADMIN → ACCOUNTADMIN → SYSADMIN → USERADMIN → SECURITYADMIN → PUBLIC
+Principle of least privilege — granting to roles not users
+Secondary roles (new C03 emphasis) — USE SECONDARY ROLES
+Object ownership and privilege inheritance
+Managed Access Schemas — only schema owner can grant
+
+Security
+
+Network Policies — IP whitelisting/blacklisting
+MFA enforcement
+OAuth, SAML 2.0 (SSO), Key-pair authentication, Okta integration
+Private Link / PrivateLink for VPC connectivity
+Tri-Secret Secure (HSM + Snowflake + customer key)
+End-to-end encryption: AES-256 at rest, TLS in transit
+Automatic key rotation (30-day default), periodic rekeying
+
+Data Governance
+
+Dynamic Data Masking — masking policies on columns by role
+Row Access Policies — filter rows by user/role context
+Object Tagging — tagging columns, tables for classification
+Data Classification — PRIVACY_CATEGORY, SEMANTIC_CATEGORY system tags
+Access History — SNOWFLAKE.ACCOUNT_USAGE.ACCESS_HISTORY view
+Column-level security
+
+Compliance & Audit
+
+ACCOUNT_USAGE schema vs. INFORMATION_SCHEMA — latency differences (45 min to 3 hrs vs. real-time)
+Key views: QUERY_HISTORY, LOGIN_HISTORY, COPY_HISTORY, WAREHOUSE_METERING_HISTORY
+FinOps & Cost Attribution — resource monitors, cost per warehouse, credit attribution
+
+
+Domain 4 — Data Loading, Unloading & Connectivity (18%)
+Stages
+
+Internal stages: User (@~), Table (@%tablename), Named (@mystagename)
+External stages: S3, Azure Blob, GCS — using STORAGE INTEGRATION
+Directory tables on stages
+
+COPY INTO
+
+COPY INTO <table> FROM @stage — key syntax
+File formats: CSV, JSON, Avro, Parquet, ORC, XML
+Validation modes: RETURN_ERRORS, RETURN_ALL_ERRORS, RETURN_N_ROWS
+ON_ERROR options: CONTINUE, SKIP_FILE, ABORT_STATEMENT
+Partial loading — PURGE option, load history
+FORCE = TRUE to reload previously loaded files
+
+Snowpipe (Continuous Ingestion)
+
+Auto-ingest using SQS/event notifications
+REST API approach for push-based loading
+Snowpipe billing — per-second compute (not warehouse credits)
+Load metadata retained for 64 days
+
+Data Unloading
+
+COPY INTO @stage FROM <table/query>
+SINGLE = TRUE/FALSE, MAX_FILE_SIZE, HEADER
+
+Connectivity Tools
+
+Snowsight (web UI)
+SnowSQL (CLI)
+JDBC/ODBC drivers
+Python Connector
+Snowflake Connector for Spark, Kafka
+SnowCD — connectivity diagnostic tool
+SQL API — REST-based query execution
+
+Git Integration (new in C03)
+
+Connecting Snowflake to Git repositories
+CI/CD concepts for Snowflake development
+
+
+Domain 5 — Data Collaboration (10%)
+Secure Data Sharing
+
+Share objects — read-only, no data movement or copying
+Provider/Consumer model — can share across accounts, not within same account
+What can be shared: tables, views, secure views, UDFs, streams
+Direct sharing requires accounts in same region and cloud (or with replication)
+Snowflake Marketplace — publishing and consuming data listings
+
+Data Replication
+
+Replication Groups and Failover Groups
+Cross-region, cross-cloud replication — RPO/RTO concepts
+Replicating databases, shares, tasks, resource monitors
+
+Data Protection
+
+Time Travel: 0–1 day (Standard), 0–90 days (Enterprise+)
+AT and BEFORE syntax for querying historical data
+UNDROP — for tables, schemas, databases
+Fail-safe: 7 days after Time Travel expiry (Snowflake-managed only, not user accessible)
+Cloning — zero-copy clone, clones Time Travel history is independent
+
+
+Study Rubric — Priority Order
+Tier 1 (Master These First)
+Architecture layers, virtual warehouse behavior, caching types, RBAC roles, COPY INTO mechanics, Time Travel + Fail-safe, streams + tasks
+Tier 2 (High Yield)
+Clustering, query profiling, data masking, row access policies, Snowpipe, file formats, data sharing model, ACCOUNT_USAGE views
+Tier 3 (C03 Differentiators — Don't Skip)
+Cortex AI functions, Snowpark basics, Streamlit in Snowflake, Notebooks, Git integration, secondary roles, Document AI
+
+Study Plan (4–6 Weeks)
+Week 1–2: Snowflake free trial + Snowflake University "Level Up" series (free). Hands-on with loading data, querying, creating warehouses.
+Week 3–4: Go through official COF-C03 Study Guide topic by topic, cross-referencing Snowflake docs for each concept. The exam is 100% doc-referenceable.
+Week 5: Practice exams. Target 85%+ before sitting. ExamTopics has 1,000+ community questions (note: some answers in comments are more reliable than the listed answers).
+Week 6: Weak area review. Re-read docs on anything below 80% in practice scores.

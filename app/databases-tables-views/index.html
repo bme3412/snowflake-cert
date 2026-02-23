@@ -17,6 +17,7 @@
       <a href="../index.html" class="logo">❄️ Snowflake Learn</a>
       <nav class="topic-nav" aria-label="Main navigation">
         <a href="../index.html">Home</a>
+        <a href="../study-guide/index.html">Study Guide</a>
         <a href="index.html" class="is-active">Databases, Tables & Views</a>
       </nav>
       <button type="button" class="nav-toggle" aria-label="Open menu" aria-expanded="false">
@@ -33,18 +34,61 @@
       <p class="you-are-here">You are here: <a href="index.html">Databases, Tables &amp; Views</a></p>
       <div class="guide-header">
         <h1>Databases, Tables & Views</h1>
-        <p class="lead">How Snowflake organizes data: databases, schemas, table structures, and views. Guides will be added here as you add them from <code>documentation/02-databases-tables-views/</code>.</p>
+        <p class="lead">How Snowflake organizes data: databases, schemas, table structures, and views.</p>
       </div>
 
-      <ul class="guide-list">
-        <li data-guide-id="table-structures" data-sections="14"><a href="table-structures.html">Table structures</a> — Micro-partitions, data clustering, clustering keys, reclustering, and automatic clustering.</li>
-        <li data-guide-id="temporary-transient" data-sections="10"><a href="temporary-transient-tables.html">Temporary &amp; transient tables</a> — Session-based temp tables, transient tables (no Fail-safe), storage, naming, and comparison of types.</li>
-        <li data-guide-id="external-tables" data-sections="12"><a href="external-tables.html">External tables</a> — Query data in S3, GCS, or Azure without loading; metadata refresh (manual and auto via SQS, Pub/Sub, Event Grid); Hive metastore integration.</li>
-        <li data-guide-id="hybrid-tables" data-sections="11"><a href="hybrid-tables.html">Hybrid tables</a> — Unistore row store + column store; primary key, indexes, bulk load; AWS and Azure only; cost, cloning, limitations, TSS.</li>
-        <li data-guide-id="interactive-tables" data-sections="10"><a href="interactive-tables.html">Interactive tables</a> — Low-latency interactive queries with interactive warehouses; CLUSTER BY, TARGET_LAG; select AWS regions; limitations, sizing, cost.</li>
-        <li data-guide-id="tables-snowsight" data-sections="4"><a href="tables-snowsight.html">Tables in Snowsight</a> — Work with tables in the UI: Database Explorer, table details, load data, Copy History, data preview.</li>
-        <li data-guide-id="search-optimization" data-sections="10"><a href="search-optimization.html">Search optimization</a> — Search access path for selective lookups; EQUALITY, SUBSTRING, FULL_TEXT, GEO; point lookups, joins, semi-structured, cost.</li>
-      </ul>
+      <div class="guide-cards">
+        <article class="guide-card" data-guide-id="table-structures" data-sections="14">
+          <span class="guide-card-num" aria-hidden="true">1</span>
+          <div class="guide-card-body">
+            <h2 class="guide-card-title"><a href="table-structures.html">Table structures</a></h2>
+            <p class="guide-card-desc">Micro-partitions, data clustering, clustering keys, reclustering, and automatic clustering.</p>
+            <span class="guide-card-badge">Start here</span>
+          </div>
+        </article>
+        <article class="guide-card" data-guide-id="temporary-transient" data-sections="10">
+          <span class="guide-card-num" aria-hidden="true">2</span>
+          <div class="guide-card-body">
+            <h2 class="guide-card-title"><a href="temporary-transient-tables.html">Temporary &amp; transient tables</a></h2>
+            <p class="guide-card-desc">Session-based temp tables, transient tables (no Fail-safe), storage, naming, and comparison of types.</p>
+          </div>
+        </article>
+        <article class="guide-card" data-guide-id="external-tables" data-sections="12">
+          <span class="guide-card-num" aria-hidden="true">3</span>
+          <div class="guide-card-body">
+            <h2 class="guide-card-title"><a href="external-tables.html">External tables</a></h2>
+            <p class="guide-card-desc">Query data in S3, GCS, or Azure without loading; metadata refresh (manual and auto via SQS, Pub/Sub, Event Grid); Hive metastore integration.</p>
+          </div>
+        </article>
+        <article class="guide-card" data-guide-id="hybrid-tables" data-sections="11">
+          <span class="guide-card-num" aria-hidden="true">4</span>
+          <div class="guide-card-body">
+            <h2 class="guide-card-title"><a href="hybrid-tables.html">Hybrid tables</a></h2>
+            <p class="guide-card-desc">Unistore row store + column store; primary key, indexes, bulk load; AWS and Azure only; cost, cloning, limitations, TSS.</p>
+          </div>
+        </article>
+        <article class="guide-card" data-guide-id="interactive-tables" data-sections="10">
+          <span class="guide-card-num" aria-hidden="true">5</span>
+          <div class="guide-card-body">
+            <h2 class="guide-card-title"><a href="interactive-tables.html">Interactive tables</a></h2>
+            <p class="guide-card-desc">Low-latency interactive queries with interactive warehouses; CLUSTER BY, TARGET_LAG; select AWS regions; limitations, sizing, cost.</p>
+          </div>
+        </article>
+        <article class="guide-card" data-guide-id="tables-snowsight" data-sections="4">
+          <span class="guide-card-num" aria-hidden="true">6</span>
+          <div class="guide-card-body">
+            <h2 class="guide-card-title"><a href="tables-snowsight.html">Tables in Snowsight</a></h2>
+            <p class="guide-card-desc">Work with tables in the UI: Database Explorer, table details, load data, Copy History, data preview.</p>
+          </div>
+        </article>
+        <article class="guide-card" data-guide-id="search-optimization" data-sections="10">
+          <span class="guide-card-num" aria-hidden="true">7</span>
+          <div class="guide-card-body">
+            <h2 class="guide-card-title"><a href="search-optimization.html">Search optimization</a></h2>
+            <p class="guide-card-desc">Search access path for selective lookups; EQUALITY, SUBSTRING, FULL_TEXT, GEO; point lookups, joins, semi-structured, cost.</p>
+          </div>
+        </article>
+      </div>
     </div>
   </main>
 

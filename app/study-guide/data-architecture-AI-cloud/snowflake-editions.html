@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Snowflake Editions — Study Guide</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../css/styles.css" />
+</head>
+<body data-guide-id="study-editions">
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../../index.html" class="logo">❄️ Snowflake Learn</a>
+      <nav class="topic-nav" aria-label="Study topics">
+        <a href="../../index.html">Home</a>
+        <a href="../index.html">Study Guide</a>
+        <a href="index.html">Data Architecture & AI Data Cloud</a>
+      </nav>
+      <button type="button" class="nav-toggle" aria-label="Open menu" aria-expanded="false">
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+      </button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar" aria-label="Study guide navigation">
+      <details class="sidebar-group" open>
+        <summary>Guides — Core Architecture</summary>
+        <div class="sidebar-group-content">
+          <ul class="guide-list chapter-list">
+            <li><a href="index.html">Category index</a></li>
+            <li><a href="three-layer-model.html">Three-Layer Architecture</a></li>
+            <li><a href="separation-compute-storage.html">Separation of Compute &amp; Storage</a></li>
+            <li><a href="multi-cluster.html">Multi-Cluster Shared Data</a></li>
+            <li><a href="snowflake-editions.html" class="is-active">Snowflake Editions</a></li>
+            <li><a href="cloud-deployment.html">Deployment on AWS, Azure, GCP</a></li>
+          </ul>
+        </div>
+      </details>
+      <details class="sidebar-group" open>
+        <summary>In this guide</summary>
+        <div class="sidebar-group-content">
+          <ul class="chapter-list">
+            <li><a href="#why-editions-matter" class="nav-link" data-section="why-editions-matter">Why Editions Matter</a></li>
+            <li><a href="#standard-edition" class="nav-link" data-section="standard-edition">Standard Edition</a></li>
+            <li><a href="#enterprise-edition" class="nav-link" data-section="enterprise-edition">Enterprise Edition</a></li>
+            <li><a href="#business-critical" class="nav-link" data-section="business-critical">Business Critical Edition</a></li>
+            <li><a href="#virtual-private-snowflake" class="nav-link" data-section="virtual-private-snowflake">Virtual Private Snowflake (VPS)</a></li>
+            <li><a href="#edition-comparison" class="nav-link" data-section="edition-comparison">Edition Feature Comparison</a></li>
+            <li><a href="#exam-editions" class="nav-link" data-section="exam-editions">How to Think About Editions on the Exam</a></li>
+          </ul>
+        </div>
+      </details>
+      <div class="sidebar-footer">
+        <p class="progress-label">Your progress</p>
+        <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="7" aria-label="Sections completed">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <p class="progress-count" id="progress-count">0/7 sections</p>
+      </div>
+    </aside>
+
+    <main id="main" class="content">
+      <article class="guide">
+        <p class="breadcrumb"><a href="../../index.html">Home</a> <span>›</span> <a href="../index.html">Study Guide</a> <span>›</span> <a href="index.html">Data Architecture & AI Data Cloud</a> <span>›</span> Snowflake Editions</p>
+        <div class="guide-header">
+          <h1>Snowflake Editions: Standard, Enterprise, Business Critical, and VPS</h1>
+          <p class="lead">Which features are edition-gated and how to map scenarios to the right edition.</p>
+        </div>
+
+        <section id="why-editions-matter" class="section" data-section="why-editions-matter">
+          <h2>Why Editions Matter</h2>
+          <p>Every Snowflake account runs on one of four editions, in ascending order of capability and cost: <strong>Standard</strong>, <strong>Enterprise</strong>, <strong>Business Critical</strong>, and <strong>Virtual Private Snowflake (VPS)</strong>. The edition is set at account creation and determines which features are available to that account for its lifetime.</p>
+          <p>Each edition is a <strong>strict superset</strong> of the one below it. This means you never lose a feature by moving to a higher edition — you only gain them. Every capability available at Standard is also available at Enterprise, every Enterprise feature carries into Business Critical, and so on. No edition removes anything that was available at a lower tier. This is important for exam reasoning: when a scenario has multiple requirements, you identify the highest-tier requirement and that determines the minimum edition. Everything below that tier satisfies the other requirements automatically.</p>
+          <p>Editions can be <strong>upgraded</strong> but not downgraded. If an organization starts on Standard and later takes on a compliance requirement that needs Business Critical, they upgrade. But they cannot downgrade back to Standard afterward — the account stays at Business Critical or above. This is occasionally tested as a factual question.</p>
+          <p>For the exam, edition questions appear in two forms: a feature is named and you identify which edition first introduces it, or a business scenario is described and you identify the minimum viable edition that satisfies it. The minimum viable edition framing is more common and more important to master.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="why-editions-matter" aria-label="Mark section as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="standard-edition" class="section" data-section="standard-edition">
+          <h2>Standard Edition</h2>
+          <p>Standard is the foundation tier and includes the complete core Snowflake platform: all SQL capabilities, data loading and unloading, semi-structured data (VARIANT, ARRAY, OBJECT), Snowpipe, Tasks, Streams, Secure Data Sharing, and the full three-layer architecture. If you're evaluating Snowflake or running development and testing workloads, Standard gives you everything that makes Snowflake distinctively Snowflake.</p>
+          <p>Standard includes <strong>one day of Time Travel</strong>. This means you can query historical versions of your data or restore dropped objects as long as the change happened within the last 24 hours. For many use cases — catching a mistake quickly, undoing an accidental truncate — one day is sufficient. Where it fails is the scenario most common in production: a silent data quality issue that goes unnoticed for several days. A pipeline that silently wrote corrupted data three days ago is unrecoverable at Standard because the Time Travel window has already expired. That's the operational gap that pushes production workloads toward Enterprise.</p>
+          <p>Standard does not include <strong>multi-cluster warehouses</strong>. You can still run multiple independent warehouses simultaneously — that's available at every edition — but automatic concurrency scaling within a single named warehouse requires Enterprise. For teams with modest or predictable concurrency, Standard's single-cluster warehouses are perfectly adequate. For large teams with variable peak loads hitting a single warehouse endpoint, the absence of multi-cluster is a meaningful constraint.</p>
+          <p>Standard also does not include HIPAA-eligible configuration, PCI-DSS compliance support, or any of the enhanced security infrastructure available at higher tiers. For workloads without regulated data, Standard's security posture — encryption at rest and in transit, RBAC, network policies, MFA — is robust. For regulated workloads, Standard is disqualifying by definition, not by preference.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="standard-edition" aria-label="Mark section as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="enterprise-edition" class="section" data-section="enterprise-edition">
+          <h2>Enterprise Edition</h2>
+          <p>Enterprise is where most serious production deployments live, because it adds the capabilities that typically become necessary as workloads scale and organizations mature their Snowflake usage.</p>
+          <p><strong>Multi-cluster warehouses</strong> are the most operationally impactful addition. As covered in the multi-cluster guide, a multi-cluster warehouse automatically scales cluster count in response to concurrency demand — the answer to large numbers of simultaneous users hitting a single warehouse endpoint. Without multi-cluster, an organization managing 200 concurrent BI users has no mechanism for automatic concurrency scaling within a single warehouse. They must either overprovision a single cluster or manually manage multiple independent warehouses. Multi-cluster warehouses solve this architecturally.</p>
+          <p><strong>Time Travel extended to 90 days</strong> is the second major addition. The practical reason is production data governance: bugs in pipelines, incorrect transformations, and data quality issues frequently aren't discovered within 24 hours. An ETL job that silently started writing incorrect data on a Monday might not be noticed until a Thursday report looks wrong. With 90-day Time Travel, that data is still recoverable. With 1-day Standard Time Travel, it's gone. The 90-day maximum applies to permanent tables; transient and temporary tables are capped at 1 day regardless of edition.</p>
+          <p><strong>Materialized views</strong> store the precomputed result of a query as a physical object that Snowflake refreshes automatically when the underlying data changes. Unlike a regular view — which re-executes its defining query every time it's accessed — a materialized view serves pre-computed results directly. This is a premium feature because it involves ongoing background compute that Snowflake manages on your behalf. It's the answer when the same expensive aggregation or join is queried repeatedly and latency matters.</p>
+          <p><strong>Column-level security</strong> — specifically dynamic data masking policies — allows you to define rules that transform how specific columns are presented to different roles. A column containing Social Security numbers might show the full value to authorized analysts and a redacted placeholder (e.g. <code>XXX-XX-1234</code>) to everyone else. The underlying data is unchanged; the presentation is role-dependent. <strong>Row access policies</strong> work similarly but filter entire rows based on the querying user's role or attributes. Both are Enterprise features because PII governance at column and row granularity is a production compliance capability, not a core query feature.</p>
+          <p><strong>Database replication</strong> across accounts and regions is also introduced at Enterprise. If you need your data available in multiple geographic regions — for latency, data residency, or disaster recovery purposes — replication is the mechanism, and it requires Enterprise or above.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="enterprise-edition" aria-label="Mark section as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="business-critical" class="section" data-section="business-critical">
+          <h2>Business Critical Edition</h2>
+          <p>Business Critical is designed for organizations operating under strict regulatory frameworks — HIPAA, PCI-DSS, SOC 1 and 2 Type II, ISO 27001, and similar standards that impose specific requirements on data handling infrastructure. The upgrade from Enterprise to Business Critical is primarily about enhanced security and compliance architecture, not new analytical capabilities.</p>
+
+          <h3>Tri-Secret Secure and customer-managed encryption keys</h3>
+          <p>At Standard and Enterprise, Snowflake manages your encryption keys using its own key management infrastructure. Your data is encrypted, but Snowflake controls both the encryption process and the keys. In Business Critical with <strong>Tri-Secret Secure</strong>, the encryption model changes fundamentally.</p>
+          <p>Tri-Secret Secure uses a composite key made up of two halves: a Snowflake-managed key and a <strong>customer-managed key</strong> stored in your own cloud provider's key management service — AWS KMS, Azure Key Vault, or Google Cloud KMS. Decrypting any data requires <em>both</em> halves simultaneously. If either half is unavailable — whether because Snowflake is compromised or because you revoke your key — the data cannot be decrypted. This means that even Snowflake itself, without your cooperation, cannot read your data. This is the cryptographic architecture that satisfies data sovereignty requirements where organizations must ensure that the data platform vendor cannot unilaterally access their data even under legal compulsion.</p>
+
+          <h3>HIPAA eligibility and the Business Associate Agreement</h3>
+          <p>HIPAA (the Health Insurance Portability and Accountability Act) requires that any service provider handling Protected Health Information (PHI) on behalf of a covered entity sign a <strong>Business Associate Agreement (BAA)</strong> — a contractual commitment specifying exactly how PHI is protected, who can access it, and what happens in the event of a breach. Snowflake will not sign a BAA for Standard or Enterprise accounts. The technical infrastructure at those tiers is not configured to meet HIPAA's specific requirements. Business Critical is the minimum edition where Snowflake commits to HIPAA-eligible operation and will enter into a BAA. If a scenario involves healthcare data, patient records, PHI, or the phrase "Business Associate Agreement," the answer is Business Critical.</p>
+          <p>PCI-DSS (payment card industry) compliance works similarly: Business Critical is the minimum tier where Snowflake's technical controls and contractual commitments satisfy PCI requirements for storing and processing cardholder data.</p>
+
+          <h3>Private Link connectivity</h3>
+          <p>AWS PrivateLink, Azure Private Link, and Google Cloud Private Service Connect allow network traffic between your cloud environment and Snowflake to travel over a private network path rather than the public internet. This matters because traffic on the public internet is, in principle, observable by third parties in transit — even encrypted traffic reveals metadata (endpoints, timing, volume). Private Link routes the traffic through the cloud provider's private backbone network, so it never touches the public internet at all. For financial services, healthcare, and government organizations with hard network security requirements around data in transit, this is often a mandatory control, not an optional enhancement. Private Link requires Business Critical.</p>
+
+          <h3>Failover Groups for orchestrated disaster recovery</h3>
+          <p>While Enterprise supports database replication, Business Critical adds <strong>Failover Groups</strong> — an orchestration layer that turns replication into a functioning disaster recovery mechanism. A Failover Group bundles multiple databases, shares, and account objects together and maintains them as a coordinated replication unit. If the primary region becomes unavailable, a Failover Group can promote a secondary account to primary status with defined RTO/RPO objectives. This is Snowflake's enterprise DR story: not just replicating data, but having an automated and tested path to actually switching over to the replica in an emergency.</p>
+
+          <label class="section-done">
+            <input type="checkbox" name="done" value="business-critical" aria-label="Mark section as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="virtual-private-snowflake" class="section" data-section="virtual-private-snowflake">
+          <h2>Virtual Private Snowflake (VPS)</h2>
+          <p>VPS is categorically different from the other three editions in one fundamental way: it is the only edition where your Snowflake environment runs on <strong>dedicated, single-tenant infrastructure</strong>. Standard, Enterprise, and Business Critical all run on Snowflake's shared multi-tenant cloud infrastructure — logical isolation between customers is enforced through encryption, access controls, and network policy, but the underlying hardware is shared. In VPS, the physical infrastructure itself is yours alone.</p>
+          <p>It's worth understanding why logical isolation — even with Tri-Secret Secure encryption — is not sufficient for some organizations. Most regulatory frameworks accept strong logical isolation as meeting their security requirements. HIPAA, PCI-DSS, and SOC 2 are all satisfiable at Business Critical because they define security in terms of controls and outcomes, not hardware ownership. But a small subset of organizations operate under requirements that prohibit shared infrastructure entirely — classified government workloads, certain defense contractors, and some financial institutions with the most stringent interpretations of data sovereignty. For these organizations, the fact that their queries run on the same physical servers as another company's queries is disqualifying, regardless of how strong the logical isolation is. Physical separation is the requirement, and VPS is the only option.</p>
+          <p>What VPS actually changes is the infrastructure layer. Dedicated Cloud Services (authentication, query planning, metadata), dedicated metadata store, dedicated Virtual Warehouse compute, and dedicated storage — none of it is shared with any other Snowflake customer. From inside VPS, the experience looks operationally identical to Business Critical: the same SQL interface, the same objects, the same features. The difference is entirely in what's running underneath.</p>
+          <p>VPS is sold under a custom enterprise contract, deployed in a limited set of supported regions, and requires direct engagement with Snowflake's enterprise sales team. It is not a self-service product. For the exam: VPS is the answer exclusively when the scenario involves <em>physical</em> single-tenant isolation. If strong security, compliance certification, customer-managed encryption keys, or Private Link can satisfy the scenario, Business Critical is the correct minimum viable edition — VPS would be more than required.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="virtual-private-snowflake" aria-label="Mark section as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="edition-comparison" class="section" data-section="edition-comparison">
+          <h2>Edition Feature Comparison — Exam-Critical Facts</h2>
+          <p>Use this table as your revision reference. The column shows the first edition where the feature becomes available — all higher editions include it too.</p>
+
+          <div class="table-wrap" role="region" aria-label="Snowflake editions feature comparison">
+            <table class="data-table">
+              <caption>Feature availability by Snowflake edition</caption>
+              <thead>
+                <tr>
+                  <th>Feature</th>
+                  <th>Standard</th>
+                  <th>Enterprise</th>
+                  <th>Business Critical</th>
+                  <th>VPS</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Core SQL, loading, semi-structured, Tasks, Streams, Snowpipe</td>
+                  <td>✓</td><td>✓</td><td>✓</td><td>✓</td>
+                </tr>
+                <tr>
+                  <td>Secure Data Sharing</td>
+                  <td>✓</td><td>✓</td><td>✓</td><td>✓</td>
+                </tr>
+                <tr>
+                  <td>Always-on encryption (at rest + in transit)</td>
+                  <td>✓</td><td>✓</td><td>✓</td><td>✓</td>
+                </tr>
+                <tr>
+                  <td>RBAC, network policies, MFA</td>
+                  <td>✓</td><td>✓</td><td>✓</td><td>✓</td>
+                </tr>
+                <tr>
+                  <td>Time Travel</td>
+                  <td>1 day</td><td>Up to 90 days</td><td>Up to 90 days</td><td>Up to 90 days</td>
+                </tr>
+                <tr>
+                  <td>Multi-cluster warehouses</td>
+                  <td>—</td><td>✓</td><td>✓</td><td>✓</td>
+                </tr>
+                <tr>
+                  <td>Materialized views</td>
+                  <td>—</td><td>✓</td><td>✓</td><td>✓</td>
+                </tr>
+                <tr>
+                  <td>Dynamic data masking (column-level security)</td>
+                  <td>—</td><td>✓</td><td>✓</td><td>✓</td>
+                </tr>
+                <tr>
+                  <td>Row access policies</td>
+                  <td>—</td><td>✓</td><td>✓</td><td>✓</td>
+                </tr>
+                <tr>
+                  <td>Database replication (cross-region, cross-cloud)</td>
+                  <td>—</td><td>✓</td><td>✓</td><td>✓</td>
+                </tr>
+                <tr>
+                  <td>HIPAA-eligible configuration / BAA</td>
+                  <td>—</td><td>—</td><td>✓</td><td>✓</td>
+                </tr>
+                <tr>
+                  <td>PCI-DSS compliance</td>
+                  <td>—</td><td>—</td><td>✓</td><td>✓</td>
+                </tr>
+                <tr>
+                  <td>Tri-Secret Secure (customer-managed keys)</td>
+                  <td>—</td><td>—</td><td>✓</td><td>✓</td>
+                </tr>
+                <tr>
+                  <td>AWS PrivateLink / Azure Private Link / GCP PSC</td>
+                  <td>—</td><td>—</td><td>✓</td><td>✓</td>
+                </tr>
+                <tr>
+                  <td>Failover Groups (orchestrated DR)</td>
+                  <td>—</td><td>—</td><td>✓</td><td>✓</td>
+                </tr>
+                <tr>
+                  <td>Physical single-tenant dedicated infrastructure</td>
+                  <td>—</td><td>—</td><td>—</td><td>✓</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <label class="section-done">
+            <input type="checkbox" name="done" value="edition-comparison" aria-label="Mark section as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="exam-editions" class="section" data-section="exam-editions">
+          <h2>How to Think About Editions on the Exam</h2>
+          <p>Edition questions on the SnowPro Core exam almost always follow the <strong>minimum viable edition</strong> pattern: a scenario describes requirements, and you identify the lowest edition that satisfies all of them. The key to doing this reliably is a consistent elimination process.</p>
+
+          <h3>The elimination method</h3>
+          <p><strong>Step 1:</strong> Read the scenario carefully and identify every hard constraint — a specific feature name, a regulatory term, a compliance requirement, a capability description.</p>
+          <p><strong>Step 2:</strong> For each constraint, identify which edition first introduces it. Use the feature table above as your reference.</p>
+          <p><strong>Step 3:</strong> The answer is the highest edition identified in Step 2. Because every edition is a superset of those below it, the highest requirement sets the floor — all lower requirements are automatically satisfied.</p>
+          <p><strong>Step 4:</strong> If the scenario can be satisfied at Business Critical, eliminate VPS. The exam tests for the minimum viable edition, not the most capable one. Choosing VPS when Business Critical is sufficient is a distractor.</p>
+
+          <h3>Worked examples</h3>
+          <p><em>"A healthcare company needs to store patient records in Snowflake and sign a Business Associate Agreement with their vendor."</em><br>
+          BAA → Business Critical. Healthcare data alone might suggest compliance, but the explicit BAA requirement is the clincher. Answer: <strong>Business Critical</strong>.</p>
+          <p><em>"An analytics team with 400 simultaneous users needs queries to run without excessive queuing, and they need to query historical data up to 60 days back."</em><br>
+          400 simultaneous users → multi-cluster (Enterprise). 60-day Time Travel → Enterprise (90-day max). Both requirements are satisfied at Enterprise. Answer: <strong>Enterprise</strong>.</p>
+          <p><em>"A defense contractor requires that their Snowflake workloads run on hardware that is not shared with any other organization."</em><br>
+          Physical, single-tenant hardware isolation → VPS only. This is the one scenario where VPS is the minimum viable edition. Answer: <strong>VPS</strong>.</p>
+          <p><em>"An organization stores payment card data and needs to ensure their encryption keys cannot be accessed by Snowflake without their involvement."</em><br>
+          PCI-DSS + customer-managed keys (Tri-Secret Secure) → both require Business Critical. Answer: <strong>Business Critical</strong>.</p>
+
+          <div class="callout callout-tip">
+            <span class="callout-label">The most common exam trap</span>
+            <p>The most reliable distractor is choosing VPS when the scenario describes strong security requirements. Re-read carefully: does the scenario require physical hardware isolation, or just strong encryption, compliance certification, and private networking? Strong encryption + compliance + Private Link = Business Critical. Physical hardware isolation = VPS. These are different requirements, and the exam will write scenarios that sound like VPS but are actually Business Critical.</p>
+          </div>
+
+          <label class="section-done">
+            <input type="checkbox" name="done" value="exam-editions" aria-label="Mark section as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <footer class="guide-footer">
+          <p>End of Snowflake Editions. <a href="index.html">All Data Architecture & AI Data Cloud guides</a></p>
+          <p class="guide-footer-links"><a href="three-layer-model.html">Three-Layer Architecture</a> · <a href="separation-compute-storage.html">Separation of Compute &amp; Storage</a> · <a href="multi-cluster.html">Multi-Cluster Shared Data</a> · <a href="cloud-deployment.html">Cloud Deployment</a></p>
+        </footer>
+      </article>
+    </main>
+  </div>
+
+  <script src="../../js/app.js"></script>
+</body>
+</html>

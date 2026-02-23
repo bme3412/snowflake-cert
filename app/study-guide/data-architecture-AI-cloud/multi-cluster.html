@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Multi-Cluster Shared Data Architecture — Study Guide</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../css/styles.css" />
+</head>
+<body data-guide-id="study-multi-cluster">
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../../index.html" class="logo">❄️ Snowflake Learn</a>
+      <nav class="topic-nav" aria-label="Study topics">
+        <a href="../../index.html">Home</a>
+        <a href="../index.html">Study Guide</a>
+        <a href="index.html">Data Architecture & AI Data Cloud</a>
+      </nav>
+      <button type="button" class="nav-toggle" aria-label="Open menu" aria-expanded="false">
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+      </button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar" aria-label="Study guide navigation">
+      <details class="sidebar-group" open>
+        <summary>Guides — Core Architecture</summary>
+        <div class="sidebar-group-content">
+          <ul class="guide-list chapter-list">
+            <li><a href="index.html">Category index</a></li>
+            <li><a href="three-layer-model.html">Three-Layer Architecture</a></li>
+            <li><a href="separation-compute-storage.html">Separation of Compute &amp; Storage</a></li>
+            <li><a href="multi-cluster.html" class="is-active">Multi-Cluster Shared Data</a></li>
+            <li><a href="snowflake-editions.html">Snowflake Editions</a></li>
+            <li><a href="cloud-deployment.html">Deployment on AWS, Azure, GCP</a></li>
+          </ul>
+        </div>
+      </details>
+      <details class="sidebar-group" open>
+        <summary>In this guide</summary>
+        <div class="sidebar-group-content">
+          <ul class="chapter-list">
+            <li><a href="#architecture-that-defines" class="nav-link" data-section="architecture-that-defines">The Architecture That Defines Snowflake</a></li>
+            <li><a href="#shared-data-half" class="nav-link" data-section="shared-data-half">The "Shared Data" Half</a></li>
+            <li><a href="#multi-cluster-half" class="nav-link" data-section="multi-cluster-half">The "Multi-Cluster" Half</a></li>
+            <li><a href="#scaling-up-vs-out" class="nav-link" data-section="scaling-up-vs-out">Scaling Up vs. Scaling Out</a></li>
+            <li><a href="#warehouse-modes" class="nav-link" data-section="warehouse-modes">Multi-Cluster Warehouse Modes</a></li>
+            <li><a href="#scaling-policy" class="nav-link" data-section="scaling-policy">Scaling Policy</a></li>
+            <li><a href="#concurrency-query-queue" class="nav-link" data-section="concurrency-query-queue">Concurrency and the Query Queue</a></li>
+            <li><a href="#fault-tolerance" class="nav-link" data-section="fault-tolerance">Fault Tolerance and High Availability</a></li>
+            <li><a href="#exam-angle" class="nav-link" data-section="exam-angle">The Exam Angle</a></li>
+          </ul>
+        </div>
+      </details>
+      <div class="sidebar-footer">
+        <p class="progress-label">Your progress</p>
+        <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="9" aria-label="Sections completed">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <p class="progress-count" id="progress-count">0/9 sections</p>
+      </div>
+    </aside>
+
+    <main id="main" class="content">
+      <article class="guide">
+        <p class="breadcrumb"><a href="../../index.html">Home</a> <span>›</span> <a href="../index.html">Study Guide</a> <span>›</span> <a href="index.html">Data Architecture & AI Data Cloud</a> <span>›</span> Multi-Cluster Shared Data</p>
+        <div class="guide-header">
+          <h1>Multi-Cluster Shared Data Architecture</h1>
+          <p class="lead">Shared data, multiple clusters, auto-scale vs. maximized mode, and concurrency.</p>
+        </div>
+
+        <section id="architecture-that-defines" class="section" data-section="architecture-that-defines">
+          <h2>The Architecture That Defines Snowflake</h2>
+          <p>If you had to name the single concept that most precisely captures what Snowflake is, it would be <strong>multi-cluster shared data architecture</strong>. "Shared data" tells you how storage works: one centralized repository that every compute resource reads from. "Multi-cluster" tells you how compute works: many independent processing clusters can operate against that shared data simultaneously. Together, these two ideas resolve the trade-off between concurrency, performance, and cost.</p>
+          <p>To appreciate why this matters, it helps to understand the tension it was designed to resolve. Traditional MPP systems — Teradata, early Amazon Redshift, Hadoop clusters — gave you one fixed cluster to serve every workload. You could tune it for throughput (fewer, larger queries) or for concurrency (many simultaneous users), but not really both. If you provisioned the cluster for peak concurrency — say, 500 analysts running dashboards simultaneously — you were paying for that capacity around the clock, even at 3am when nobody was using it. If you provisioned for off-peak cost efficiency, your peak users experienced slowdowns and queuing. And there was no way to independently scale one dimension without also changing the other, because size and concurrency were properties of the same fixed cluster.</p>
+          <p>Multi-cluster shared data architecture separates these two dimensions entirely. <strong>Cluster size</strong> (XS through 6XL) determines how much compute power each individual cluster has — how fast a single complex query runs. <strong>Cluster count</strong> determines how much concurrency the warehouse can absorb — how many queries can run in parallel before queuing begins. Because both dimensions are independently configurable, and because the underlying data is shared rather than partitioned across nodes, you can tune each axis for your actual workload without the other getting in the way.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="architecture-that-defines" aria-label="Mark section as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="shared-data-half" class="section" data-section="shared-data-half">
+          <h2>The "Shared Data" Half</h2>
+          <p>Snowflake eliminates node-level data ownership entirely. All data lives in a single, centralized cloud object store — S3, Azure Blob, or GCS — and is organized into <strong>micro-partitions</strong> with global metadata maintained by the Cloud Services layer. No compute node <em>owns</em> any data. Every Virtual Warehouse has equal, symmetric access to all of it.</p>
+          <p>To understand why this is significant, it helps to understand what <strong>data locality</strong> means in the systems Snowflake was designed to replace. In a traditional MPP cluster — Redshift, Teradata, a Spark cluster — each node owns a physical partition of the data. The data literally lives on that node's disks. When a query runs, each node processes its own local slice and exchanges results over the network. This design delivers good performance when everything is healthy, but it has fundamental constraints.</p>
+          <p>The first is the cost of expansion. Adding a new node to a traditional cluster means redistributing data — some slices must move from existing nodes to the new one so the data remains balanced. This is a resource-intensive, time-consuming operation, and for large clusters it can mean hours of reshuffling. The cluster is often unavailable or degraded during the process. In Snowflake, there is nothing to reshuffle. A new warehouse simply starts making network calls to the same shared object store that every other warehouse already uses. Adding compute capacity takes seconds, not hours, and the data does not move at all.</p>
+          <p>The second is failure isolation. If a node in a traditional MPP cluster fails, the data it owned is temporarily unavailable — the cluster must wait for the node to recover or rely on replication to serve that data from another node. In Snowflake, a compute node failure is a compute-only problem. The data was never on that node; it is in a highly durable cloud object store designed with redundancy across multiple availability zones. Snowflake simply redirects work to healthy compute nodes, and the data is unaffected.</p>
+          <p>The practical consequence of eliminating data locality is that <strong>there is no coordination overhead between warehouses</strong>. When you add a second warehouse to serve a new team, it does not need to negotiate with the first warehouse about data ownership, cache coherence, or partition assignments. Each warehouse independently queries the same storage layer, pulls the micro-partitions it needs, and operates entirely on its own. The shared data model is what makes horizontal scaling — adding more warehouses — both instant and completely transparent.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="shared-data-half" aria-label="Mark section as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="multi-cluster-half" class="section" data-section="multi-cluster-half">
+          <h2>The "Multi-Cluster" Half</h2>
+          <p>The "multi-cluster" aspect of Snowflake's architecture actually operates at two distinct levels, and the exam will test whether you can distinguish between them. Conflating these two levels is one of the most reliable traps in multi-cluster questions.</p>
+
+          <h3>Level 1: Multiple independent Virtual Warehouses (all editions)</h3>
+          <p>The most basic expression of multi-cluster architecture is simply running more than one Virtual Warehouse simultaneously against the same shared data. Each warehouse is its own isolated compute cluster — its own set of nodes, its own local SSD cache, its own query queue, its own billing meter. A data engineering team's warehouse and an analytics team's warehouse can run in parallel against the same tables with no interaction between them whatsoever. This capability is available on every Snowflake edition, including Standard. It requires no special configuration beyond creating and starting a second warehouse.</p>
+          <p>When people talk about "workload isolation," this is the mechanism: separate warehouses for separate workloads, all reading from the same data. The data is shared; the compute is not.</p>
+
+          <h3>Level 2: Multi-cluster warehouse — a single warehouse that scales its own cluster count (Enterprise+)</h3>
+          <p>The second level is a specific Snowflake feature called a <strong>multi-cluster warehouse</strong>. This is a single logical warehouse — one name, one configuration, one entry in your billing — that can automatically provision additional compute clusters beneath it as demand increases. Users don't know how many clusters are running. They send queries to <code>ANALYTICS_WH</code> and Snowflake's infrastructure routes each query to whichever active cluster has capacity. When demand drops, clusters drain their queues and are released until the warehouse returns to its minimum cluster count.</p>
+          <p>This is meaningfully different from simply creating multiple warehouses. With multiple independent warehouses, a user or application must choose which warehouse to connect to. With a multi-cluster warehouse, the elasticity is automatic and invisible — a single connection point handles variable concurrency by dynamically adjusting the number of parallel clusters behind the scenes. This is the feature that requires <strong>Enterprise edition or above</strong>. Standard edition supports Level 1 (multiple separate warehouses) but not Level 2 (a single warehouse with elastic cluster scaling).</p>
+
+          <label class="section-done">
+            <input type="checkbox" name="done" value="multi-cluster-half" aria-label="Mark section as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="scaling-up-vs-out" class="section" data-section="scaling-up-vs-out">
+          <h2>Scaling Up vs. Scaling Out — The Core Decision Framework</h2>
+          <p>The single most tested concept in multi-cluster architecture is knowing when to scale <em>up</em> versus when to scale <em>out</em>. These are two completely independent dimensions that solve different problems, and the exam consistently presents scenarios designed to test whether you can tell them apart.</p>
+          <p><strong>Scaling up</strong> means increasing the warehouse size — moving from a Small to a Medium, or from a Large to an X-Large. Each step up roughly doubles the compute resources available: more CPUs, more RAM, more local SSD cache per cluster. The purpose of scaling up is to make individual queries run faster. If a query is complex — joining large tables, performing aggregations across billions of rows, running window functions over wide date ranges — giving the warehouse more compute means more data can be processed in parallel within a single query execution. The query finishes sooner.</p>
+          <p><strong>Scaling out</strong> means adding more clusters to the warehouse, either by creating additional independent warehouses or by enabling multi-cluster mode on a single warehouse. The purpose of scaling out is to increase the number of queries that can run simultaneously — the warehouse's concurrency capacity. If a query is fast and lightweight but 300 users are submitting queries at the same time, more clusters allow more of those queries to execute in parallel rather than waiting in the queue. The individual queries don't get faster — there is simply more capacity to run more of them at once.</p>
+          <p>The key insight is that <strong>these two dimensions do not help with each other's problem</strong>. You can make a warehouse 6X-Large — it will not reduce queuing if 500 users are hitting it simultaneously, because each user's query still occupies an execution slot and the slot count is ultimately finite. And you can add 10 clusters to a warehouse — each cluster will still run a slow, complex query at exactly the same speed, because the query's execution time depends on the compute resources within one cluster, not the total number of clusters.</p>
+
+          <div class="callout callout-note">
+            <span class="callout-label">Diagnostic questions to ask</span>
+            <ul style="margin:var(--space-sm) 0 0; padding-left:1.25rem;">
+              <li><strong>Are queries slow even when the warehouse is not busy?</strong> → Performance problem. Scale up.</li>
+              <li><strong>Are queries fast when they eventually run, but users wait a long time in queue first?</strong> → Concurrency problem. Scale out (multi-cluster or dedicated warehouses).</li>
+              <li><strong>Is the warehouse spilling to local or remote disk?</strong> → Queries need more memory. Scale up.</li>
+              <li><strong>Is the warehouse at concurrency capacity during peak hours only?</strong> → Multi-cluster in auto-scale mode to absorb peak demand without paying for it all day.</li>
+            </ul>
+          </div>
+
+          <label class="section-done">
+            <input type="checkbox" name="done" value="scaling-up-vs-out" aria-label="Mark section as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="warehouse-modes" class="section" data-section="warehouse-modes">
+          <h2>Multi-Cluster Warehouse Modes</h2>
+          <p>When you configure a multi-cluster warehouse, you choose a behavioral mode that controls how and when additional clusters are provisioned and released. There are two modes.</p>
+
+          <h3>Auto-scale mode (default)</h3>
+          <p>In auto-scale mode you set a minimum cluster count and a maximum cluster count. The warehouse starts at the minimum — usually 1 — and Snowflake monitors the query queue. When demand exceeds what the current cluster count can handle, Snowflake adds a cluster. If demand continues to grow, another cluster is added, and so on up to the configured maximum. When demand subsides, clusters are drained and released, returning toward the minimum.</p>
+          <p>The word "drained" is important and worth understanding. Snowflake does not abruptly kill in-flight queries when it decides to release a cluster. Instead, it stops routing new queries to that cluster and waits for the currently executing queries to complete. Only once the cluster is fully idle does it shut down. This means billing continues briefly after demand drops — the cluster that's being drained is still running, still consuming credits, until its final queries finish. This is a normal and expected part of auto-scale behavior, not a bug. It also means the cluster count doesn't drop instantly; there's a short tail of credit consumption as clusters finish draining.</p>
+          <p>Auto-scale is the right choice for workloads with variable intraday demand — a BI team with 200 users at 9am and 10 users at 3pm, for example. You pay for extra clusters only during the hours when demand actually justifies them. The trade-off is a brief spin-up delay (seconds to under a minute) when demand ramps quickly and a new cluster needs to be provisioned before queries can start running on it.</p>
+
+          <h3>Maximized mode</h3>
+          <p>In maximized mode, all clusters run continuously at the maximum cluster count from the moment the warehouse is resumed. There is no gradual ramp-up. All capacity is warm and available immediately, regardless of current demand.</p>
+          <p>Maximized mode sacrifices cost efficiency in exchange for zero latency on cluster availability. The right use case is a workload with a hard response-time SLA where the first query of the day — or the first query after a period of low activity — must respond immediately with full concurrency capacity. Examples include trading systems where the first morning query cannot wait 30 seconds for a cluster to spin up, or operational dashboards that must be responsive the moment a shift starts. For these workloads, the cost of running idle clusters is an acceptable trade-off for guaranteed immediate capacity.</p>
+          <p>Multi-cluster warehouses — in either mode — require <strong>Enterprise edition or above</strong>.</p>
+
+          <label class="section-done">
+            <input type="checkbox" name="done" value="warehouse-modes" aria-label="Mark section as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="scaling-policy" class="section" data-section="scaling-policy">
+          <h2>Scaling Policy</h2>
+          <p>When a multi-cluster warehouse is running in auto-scale mode, Snowflake follows a <strong>scaling policy</strong> that determines how aggressively it adds and removes clusters in response to demand changes. There are two options: <strong>Standard</strong> (the default) and <strong>Economy</strong>.</p>
+
+          <h3>Standard policy (default)</h3>
+          <p>Standard policy prioritizes responsiveness. Snowflake adds a new cluster quickly when it detects that queries are queuing — it doesn't wait for the queue to become deeply backed up before acting. On the removal side, Standard holds clusters a bit longer after demand drops before releasing them, which provides a buffer if demand spikes again shortly after. This policy is better for user experience: queries rarely wait long before additional capacity is available, and clusters aren't released so aggressively that they need to be immediately re-provisioned when demand bounces.</p>
+
+          <h3>Economy policy</h3>
+          <p>Economy policy prioritizes credit efficiency. Snowflake waits longer before provisioning a new cluster — it needs to be more confident that the demand is sustained rather than a brief spike before committing the credits. On the removal side, Economy releases clusters more aggressively once demand drops. The result is lower overall credit consumption for workloads where concurrency spikes are short-lived and users can tolerate a slightly longer queue wait. Economy is appropriate when cost containment is the primary goal and brief queuing is acceptable.</p>
+
+          <div class="callout callout-note">
+            <span class="callout-label">Scaling policy at a glance</span>
+            <p style="margin-top:var(--space-sm);">Both policies are only relevant in auto-scale mode — maximized mode keeps all clusters running regardless of demand, so there is nothing for a scaling policy to govern.</p>
+            <ul style="margin:var(--space-sm) 0 0; padding-left:1.25rem;">
+              <li><strong>Standard</strong>: adds clusters quickly, holds them longer. Better user experience, slightly higher cost.</li>
+              <li><strong>Economy</strong>: adds clusters conservatively, releases them quickly. Lower cost, slightly more queuing.</li>
+            </ul>
+          </div>
+
+          <label class="section-done">
+            <input type="checkbox" name="done" value="scaling-policy" aria-label="Mark section as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="concurrency-query-queue" class="section" data-section="concurrency-query-queue">
+          <h2>Concurrency and the Query Queue</h2>
+          <p>Every Virtual Warehouse — whether single-cluster or multi-cluster — has a query queue. When more queries arrive than the warehouse has available execution slots, the excess queries are placed in the queue and executed as slots become free. The number of concurrent execution slots a warehouse has depends on its size and the resource requirements of the queries running — there is no single fixed slot count that applies universally, because Snowflake allocates resources dynamically based on query complexity.</p>
+          <p>In a single-cluster warehouse, a full queue is the diagnostic signal that you have hit a concurrency ceiling. From here the decision branches: if the queued queries are fast once they start running, the bottleneck is concurrency — you need more clusters (multi-cluster mode or a second dedicated warehouse). If the queued queries are slow even after they start, the bottleneck is query complexity or data volume — you need a larger warehouse size.</p>
+          <p>In a multi-cluster warehouse in auto-scale mode, a growing queue is the trigger that prompts Snowflake to provision an additional cluster. As soon as the new cluster is ready — a process that takes seconds to under a minute — queries from the queue begin routing to it. The original cluster continues processing its own queries in parallel. From the user's perspective, they submitted a query and it started running; the mechanics of which cluster handled it are invisible.</p>
+
+          <h3>How to diagnose a queuing problem in practice</h3>
+          <p>In Snowflake's Query History (accessible in Snowsight or via <code>SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY</code>), every query has a status that transitions from <strong>Queued</strong> to <strong>Running</strong> to <strong>Success</strong> (or Error). If you see a pattern where many queries have long <em>queued</em> times but short <em>execution</em> times, the warehouse is at concurrency capacity — the queries are fast but there are too many arriving simultaneously. The fix is additional concurrency: multi-cluster mode or workload isolation via a second warehouse.</p>
+          <p>Conversely, if queries show short or no queue time but long execution times, the bottleneck is inside the query itself — not enough compute to process it efficiently. The correct response is to examine the <strong>Query Profile</strong> in Snowsight for signs of spilling to local or remote disk (which means the warehouse doesn't have enough memory for the query's working set), inefficient joins, or excessive data scanning. Once you understand the bottleneck, you resize the warehouse to address it.</p>
+          <p>Resource monitors don't help with queuing — they are a cost governance tool, not a performance tool. The fix for queuing is always either more clusters or better workload distribution, not credit limits.</p>
+
+          <label class="section-done">
+            <input type="checkbox" name="done" value="concurrency-query-queue" aria-label="Mark section as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="fault-tolerance" class="section" data-section="fault-tolerance">
+          <h2>Fault Tolerance and High Availability</h2>
+          <p>Because data lives in managed cloud object storage — itself a highly durable, multi-availability-zone service — the data layer is effectively immune to node failures. In Snowflake, a compute node failure is a compute problem, not a data problem. The data was never on that node. Snowflake can simply redirect work to healthy nodes.</p>
+          <p>Virtual Warehouses themselves are stateless with respect to permanent data — the only stateful element they maintain is their local disk cache, which is ephemeral by design. A warehouse failure means cache is lost and queries in-flight may need to be retried, but there is no data loss. The storage layer is entirely unaffected.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="fault-tolerance" aria-label="Mark section as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="exam-angle" class="section" data-section="exam-angle">
+          <h2>The Exam Angle</h2>
+          <p>Multi-cluster architecture is one of the highest-density topics on the SnowPro Core exam. Questions about it appear in three forms: definition questions (what does multi-cluster mean?), scenario questions (which approach solves this problem?), and edition questions (which edition is required?). The following are the concepts you need to have locked down.</p>
+
+          <div class="callout callout-tip">
+            <span class="callout-label">Exam scenario patterns — multi-cluster</span>
+            <ul style="margin:var(--space-sm) 0 0; padding-left:1.25rem;">
+              <li><em>"Users are experiencing slow queries during peak hours when many are submitting at once"</em> → <strong>concurrency problem</strong>; multi-cluster warehouse (scale out).</li>
+              <li><em>"A single complex data science query takes 4 hours on a Small warehouse"</em> → <strong>performance problem</strong>; scale the warehouse up.</li>
+              <li><em>"You need a single warehouse endpoint that automatically handles 10× the normal user load during month-end reporting"</em> → <strong>multi-cluster warehouse in auto-scale mode</strong>.</li>
+              <li><em>"Your trading system needs full concurrency capacity available the instant the warehouse resumes"</em> → <strong>maximized mode</strong>.</li>
+              <li><em>"You want to add concurrency capacity but minimize credit spend during off-peak hours"</em> → <strong>auto-scale mode with Economy scaling policy</strong>.</li>
+              <li><em>"Two teams need to query the same tables without one affecting the other"</em> → <strong>two independent warehouses</strong> (workload isolation; available on all editions).</li>
+              <li><em>"Which edition supports a single warehouse that automatically adds clusters?"</em> → <strong>Enterprise or above</strong>.</li>
+              <li><em>"Does adding a warehouse require replicating data?"</em> → <strong>No</strong>. Shared data means one copy; no replication, no reshuffling.</li>
+            </ul>
+          </div>
+
+          <label class="section-done">
+            <input type="checkbox" name="done" value="exam-angle" aria-label="Mark section as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <footer class="guide-footer">
+          <p>End of Multi-Cluster Shared Data. <a href="index.html">All Data Architecture & AI Data Cloud guides</a></p>
+          <p class="guide-footer-links"><a href="three-layer-model.html">Three-Layer Architecture</a> · <a href="separation-compute-storage.html">Separation of Compute &amp; Storage</a> · <a href="snowflake-editions.html">Snowflake Editions</a> · <a href="cloud-deployment.html">Cloud Deployment</a></p>
+        </footer>
+      </article>
+    </main>
+  </div>
+
+  <script src="../../js/app.js"></script>
+</body>
+</html>

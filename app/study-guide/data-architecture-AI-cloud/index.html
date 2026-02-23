@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Data Architecture & AI Data Cloud — Study Guide</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../css/styles.css" />
+</head>
+<body class="category-index-page">
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../../index.html" class="logo">❄️ Snowflake Learn</a>
+      <nav class="topic-nav" aria-label="Main navigation">
+        <a href="../../index.html">Home</a>
+        <a href="../index.html">Study Guide</a>
+        <a href="index.html" class="is-active">Data Architecture & AI Data Cloud</a>
+      </nav>
+      <button type="button" class="nav-toggle" aria-label="Open menu" aria-expanded="false">
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+      </button>
+    </div>
+  </header>
+
+  <main id="main" class="content category-index">
+    <div class="guide category-index-inner">
+      <p class="breadcrumb"><a href="../../index.html">Home</a> <span>›</span> <a href="../index.html">Study Guide</a> <span>›</span> Data Architecture & AI Data Cloud</p>
+      <p class="you-are-here">You are here: <a href="../index.html">Study Guide</a> <span>›</span> <a href="index.html">Data Architecture & AI Data Cloud</a></p>
+      <div class="guide-header">
+        <h1>Domain 1 — Data Architecture & AI Data Cloud</h1>
+        <p class="lead">Core architecture, editions, and deployment. This domain is 31% of the SnowPro Core exam.</p>
+      </div>
+
+      <div class="guide-cards">
+        <article class="guide-card" data-guide-id="study-three-layer" data-sections="7">
+          <span class="guide-card-num" aria-hidden="true">1</span>
+          <div class="guide-card-body">
+            <h2 class="guide-card-title"><a href="three-layer-model.html">The Three-Layer Architecture</a></h2>
+            <p class="guide-card-desc">Storage, Compute (Virtual Warehouses), and Cloud Services — how Snowflake separates and scales each layer.</p>
+            <span class="guide-card-badge">Start here</span>
+          </div>
+        </article>
+        <article class="guide-card" data-guide-id="study-separation" data-sections="6">
+          <span class="guide-card-num" aria-hidden="true">2</span>
+          <div class="guide-card-body">
+            <h2 class="guide-card-title"><a href="separation-compute-storage.html">Separation of Compute and Storage</a></h2>
+            <p class="guide-card-desc">Why it matters for scaling, cost, and workload isolation.</p>
+          </div>
+        </article>
+        <article class="guide-card" data-guide-id="study-multi-cluster" data-sections="9">
+          <span class="guide-card-num" aria-hidden="true">3</span>
+          <div class="guide-card-body">
+            <h2 class="guide-card-title"><a href="multi-cluster.html">Multi-Cluster Shared Data Architecture</a></h2>
+            <p class="guide-card-desc">Shared data, multi-cluster warehouses, auto-scale vs. maximized mode, concurrency.</p>
+          </div>
+        </article>
+        <article class="guide-card" data-guide-id="study-editions" data-sections="7">
+          <span class="guide-card-num" aria-hidden="true">4</span>
+          <div class="guide-card-body">
+            <h2 class="guide-card-title"><a href="snowflake-editions.html">Snowflake Editions</a></h2>
+            <p class="guide-card-desc">Standard, Enterprise, Business Critical, Virtual Private Snowflake — what each adds.</p>
+          </div>
+        </article>
+        <article class="guide-card" data-guide-id="study-cloud-deployment" data-sections="7">
+          <span class="guide-card-num" aria-hidden="true">5</span>
+          <div class="guide-card-body">
+            <h2 class="guide-card-title"><a href="cloud-deployment.html">Deployment on AWS, Azure, GCP</a></h2>
+            <p class="guide-card-desc">Regions, account identifiers, cross-cloud and cross-region concepts.</p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </main>
+
+  <script src="../../js/category-index.js"></script>
+  <script>
+    (function () {
+      var navToggle = document.querySelector('.nav-toggle');
+      if (navToggle) navToggle.addEventListener('click', function () {
+        document.body.classList.toggle('nav-open');
+        var open = document.body.classList.contains('nav-open');
+        navToggle.setAttribute('aria-expanded', open);
+        navToggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+      });
+    })();
+  </script>
+</body>
+</html>

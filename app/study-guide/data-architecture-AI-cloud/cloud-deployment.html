@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Deployment on AWS, Azure, GCP — Study Guide</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../css/styles.css" />
+</head>
+<body data-guide-id="study-cloud-deployment">
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../../index.html" class="logo">❄️ Snowflake Learn</a>
+      <nav class="topic-nav" aria-label="Study topics">
+        <a href="../../index.html">Home</a>
+        <a href="../index.html">Study Guide</a>
+        <a href="index.html">Data Architecture & AI Data Cloud</a>
+      </nav>
+      <button type="button" class="nav-toggle" aria-label="Open menu" aria-expanded="false">
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+      </button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar" aria-label="Study guide navigation">
+      <details class="sidebar-group" open>
+        <summary>Guides — Core Architecture</summary>
+        <div class="sidebar-group-content">
+          <ul class="guide-list chapter-list">
+            <li><a href="index.html">Category index</a></li>
+            <li><a href="three-layer-model.html">Three-Layer Architecture</a></li>
+            <li><a href="separation-compute-storage.html">Separation of Compute &amp; Storage</a></li>
+            <li><a href="multi-cluster.html">Multi-Cluster Shared Data</a></li>
+            <li><a href="snowflake-editions.html">Snowflake Editions</a></li>
+            <li><a href="cloud-deployment.html" class="is-active">Deployment on AWS, Azure, GCP</a></li>
+          </ul>
+        </div>
+      </details>
+      <details class="sidebar-group" open>
+        <summary>In this guide</summary>
+        <div class="sidebar-group-content">
+          <ul class="chapter-list">
+            <li><a href="#runs-on-clouds" class="nav-link" data-section="runs-on-clouds">Snowflake Runs On Top of the Clouds</a></li>
+            <li><a href="#how-accounts-deployed" class="nav-link" data-section="how-accounts-deployed">How Snowflake Accounts Are Deployed</a></li>
+            <li><a href="#available-regions" class="nav-link" data-section="available-regions">Available Regions Across the Three Clouds</a></li>
+            <li><a href="#account-identifier" class="nav-link" data-section="account-identifier">The Account Identifier</a></li>
+            <li><a href="#cross-cloud-cross-region" class="nav-link" data-section="cross-cloud-cross-region">Cross-Cloud and Cross-Region Concepts</a></li>
+            <li><a href="#organizational-layer" class="nav-link" data-section="organizational-layer">The Organizational Layer</a></li>
+            <li><a href="#cloud-exam-angle" class="nav-link" data-section="cloud-exam-angle">The Exam Angle</a></li>
+          </ul>
+        </div>
+      </details>
+      <div class="sidebar-footer">
+        <p class="progress-label">Your progress</p>
+        <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="7" aria-label="Sections completed">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <p class="progress-count" id="progress-count">0/7 sections</p>
+      </div>
+    </aside>
+
+    <main id="main" class="content">
+      <article class="guide">
+        <p class="breadcrumb"><a href="../../index.html">Home</a> <span>›</span> <a href="../index.html">Study Guide</a> <span>›</span> <a href="index.html">Data Architecture & AI Data Cloud</a> <span>›</span> Cloud Deployment</p>
+        <div class="guide-header">
+          <h1>Deployment on AWS, Azure, GCP — Regions and Cross-Cloud Concepts</h1>
+          <p class="lead">Where Snowflake runs, account placement, and replicate-then-share.</p>
+        </div>
+
+        <section id="runs-on-clouds" class="section" data-section="runs-on-clouds">
+          <h2>Snowflake Is Not a Cloud Provider — It Runs On Top of Them</h2>
+          <p>One of the first conceptual adjustments to make when learning Snowflake is understanding what kind of product it actually is. Snowflake does not own or operate data centers. It does not have its own network backbone or physical servers. It is a <strong>cloud-native SaaS platform</strong> — software that runs entirely on top of the three major public clouds: Amazon Web Services, Microsoft Azure, and Google Cloud Platform.</p>
+          <p>This means Snowflake's storage layer is literally the cloud provider's object storage service: Amazon S3 on AWS, Azure Blob Storage on Azure, Google Cloud Storage on GCP. Snowflake manages that storage on your behalf — formatting it as compressed micro-partitions, maintaining metadata, enforcing access controls — but the physical infrastructure belongs to the cloud provider. Similarly, Snowflake's compute nodes (Virtual Warehouses) run on the cloud provider's virtual machine infrastructure. When you resume a warehouse, Snowflake is provisioning VMs from AWS, Azure, or GCP, not from Snowflake's own hardware pool.</p>
+          <p>Snowflake's value is entirely in the software layer it builds on top of this infrastructure: the three-layer architecture, the query optimizer, the global metadata store, the security and governance model, the result cache, the automatic micro-partition management. None of those things require owning the hardware underneath. And the fact that Snowflake doesn't own hardware is what gives it global reach — anywhere AWS, Azure, or GCP operate, Snowflake can operate too, without Snowflake having to build or maintain any physical presence there.</p>
+          <p>This architecture also explains something about Snowflake's pricing model. Storage costs in Snowflake closely track the underlying cloud provider's object storage costs — Snowflake is essentially re-selling that storage with its own compression and management layer on top. Compute costs track the underlying VM costs. When cloud providers reduce their infrastructure pricing, some of that can flow through to Snowflake customers.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="runs-on-clouds" aria-label="Mark section as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="how-accounts-deployed" class="section" data-section="how-accounts-deployed">
+          <h2>How Snowflake Accounts Are Deployed</h2>
+          <p>Every Snowflake account is created in a specific <strong>cloud provider and region</strong>. When you sign up for Snowflake or when your organization creates an account, you select both the cloud (AWS, Azure, or GCP) and the specific geographic region within that cloud (for example, AWS US East - N. Virginia, or Azure West Europe - Netherlands). This selection is <strong>permanent for the lifetime of that account</strong>. You cannot migrate a Snowflake account from one cloud provider to another. You cannot move it from one region to another. The account, its storage, and its compute all live in the selected cloud and region indefinitely.</p>
+          <p>The region selection has two significant practical implications. The first is <strong>data residency</strong>. The physical location of your data is determined entirely by your account's region. If you create an account in AWS US East (N. Virginia), your micro-partitions are stored in AWS's N. Virginia data centers. If you create an account in Azure West Europe (Netherlands), your data is in Microsoft's Dutch facilities. For organizations operating under regulations that require data to remain within a specific country or jurisdiction — GDPR in Europe, data sovereignty laws in various national contexts — the account region is the only Snowflake-level control that governs where data physically resides. Selecting the wrong region at account creation puts you in compliance violation from the moment you load your first byte of regulated data. There is no reconfiguration path after the fact.</p>
+          <p>The second implication is <strong>network latency</strong>. Queries originate from a client — a BI tool, a Python script, a data pipeline — and travel to Snowflake's endpoint in the account's region. The closer the client is to the Snowflake account's region, the lower the round-trip latency. For most analytical workloads where query execution time is measured in seconds or minutes, network latency is a minor concern — 50 extra milliseconds of network round-trip is negligible against a 30-second query. But for high-frequency, low-latency operational workloads — applications that issue many short queries per second — region proximity can meaningfully affect end-to-end response time.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="how-accounts-deployed" aria-label="Mark section as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="available-regions" class="section" data-section="available-regions">
+          <h2>Available Regions Across the Three Clouds</h2>
+          <p>Snowflake supports multiple regions across all three cloud providers, spanning North America, South America, Europe, Asia Pacific, and other geographies. The specific list changes over time as Snowflake expands to new regions, so the exam does not test region name memorization. You will not be asked "which AWS region hosts Snowflake in the US East?" — the exam tests concepts, not geography trivia.</p>
+          <p>What the exam does test is the implications of region selection and region boundaries. Three principles govern this:</p>
+          <p><strong>Data does not automatically cross regional boundaries.</strong> When you load data into a Snowflake account in a given region, that data stays in that region. Snowflake does not replicate it elsewhere, does not cache it in other regions, and does not route queries through other regions. The data's physical location is determined by the account region and stays there unless you explicitly and intentionally move it using replication. This is the foundation of data residency compliance: your GDPR-covered data in an EU Snowflake account does not leave the EU unless you deliberately replicate it somewhere else.</p>
+          <p><strong>Not every cloud provider region has a Snowflake deployment.</strong> Snowflake deploys in a subset of AWS, Azure, and GCP regions based on demand and strategic priorities. Before selecting a cloud and region for a Snowflake account, you should verify it is supported in the Snowflake documentation. The exam won't ask you to identify unsupported regions, but it's conceptually important to know the list isn't exhaustive.</p>
+          <p><strong>Cross-region communication adds latency and egress cost.</strong> When data physically moves from one region to another — whether through replication, cross-region query federation, or cross-region sharing — it incurs both network latency (the transfer takes time) and cloud egress costs (cloud providers charge for data leaving their network). Same-region data movement within Snowflake has neither of these costs. This is why Snowflake's default posture is to keep data local to the account region, and cross-region movement is always opt-in and deliberate.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="available-regions" aria-label="Mark section as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="account-identifier" class="section" data-section="account-identifier">
+          <h2>The Account Identifier</h2>
+          <p>Every Snowflake account has a unique identifier used in connection strings, URLs, and cross-account operations. There are two formats, and you need to understand both for the exam.</p>
+          <p>The original format is the <strong>account locator</strong>. This is a short alphanumeric string automatically assigned to an account at creation — something like <code>xy12345</code>. When used in a fully qualified connection string, it becomes <code>xy12345.us-east-1.aws</code>, combining the locator with the region identifier and cloud provider. The account locator is unique within its region but not globally — two accounts in different regions could theoretically have the same locator string. For this reason, the locator alone is insufficient to globally address an account; you always need the region and cloud qualifier for it to be unambiguous.</p>
+          <p>The modern format is the <strong>organization-based account identifier</strong>, in the form <code>&lt;orgname&gt;.&lt;account_name&gt;</code>. The organization name is the name of your Snowflake organization (a multi-account administrative construct), and the account name is a human-readable name assigned at account creation. This format is <em>globally unique</em> across all of Snowflake — no two accounts anywhere share the same org name and account name combination. It is also more readable than a cryptic locator string. The organization-based identifier is the preferred format for modern Snowflake deployments, particularly for replication configuration, Snowflake Private Connectivity, and any cross-account features where a globally unambiguous identifier is required.</p>
+          <p>Both formats appear in connection strings, <code>SHOW</code> output, and documentation. The exam distinguishes between them by testing which one is globally unique (org-based), which was the original format (locator), and in which contexts each is appropriate.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="account-identifier" aria-label="Mark section as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="cross-cloud-cross-region" class="section" data-section="cross-cloud-cross-region">
+          <h2>Cross-Cloud and Cross-Region Concepts</h2>
+          <p>Because a Snowflake account is permanently bound to one cloud and region, any scenario involving multiple geographies or multiple cloud providers requires deliberate mechanisms to bridge those boundaries. Snowflake provides two main paths: replication and sharing. Understanding exactly what each can and cannot do, and what edition each requires, is one of the most directly tested areas of the exam.</p>
+
+          <h3>Database replication</h3>
+          <p>Database replication allows you to create a synchronized copy of a Snowflake database in a different account — which can be in a different region, a different cloud provider, or both. The source account holds the <strong>primary database</strong>; target accounts hold <strong>secondary databases</strong> that are read-only replicas. Snowflake manages the replication process asynchronously — the secondary is eventually consistent with the primary, meaning there is a lag between when data changes in the primary and when those changes appear in the secondary. The size of this lag depends on replication frequency configuration.</p>
+          <p>Database replication requires <strong>Enterprise edition or above</strong>. A Standard edition account cannot replicate its databases to another account.</p>
+          <p><strong>Replication Groups</strong> extend the concept by allowing you to bundle multiple databases, shares, and other account objects together as a single coordinated replication unit — ensuring consistency across related objects rather than replicating each database independently. <strong>Failover Groups</strong> add automated failover orchestration on top of Replication Groups, creating a path to promote a secondary account to primary status in the event of a regional outage. Both Replication Groups and Failover Groups require <strong>Business Critical edition or above</strong>.</p>
+
+          <h3>Secure Data Sharing and the same-region constraint</h3>
+          <p>Secure Data Sharing is Snowflake's zero-copy data sharing mechanism: a provider account grants a consumer account read access to specific database objects. No data is copied or moved — the consumer's Virtual Warehouses simply query the provider's storage directly. This is elegant and efficient, but it has a hard architectural constraint: it only works natively between accounts in the <strong>same region on the same cloud provider</strong>.</p>
+          <p>The reason is physical. Zero-copy sharing works because the consumer's compute can reach the provider's storage directly — they are in the same physical infrastructure environment. If the consumer's account is in a different region or a different cloud, their compute cannot reach the provider's storage by the same low-latency, zero-cost path. Cross-region or cross-cloud sharing would require data to physically travel across regional or cloud boundaries, which Snowflake does not do natively in a sharing context.</p>
+          <p>The solution is the <strong>replicate-then-share</strong> pattern. To share data with a consumer in a different region or on a different cloud, the provider first replicates the relevant data to an account that exists in the same region and cloud as the consumer, then shares from that replicated account. The consumer gets the same read-only access experience — they query through their own warehouse — but the provider maintains an intermediate replicated account as the sharing point. This pattern adds replication lag, intermediate account maintenance overhead, and replication costs, but it is the supported and correct architectural answer to cross-boundary sharing.</p>
+          <p>The <strong>Snowflake Marketplace</strong> presents a simplified face over this complexity for published data products. Marketplace listings appear available globally regardless of the consumer's region or cloud, because Snowflake manages the replication and distribution infrastructure in the background. From the consumer's perspective, a Marketplace dataset simply appears in their account.</p>
+
+          <label class="section-done">
+            <input type="checkbox" name="done" value="cross-cloud-cross-region" aria-label="Mark section as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="organizational-layer" class="section" data-section="organizational-layer">
+          <h2>The Organizational Layer</h2>
+          <p>Above the individual account sits the <strong>Organization</strong> — a Snowflake construct that allows a company to manage multiple Snowflake accounts under a single administrative umbrella. An organization might contain separate accounts for production, development, and staging environments; accounts in different cloud regions serving different business units; or accounts on different cloud providers to serve different geographic markets.</p>
+          <p>The <strong>ORGADMIN</strong> role sits at the top of the role hierarchy above ACCOUNTADMIN. From the ORGADMIN context, you can view credit usage and compute consumption across all accounts in the organization, manage account creation, configure cross-account replication, and oversee the organization's overall Snowflake footprint. ORGADMIN is the role that gives multi-account enterprises a unified administrative view of their entire Snowflake deployment — something that would otherwise require logging into each account individually.</p>
+          <p>The organization is also the namespace that makes organization-based account identifiers globally unique. The format <code>&lt;orgname&gt;.&lt;account_name&gt;</code> is unique because the organization name itself is globally unique across Snowflake. Two different companies cannot share the same organization name. Within an organization, account names must be unique. Together, org name plus account name form an address that unambiguously identifies any account anywhere in Snowflake's global infrastructure, regardless of which cloud or region it's deployed in.</p>
+          <p>For the exam, the key facts about the organization layer are: ORGADMIN has cross-account visibility; organizations are the administrative grouping above accounts; and organization-based identifiers are the globally-unique, modern way to address accounts in cross-account operations.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="organizational-layer" aria-label="Mark section as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="cloud-exam-angle" class="section" data-section="cloud-exam-angle">
+          <h2>The Exam Angle</h2>
+          <p>Cloud deployment questions on the SnowPro Core exam tend to revolve around a small set of recurring scenario types. Recognizing the pattern immediately narrows the answer choices.</p>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Exam scenario</th>
+                <th>Key concept</th>
+                <th>Correct answer direction</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>"Company needs data in EU for compliance but already has a US Snowflake account"</td>
+                <td>Account placement is permanent</td>
+                <td>Create a new Snowflake account in an EU region; cannot migrate the existing account</td>
+              </tr>
+              <tr>
+                <td>"Provider in us-east-1/AWS wants to share data with consumer in eu-west-1/AWS"</td>
+                <td>Sharing is same-region, same-cloud only</td>
+                <td>Replicate to an account in eu-west-1/AWS, then share from that account</td>
+              </tr>
+              <tr>
+                <td>"Provider in AWS wants to share data with consumer on Azure"</td>
+                <td>Cross-cloud sharing requires replicate-then-share</td>
+                <td>Replicate to an account on Azure in the consumer's region, then share</td>
+              </tr>
+              <tr>
+                <td>"Which edition is required to replicate a database across regions?"</td>
+                <td>Edition requirements for replication</td>
+                <td>Enterprise edition or above</td>
+              </tr>
+              <tr>
+                <td>"Which feature provides orchestrated disaster recovery with automated failover?"</td>
+                <td>Edition requirements for DR</td>
+                <td>Failover Groups — requires Business Critical or above</td>
+              </tr>
+              <tr>
+                <td>"What uniquely identifies a Snowflake account globally?"</td>
+                <td>Account identifier formats</td>
+                <td>The organization-based identifier (<code>&lt;orgname&gt;.&lt;account_name&gt;</code>), not the account locator</td>
+              </tr>
+              <tr>
+                <td>"Who can manage and view usage across all accounts in an organization?"</td>
+                <td>ORGADMIN role</td>
+                <td>A user with the ORGADMIN role granted in any account of the organization</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="callout callout-tip">
+            <strong>The most common distractor:</strong> Exam questions sometimes imply that cross-region sharing can be solved purely by a configuration option or a sharing flag — something quick. The answer is always no: the provider must <em>establish a second account in the consumer's region, replicate there, then share from that account</em>. No shortcut exists. If an answer choice suggests otherwise, it is wrong.
+          </div>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="cloud-exam-angle" aria-label="Mark section as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <footer class="guide-footer">
+          <p>End of Cloud Deployment. <a href="index.html">All Data Architecture & AI Data Cloud guides</a></p>
+          <p class="guide-footer-links"><a href="three-layer-model.html">Three-Layer Architecture</a> · <a href="separation-compute-storage.html">Separation of Compute &amp; Storage</a> · <a href="multi-cluster.html">Multi-Cluster Shared Data</a> · <a href="snowflake-editions.html">Snowflake Editions</a></p>
+        </footer>
+      </article>
+    </main>
+  </div>
+
+  <script src="../../js/app.js"></script>
+</body>
+</html>

@@ -766,6 +766,24 @@ pre code {
   text-decoration: underline;
 }
 
+/* Docs source notice — clarify content comes from documentation/ */
+.docs-source {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin: var(--space-md) 0 0 0;
+  padding: var(--space-md) var(--space-lg);
+  background: var(--accent-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.docs-source strong { color: var(--text); }
+.docs-source code {
+  font-size: 0.8125rem;
+  background: var(--surface);
+  padding: 0.1em 0.4em;
+  border-radius: var(--radius-sm);
+}
+
 /* ========== Category index page ========== */
 .category-index-page .sidebar-footer { display: none; }
 .category-index-page .chapter-nav .chapter-list {
