@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Snowflake Study Guide — Query Acceleration Service (QAS)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body data-guide-id="qas">
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../index.html" class="logo">❄️ Snowflake Learn</a>
+      <nav class="topic-nav" aria-label="Study topics">
+        <a href="../index.html">Home</a>
+        <a href="index.html">Virtual Warehouse</a>
+      </nav>
+      <button type="button" class="nav-toggle" aria-label="Open menu" aria-expanded="false">
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+      </button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar" aria-label="Study guide navigation">
+      <details class="sidebar-group" open>
+        <summary>Guides — 01-virtual-warehouse</summary>
+        <div class="sidebar-group-content">
+          <ul class="guide-list chapter-list">
+            <li><a href="index.html">Category index</a></li>
+            <li><a href="overview.html">Overview</a><span class="sidebar-doc">00-overview.md</span></li>
+            <li><a href="multi-cluster.html">Multi-cluster</a><span class="sidebar-doc">01-multi-cluster.md</span></li>
+            <li><a href="considerations.html">Considerations</a><span class="sidebar-doc">02-considerations.md</span></li>
+            <li><a href="working-with-warehouses.html">Working with</a><span class="sidebar-doc">03-working-with-warehouses.md</span></li>
+            <li><a href="next-gen-warehouses.html">Gen2</a><span class="sidebar-doc">04-next-gen-standard-warehouses.md</span></li>
+            <li><a href="query-acceleration.html" class="is-active">Query Acceleration (QAS)</a><span class="sidebar-doc">05-query-acceleration.md</span></li>
+            <li><a href="monitoring-load.html">Monitoring load</a><span class="sidebar-doc">06-monitoring-load.md</span></li>
+            <li><a href="snowpark-optimized-warehouses.html">Snowpark-optimized</a><span class="sidebar-doc">07-snowpark-optimized-warehouses.md</span></li>
+            <li><a href="interactive-tables.html">Interactive tables</a><span class="sidebar-doc">08-interactive-tables.md</span></li>
+            <li><a href="example-workflow-equity-research.html">Example workflow</a><span class="sidebar-doc">09-example-workflow-equity-research.md</span></li>
+          </ul>
+        </div>
+      </details>
+      <details class="sidebar-group" open>
+        <summary>In this guide</summary>
+        <div class="sidebar-group-content">
+          <ul class="chapter-list">
+            <li><a href="#intro" class="nav-link" data-section="intro">Introduction</a></li>
+            <li><a href="#what-it-does" class="nav-link" data-section="what-it-does">What QAS does</a></li>
+            <li><a href="#sql-commands" class="nav-link" data-section="sql-commands">SQL commands QAS can accelerate</a></li>
+            <li><a href="#enabling" class="nav-link" data-section="enabling">Enabling QAS</a></li>
+            <li><a href="#eligible" class="nav-link" data-section="eligible">Eligible vs ineligible queries</a></li>
+            <li><a href="#identify" class="nav-link" data-section="identify">Identifying queries and warehouses</a></li>
+            <li><a href="#scale-factor" class="nav-link" data-section="scale-factor">Scale factor (cost control)</a></li>
+            <li><a href="#monitoring" class="nav-link" data-section="monitoring">Monitoring usage</a></li>
+            <li><a href="#cost" class="nav-link" data-section="cost">Cost and billing</a></li>
+            <li><a href="#search-opt" class="nav-link" data-section="search-opt">Search optimization</a></li>
+          </ul>
+        </div>
+      </details>
+      <div class="sidebar-footer">
+        <p class="progress-label">Your progress</p>
+        <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="10" aria-label="Sections completed">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <p class="progress-count" id="progress-count">0/10 sections</p>
+      </div>
+    </aside>
+
+    <main id="main" class="content">
+      <article class="guide">
+        <p class="breadcrumb"><a href="../index.html">Home</a> <span>›</span> <a href="index.html">Virtual Warehouse</a> <span>›</span> Query Acceleration</p>
+        <div class="guide-header">
+          <h1>Query Acceleration Service (QAS)</h1>
+          <p class="lead">QAS can speed up parts of your warehouse’s query workload by offloading work to shared, serverless compute. It helps with outlier queries and ad hoc analytics. This feature is Enterprise Edition (or higher).</p>
+        </div>
+
+        <section id="intro" class="section" data-section="intro">
+          <div class="section-badge">Start here</div>
+          <h2>Introduction</h2>
+          <p class="key-takeaway">The <strong>Query Acceleration Service (QAS)</strong> offloads parts of query processing to shared compute so your warehouse can run faster and handle “outlier” queries (ones that use more resources than usual) without blocking everyone else. It’s an Enterprise Edition feature.</p>
+          <p>When you enable QAS on a warehouse, Snowflake can send eligible portions of queries to a separate, shared compute service. That service does work (like scanning and filtering) in parallel, so the overall query can finish sooner. That improves warehouse performance and reduces the impact of heavy or unpredictable queries. Performance gains can vary depending on server availability and workload.</p>
+          <p>QAS is available only on <strong>Enterprise Edition</strong> (or higher). If you’re not on that edition, you’d need to upgrade to use it.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="intro" aria-label="Mark Introduction as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <section id="what-it-does" class="section" data-section="what-it-does">
+          <h2>What QAS does</h2>
+          <p class="key-takeaway">QAS offloads eligible parts of queries to shared compute so more work runs in parallel. It helps most with ad hoc analytics, unpredictable data volume per query, and large scans with selective filters.</p>
+          <p>QAS focuses on the parts of a query that benefit from running on extra, parallel compute—for example big table scans and filters. By offloading that work to the service, the warehouse can finish queries faster and spend less “wall clock” time on scanning and filtering. Workloads that often benefit include: <strong>ad hoc analytics</strong>, workloads where the amount of data per query is <strong>unpredictable</strong>, and queries that do <strong>large scans</strong> with <strong>selective filters</strong>. The service handles these patterns by doing more work in parallel.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="what-it-does" aria-label="Mark What QAS does as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <section id="sql-commands" class="section" data-section="sql-commands">
+          <h2>SQL commands QAS can accelerate</h2>
+          <p class="key-takeaway">QAS can accelerate <strong>SELECT</strong>, <strong>INSERT</strong>, <strong>CREATE TABLE AS SELECT (CTAS)</strong>, and <strong>COPY INTO</strong>. Within those, it may accelerate the whole query or only a subquery or clause.</p>
+          <p>The query acceleration service works with these SQL commands: <code>SELECT</code>, <code>INSERT</code>, <code>CREATE TABLE AS SELECT</code> (CTAS), and <code>COPY INTO &lt;table&gt;</code>. For a given statement, QAS might accelerate the entire query or only a subquery or clause—it depends on whether that part is eligible. So not every query that uses these commands will use QAS; only the parts Snowflake deems eligible get offloaded.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="sql-commands" aria-label="Mark SQL commands as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <section id="enabling" class="section" data-section="enabling">
+          <h2>Enabling QAS</h2>
+          <p class="key-takeaway">Turn on QAS with <code>ENABLE_QUERY_ACCELERATION = TRUE</code> in <code>CREATE WAREHOUSE</code> or <code>ALTER WAREHOUSE</code>. Use <code>SHOW WAREHOUSES</code> (or the pipe operator) to see <code>enable_query_acceleration</code> and <code>query_acceleration_max_scale_factor</code>.</p>
+          <p>To enable the query acceleration service for a warehouse, set <code>ENABLE_QUERY_ACCELERATION = TRUE</code> when you create or alter the warehouse. Example: <code>CREATE WAREHOUSE my_wh WITH ENABLE_QUERY_ACCELERATION = true;</code> Or for an existing warehouse: <code>ALTER WAREHOUSE my_wh SET ENABLE_QUERY_ACCELERATION = true;</code></p>
+          <p>You can confirm the setting with <code>SHOW WAREHOUSES</code>. The output includes columns such as <code>enable_query_acceleration</code> and <code>query_acceleration_max_scale_factor</code>. Using the pipe operator (e.g. <code>SHOW WAREHOUSES LIKE 'my_wh' -&gt;&gt; SELECT "name", "enable_query_acceleration", "query_acceleration_max_scale_factor" FROM $1;</code>) lets you limit the columns you see. QAS can increase credit consumption; the <strong>scale factor</strong> (covered in the next sections) caps how much extra compute the warehouse can use for acceleration.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="enabling" aria-label="Mark Enabling QAS as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <section id="eligible" class="section" data-section="eligible">
+          <h2>Eligible vs ineligible queries</h2>
+          <p class="key-takeaway">Eligible queries usually have <strong>large scans</strong> with an aggregation or selective filter, or large scans that insert/copy many rows. Ineligible reasons include: not enough partitions, filters not selective enough, certain LIMIT cases, or nondeterministic functions.</p>
+          <p>In general, a query (or part of it) is eligible for QAS if it has a portion of the plan that can be run in parallel on QAS compute. Two common patterns: <strong>large scans with an aggregation or selective filter</strong>, and <strong>large scans that insert or copy many new rows</strong> (e.g. <code>INSERT</code>, <code>COPY</code>). Snowflake doesn’t publish a fixed “large enough” threshold; eligibility depends on the query plan, warehouse size, and other factors. A query is marked eligible only when Snowflake has high confidence it would be accelerated.</p>
+          <p>Common reasons a query is <strong>ineligible</strong>: there aren’t <strong>enough partitions</strong> in the scan (so the cost of acquiring QAS resources outweighs the benefit); filters aren’t <strong>selective enough</strong>, or a <code>GROUP BY</code> has <strong>too high cardinality</strong>; the query has a <strong>LIMIT</strong> that prevents acceleration (though Snowflake does automatically allow some LIMIT queries now); or the query uses <strong>nondeterministic functions</strong> (e.g. <code>SEQ</code>, <code>RANDOM</code>).</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="eligible" aria-label="Mark Eligible vs ineligible as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <section id="identify" class="section" data-section="identify">
+          <h2>Identifying queries and warehouses that benefit</h2>
+          <p class="key-takeaway">Use the <strong>QUERY_ACCELERATION_ELIGIBLE</strong> view (e.g. in <code>SNOWFLAKE.ACCOUNT_USAGE</code>) to see which queries and warehouses have the most eligible time. Use <strong>SYSTEM$ESTIMATE_QUERY_ACCELERATION</strong> with a query ID to see if that query is eligible and get estimated times at different scale factors.</p>
+          <p>To see which queries or warehouses might benefit from QAS, query the <strong>QUERY_ACCELERATION_ELIGIBLE</strong> view (in <code>SNOWFLAKE.ACCOUNT_USAGE</code>; you typically need <code>ACCOUNTADMIN</code> or privileges on that database). The view shows, per query, how much execution time was eligible for acceleration. You can order by <code>eligible_query_acceleration_time</code> to find the biggest opportunities, or filter by <code>warehouse_name</code> and aggregate by warehouse to see which warehouses have the most eligible queries or eligible time.</p>
+          <p>The function <strong>SYSTEM$ESTIMATE_QUERY_ACCELERATION( query_id )</strong> takes a query ID and returns JSON indicating whether that query is eligible. If eligible, the result includes <code>estimatedQueryTimes</code> for different scale factors and <code>originalQueryTime</code>. If ineligible, <code>ineligibleReason</code> (e.g. <code>NO_LARGE_ENOUGH_SCAN</code>) and <code>status: "ineligible"</code> are set. That helps you decide whether to enable QAS and what scale factor to use.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="identify" aria-label="Mark Identifying queries as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <section id="scale-factor" class="section" data-section="scale-factor">
+          <h2>Scale factor (cost control)</h2>
+          <p class="key-takeaway">The <strong>scale factor</strong> is an upper bound on how much extra compute the warehouse can use for QAS (as a multiplier of warehouse size). Default is 8; set to 0 for no bound. QAS is billed by the second when in use; for multi-cluster warehouses, consider a higher scale factor.</p>
+          <p>The <strong>QUERY_ACCELERATION_MAX_SCALE_FACTOR</strong> property is a cost control: it caps how much compute the warehouse can “lease” for query acceleration. The value is a multiplier on the warehouse size. For example, with scale factor 5 on a Medium warehouse (4 credits/hour), the warehouse could use up to 5× a Medium’s worth of QAS compute, which could cost up to an additional 20 credits per hour (4 × 5) when QAS is used. The actual cost depends on how long and how much the service runs; QAS is billed by the second, only when in use, and separately from normal warehouse credits.</p>
+          <p>If you don’t set the scale factor, the default is <strong>8</strong>. Set it to <strong>0</strong> to remove the upper bound and allow QAS to use as much resource as needed and available. Not every query needs the full scale factor; the service requests what it needs for each query. For <strong>multi-cluster</strong> warehouses, Snowflake recommends considering a <strong>higher</strong> scale factor so all clusters can benefit from QAS. You set it with <code>CREATE WAREHOUSE</code> or <code>ALTER WAREHOUSE ... SET QUERY_ACCELERATION_MAX_SCALE_FACTOR = &lt;value&gt;</code>.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="scale-factor" aria-label="Mark Scale factor as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <section id="monitoring" class="section" data-section="monitoring">
+          <h2>Monitoring QAS usage</h2>
+          <p class="key-takeaway">In Snowsight, use the Query Profile tab (Profile Overview and operator details) to see partitions scanned by the service and scans selected for acceleration. In SQL, use <code>QUERY_HISTORY</code> columns such as <code>QUERY_ACCELERATION_BYTES_SCANNED</code> and <code>QUERY_ACCELERATION_PARTITIONS_SCANNED</code>.</p>
+          <p>In the Snowflake web interface, after QAS is enabled, open the <strong>Query Profile</strong> tab for a query. The Profile Overview panel shows Query Acceleration stats: e.g. <strong>Partitions scanned by service</strong> and <strong>Scans selected for acceleration</strong>. In the operator details (e.g. for a TableScan), you can see how many partitions were offloaded to the service.</p>
+          <p>In SQL, the Account Usage <strong>QUERY_HISTORY</strong> view has columns such as <code>QUERY_ACCELERATION_BYTES_SCANNED</code>, <code>QUERY_ACCELERATION_PARTITIONS_SCANNED</code>, and <code>QUERY_ACCELERATION_UPPER_LIMIT_SCALE_FACTOR</code>. Filter by <code>query_acceleration_partitions_scanned &gt; 0</code> to find queries that used QAS, and order by bytes or partitions scanned to see which queries benefited most. Note: when QAS is used, the sum of QAS bytes/partitions and the regular bytes/partitions columns can be higher than without QAS because of intermediary results the service uses.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="monitoring" aria-label="Mark Monitoring as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <section id="cost" class="section" data-section="cost">
+          <h2>Cost and billing</h2>
+          <p class="key-takeaway">QAS uses serverless compute and is billed by the second when in use. Check the Snowflake Service Consumption Table for credits per compute-hour. In Snowsight: Admin → Cost management → Consumption → Service Type: Query Acceleration. In SQL: <code>QUERY_ACCELERATION_HISTORY</code> in Account Usage, Organization Usage, or Information Schema.</p>
+          <p>Query Acceleration consumes credits when it uses serverless compute to run portions of eligible queries. It’s billed like other serverless features: by the second for the compute used. For credits per compute-hour, see the “Serverless Feature Credit Table” in the <strong>Snowflake Service Consumption Table</strong>.</p>
+          <p>In <strong>Snowsight</strong>: go to Admin → Cost management → Consumption tab, then choose <strong>Query Acceleration</strong> from the Service Type dropdown to see QAS spending. In SQL, you can use the <strong>QUERY_ACCELERATION_HISTORY</strong> view in <code>SNOWFLAKE.ACCOUNT_USAGE</code> (per account) or <code>SNOWFLAKE.ORGANIZATION_USAGE</code> (per account across the org), or the Information Schema function <code>QUERY_ACCELERATION_HISTORY( date_range_start =&gt; ... )</code>, to see credits used per warehouse and over time.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="cost" aria-label="Mark Cost and billing as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <section id="search-opt" class="section" data-section="search-opt">
+          <h2>Compatibility with search optimization</h2>
+          <p class="key-takeaway">Query acceleration and search optimization can both be used: search optimization can prune micro-partitions first, then QAS can offload remaining eligible work to the service. Performance depends on workload and resource availability.</p>
+          <p>Query acceleration and <strong>search optimization</strong> work together. Search optimization can first prune micro-partitions that aren’t needed for the query. Then, for the remaining work, QAS can offload eligible portions to its shared compute. So you can have both features enabled and get the benefits of each. How much faster queries run depends on the workload and what resources are available.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="search-opt" aria-label="Mark Search optimization as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <footer class="guide-footer">
+          <p>You’ve finished the Query Acceleration guide. <a href="index.html">All Virtual Warehouse guides</a></p>
+          <p class="guide-footer-links"><a href="overview.html">Overview</a> · <a href="multi-cluster.html">Multi-cluster</a> · <a href="considerations.html">Considerations</a> · <a href="working-with-warehouses.html">Working with</a> · <a href="next-gen-warehouses.html">Gen2</a> · <a href="monitoring-load.html">Monitoring load</a> · <a href="snowpark-optimized-warehouses.html">Snowpark-optimized</a> · <a href="interactive-tables.html">Interactive tables</a> · <a href="example-workflow-equity-research.html">Example workflow</a></p>
+        </footer>
+      </article>
+    </main>
+  </div>
+
+  <script src="../js/app.js"></script>
+</body>
+</html>

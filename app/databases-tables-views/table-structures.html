@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Table structures — Snowflake Learn</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body data-guide-id="table-structures">
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../index.html" class="logo">❄️ Snowflake Learn</a>
+      <nav class="topic-nav" aria-label="Study topics">
+        <a href="../index.html">Home</a>
+        <a href="index.html">Databases, Tables & Views</a>
+      </nav>
+      <button type="button" class="nav-toggle" aria-label="Open menu" aria-expanded="false">
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+      </button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar" aria-label="Study guide navigation">
+      <details class="sidebar-group" open>
+        <summary>Guides — 02-databases-tables-views</summary>
+        <div class="sidebar-group-content">
+          <ul class="guide-list chapter-list">
+            <li><a href="index.html">Category index</a></li>
+            <li><a href="table-structures.html" class="is-active">Table structures</a><span class="sidebar-doc">01-table-structures.md</span></li>
+            <li><a href="temporary-transient-tables.html">Temporary &amp; transient</a><span class="sidebar-doc">02-temporary-transient-tables.md</span></li>
+            <li><a href="external-tables.html">External tables</a><span class="sidebar-doc">03-external-tables.md</span></li>
+            <li><a href="hybrid-tables.html">Hybrid tables</a><span class="sidebar-doc">04-hybrid-tables.md</span></li>
+            <li><a href="interactive-tables.html">Interactive tables</a><span class="sidebar-doc">05-interactive-tables.md</span></li>
+            <li><a href="tables-snowsight.html">Tables in Snowsight</a><span class="sidebar-doc">06-tables-Snowsight.md</span></li>
+            <li><a href="search-optimization.html">Search optimization</a><span class="sidebar-doc">07-search-optimization.md</span></li>
+          </ul>
+        </div>
+      </details>
+      <details class="sidebar-group" open>
+        <summary>In this guide</summary>
+        <div class="sidebar-group-content">
+          <ul class="chapter-list">
+            <li><a href="#intro" class="nav-link" data-section="intro">Micro-partitions intro</a></li>
+            <li><a href="#micro-partitions" class="nav-link" data-section="micro-partitions">What are micro-partitions?</a></li>
+            <li><a href="#benefits-mp" class="nav-link" data-section="benefits-mp">Benefits of micro-partitioning</a></li>
+            <li><a href="#impact" class="nav-link" data-section="impact">Impact: DML, pruning</a></li>
+            <li><a href="#data-clustering" class="nav-link" data-section="data-clustering">What is data clustering?</a></li>
+            <li><a href="#clustering-info" class="nav-link" data-section="clustering-info">Clustering depth &amp; metadata</a></li>
+            <li><a href="#monitoring-clustering" class="nav-link" data-section="monitoring-clustering">Monitoring clustering</a></li>
+            <li><a href="#clustering-keys" class="nav-link" data-section="clustering-keys">Clustering keys</a></li>
+            <li><a href="#considerations-clustering" class="nav-link" data-section="considerations-clustering">Choosing clustering</a></li>
+            <li><a href="#strategies" class="nav-link" data-section="strategies">Strategies for clustering keys</a></li>
+            <li><a href="#reclustering" class="nav-link" data-section="reclustering">Reclustering</a></li>
+            <li><a href="#defining" class="nav-link" data-section="defining">Defining clustered tables</a></li>
+            <li><a href="#automatic-clustering" class="nav-link" data-section="automatic-clustering">Automatic clustering</a></li>
+            <li><a href="#auto-clustering-cost" class="nav-link" data-section="auto-clustering-cost">Automatic clustering cost</a></li>
+          </ul>
+        </div>
+      </details>
+      <div class="sidebar-footer">
+        <p class="progress-label">Your progress</p>
+        <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="14" aria-label="Sections completed">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <p class="progress-count" id="progress-count">0/14 sections</p>
+      </div>
+    </aside>
+
+    <main id="main" class="content">
+      <article class="guide">
+        <p class="breadcrumb"><a href="../index.html">Home</a> <span>›</span> <a href="index.html">Databases, Tables &amp; Views</a> <span>›</span> Table structures</p>
+        <div class="guide-header">
+          <h1>Table structures</h1>
+          <p class="lead">Micro-partitions, data clustering, clustering keys, and automatic reclustering in Snowflake tables.</p>
+        </div>
+
+        <section id="intro" class="section" data-section="intro">
+          <h2>Micro-partitions &amp; Data Clustering</h2>
+          <p>Traditional data warehouses use static partitioning; Snowflake uses <strong>micro-partitioning</strong>, which gives the benefits of partitioning without the limitations (maintenance, skew).</p>
+          <div class="callout note">
+            <p><strong>Attention:</strong> Hybrid tables use a different architecture and do not support some standard table features, such as clustering keys.</p>
+          </div>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="intro" aria-label="Mark Micro-partitions intro as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="micro-partitions" class="section" data-section="micro-partitions">
+          <h2>What are micro-partitions?</h2>
+          <p>All data in Snowflake tables is automatically divided into <strong>micro-partitions</strong>: contiguous units of storage. Each micro-partition holds about <strong>50 MB to 500 MB</strong> of uncompressed data (smaller on disk due to compression). Rows are mapped into micro-partitions in a <strong>columnar</strong> layout, enabling very fine-grained pruning.</p>
+          <p>Snowflake stores metadata for each micro-partition, including: range of values per column; number of distinct values; and other properties used for optimization and query processing.</p>
+          <div class="callout note">
+            <p>Micro-partitioning is automatic on all Snowflake tables. Data is partitioned transparently based on insert/load order.</p>
+          </div>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="micro-partitions" aria-label="Mark What are micro-partitions as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="benefits-mp" class="section" data-section="benefits-mp">
+          <h2>Benefits of micro-partitioning</h2>
+          <ul>
+            <li>Micro-partitions are <strong>derived automatically</strong>—no upfront definition or user maintenance.</li>
+            <li>Small size (50–500 MB) enables efficient DML and <strong>fine-grained pruning</strong>.</li>
+            <li>Ranges can <strong>overlap</strong>, which with uniform size helps prevent skew.</li>
+            <li><strong>Columnar storage</strong> within micro-partitions: only columns referenced by a query are scanned.</li>
+            <li>Columns are <strong>compressed individually</strong>; Snowflake picks the best algorithm per column per micro-partition.</li>
+            <li>You can enable <strong>clustering</strong> by specifying a clustering key (CREATE TABLE, ALTER TABLE). See Automatic Clustering and related docs.</li>
+          </ul>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="benefits-mp" aria-label="Mark Benefits of micro-partitioning as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="impact" class="section" data-section="impact">
+          <h2>Impact of micro-partitions</h2>
+          <h3>DML</h3>
+          <p>DML (DELETE, UPDATE, MERGE) uses micro-partition metadata to simplify maintenance. Some operations (e.g. delete all rows) are metadata-only.</p>
+          <h3>Dropping a column</h3>
+          <p>When a column is dropped, micro-partitions are not rewritten at execution time; the dropped column data remains in storage until purged. See ALTER TABLE usage notes.</p>
+          <h3>Query pruning</h3>
+          <p>Micro-partition metadata allows precise <strong>pruning</strong> at query time (including semi-structured columns). A filter that matches 10% of values should ideally scan only about 10% of micro-partitions. For time-series data, pruning can yield sub-second response for narrow ranges (e.g. one hour). Not all predicates prune—e.g. Snowflake does not prune on predicates with subqueries.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="impact" aria-label="Mark Impact as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="data-clustering" class="section" data-section="data-clustering">
+          <h2>What is data clustering?</h2>
+          <p>Data is often ordered along natural dimensions (e.g. date, region). This clustering affects query performance: unsorted or partially sorted data can slow queries on large tables.</p>
+          <p>Snowflake collects and records <strong>clustering metadata</strong> for each micro-partition as data is inserted/loaded, and uses it to avoid scanning unnecessary micro-partitions, speeding up queries that reference those columns.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="data-clustering" aria-label="Mark What is data clustering as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="clustering-info" class="section" data-section="clustering-info">
+          <h2>Clustering information and depth</h2>
+          <p>Snowflake maintains clustering metadata for micro-partitions: total number of micro-partitions; number with overlapping values (for a given set of columns); and <strong>depth</strong> of overlap.</p>
+          <p><strong>Clustering depth</strong> is the average depth of overlapping micro-partitions for specified columns. Lower average depth means better clustering. Use it to monitor clustering health and to decide if a table would benefit from an explicit clustering key. An empty table has depth 0.</p>
+          <div class="callout note">
+            <p>Depth is not an absolute measure. Query performance is the best indicator: if queries perform well, the table is likely well-clustered; if performance degrades, consider clustering.</p>
+          </div>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="clustering-info" aria-label="Mark Clustering info as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="monitoring-clustering" class="section" data-section="monitoring-clustering">
+          <h2>Monitoring clustering</h2>
+          <p>Use system functions to view clustering metadata:</p>
+          <ul>
+            <li><code>SYSTEM$CLUSTERING_DEPTH</code></li>
+            <li><code>SYSTEM$CLUSTERING_INFORMATION</code> (includes clustering depth)</li>
+          </ul>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="monitoring-clustering" aria-label="Mark Monitoring clustering as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="clustering-keys" class="section" data-section="clustering-keys">
+          <h2>Clustering keys &amp; clustered tables</h2>
+          <p>Over time, especially after DML on very large tables, data may no longer cluster well. You can define a <strong>clustering key</strong> (one or more columns/expressions) so Snowflake automates co-locating data in micro-partitions. A table with a clustering key is a <strong>clustered table</strong>.</p>
+          <div class="callout note">
+            <p><strong>Attention:</strong> Clustering is not for every table—it has initial and ongoing cost. Use it when you need the fastest response times or when improved query performance outweighs clustering cost. See Considerations for Choosing Clustering.</p>
+          </div>
+          <p><strong>Benefits</strong> (for very large tables): better scan efficiency (skip non-matching data); often better compression; maintenance is automatic after the key is defined. Clustering consumes credits; cluster only when queries benefit (typically when they filter or sort on the key).</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="clustering-keys" aria-label="Mark Clustering keys as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="considerations-clustering" class="section" data-section="considerations-clustering">
+          <h2>Considerations for choosing clustering</h2>
+          <p>Clustering is best when <strong>all</strong> of the following apply:</p>
+          <ul>
+            <li>The table has a large number of micro-partitions (typically multiple TB).</li>
+            <li>Queries can take advantage (selective filters and/or sort on the key; many queries benefit from the same key).</li>
+            <li>For cost reduction: high ratio of queries to DML (queried often, updated rarely). For heavy-DML tables, consider batching DML.</li>
+          </ul>
+          <p>Test a representative set of queries to establish baselines before clustering.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="considerations-clustering" aria-label="Mark Choosing clustering as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="strategies" class="section" data-section="strategies">
+          <h2>Strategies for selecting clustering keys</h2>
+          <p>Snowflake recommends at most <strong>3–4 columns (or expressions)</strong> per key. Prioritize:</p>
+          <ol>
+            <li>Columns used in <strong>selective filters</strong> (e.g. date for date-range queries).</li>
+            <li>Columns used in <strong>join predicates</strong>.</li>
+            <li>If filtering by two dimensions, clustering on both can help.</li>
+          </ol>
+          <p><strong>Cardinality</strong> matters: enough distinct values for pruning, but not so many that grouping is ineffective. Very low cardinality (e.g. a boolean) gives minimal pruning; very high (e.g. nanosecond timestamps) is often a poor key—use an expression (e.g. <code>to_date(c_timestamp)</code>) to reduce cardinality while preserving order. For multi-column keys, order columns from <strong>lowest to highest cardinality</strong>. Clustering on text uses the first several bytes in metadata.</p>
+          <div class="callout tip">
+            <p>Filter/join columns usually help more than GROUP BY/ORDER BY columns. Favor the former when they differ.</p>
+          </div>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="strategies" aria-label="Mark Strategies as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="reclustering" class="section" data-section="reclustering">
+          <h2>Reclustering</h2>
+          <p>As DML runs on a clustered table, data can become less clustered. <strong>Reclustering</strong> reorganizes data by the clustering key (delete and re-insert grouped). In Snowflake, reclustering is <strong>automatic</strong>; no manual maintenance. (Manual reclustering is deprecated but still allowed on some accounts.)</p>
+          <p><strong>Credit and storage:</strong> Reclustering consumes credits and can increase storage (new micro-partitions; old ones retained for Time Travel and Fail-safe until retention expires). Consider these costs before defining a key.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="reclustering" aria-label="Mark Reclustering as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="defining" class="section" data-section="defining">
+          <h2>Defining clustered tables</h2>
+          <p><strong>Clustering information:</strong> Use <code>SYSTEM$CLUSTERING_INFORMATION</code> for clustering details and depth. For tables with a key, the table name is enough; for others (or to test other columns), pass the desired column(s).</p>
+          <p><strong>Create:</strong> <code>CREATE TABLE &lt;name&gt; ... CLUSTER BY ( &lt;expr1&gt; [ , &lt;expr2&gt; ... ] )</code>. Keys can be base columns, expressions, or paths in VARIANT (with type). Not allowed: GEOGRAPHY, VARIANT/OBJECT/ARRAY as direct key; use expressions for VARIANT paths. VARCHAR uses first 5 bytes in implementation.</p>
+          <p><strong>Alter:</strong> <code>ALTER TABLE &lt;name&gt; CLUSTER BY ( ... )</code> to add or change the key. For populated tables, only certain expressions are allowed (check <code>SHOW FUNCTIONS</code> and <code>valid_for_clustering</code>). Changing the key does not affect existing rows until reclustering runs.</p>
+          <p><strong>Drop:</strong> <code>ALTER TABLE &lt;name&gt; DROP CLUSTERING KEY</code>.</p>
+          <p>Cloning copies the key but suspends Automatic Clustering; CTAS does not support a key (add after creation).</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="defining" aria-label="Mark Defining clustered tables as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="automatic-clustering" class="section" data-section="automatic-clustering">
+          <h2>Automatic clustering</h2>
+          <p><strong>Automatic Clustering</strong> is the service that manages reclustering for clustered tables. Reclustering does not start immediately; Snowflake runs it only when the table would benefit.</p>
+          <p><strong>Benefits:</strong> No need to monitor or run reclustering manually; you can suspend/resume with <code>ALTER TABLE ... SUSPEND / RESUME RECLUSTER</code>; DML is not blocked during reclustering; Snowflake allocates resources and only reclusters when beneficial.</p>
+          <p>Define a clustering key to enable (no extra step). For tables created by CLONE from a clustered source, Automatic Clustering starts suspended. Use <code>SHOW TABLES</code> or Information Schema / Account Usage <code>TABLES</code> view to see <code>automatic_clustering</code> and <code>cluster_by</code> / <code>clustering_key</code>.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="automatic-clustering" aria-label="Mark Automatic clustering as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="auto-clustering-cost" class="section" data-section="auto-clustering-cost">
+          <h2>Automatic clustering cost</h2>
+          <p>Costs are <strong>compute</strong> (serverless; no warehouse required) and possibly <strong>storage</strong> (if Fail-safe grows). Credits are billed for actual consumption. After enabling or resuming, reclustering can run to bring the table to an optimal state; defining or changing a key can also trigger reclustering. Start with one or two tables to establish a baseline.</p>
+          <p>Use <code>SYSTEM$ESTIMATE_AUTOMATIC_CLUSTERING_COSTS</code> for cost estimates (best-effort; actual can vary). View cost in Snowsight (Admin → Cost management) or via <code>AUTOMATIC_CLUSTERING_HISTORY</code> (table function or Account Usage view). See Snowflake Service Consumption Table for credits per compute-hour. Resource monitors do not apply to Snowflake-managed Automatic Clustering resources.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="auto-clustering-cost" aria-label="Mark Automatic clustering cost as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <footer class="guide-footer">
+          <p>You've finished the Table structures guide. <a href="index.html">All Databases, Tables &amp; Views guides</a></p>
+          <p class="guide-footer-links"><a href="temporary-transient-tables.html">Temporary &amp; transient tables</a> · <a href="external-tables.html">External tables</a> · <a href="hybrid-tables.html">Hybrid tables</a> · <a href="interactive-tables.html">Interactive tables</a> · <a href="tables-snowsight.html">Tables in Snowsight</a> · <a href="search-optimization.html">Search optimization</a></p>
+        </footer>
+      </article>
+    </main>
+  </div>
+
+  <script src="../js/app.js"></script>
+</body>
+</html>

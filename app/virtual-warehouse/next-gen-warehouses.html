@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Snowflake Study Guide — Gen2 Standard Warehouses</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body data-guide-id="nextgen">
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../index.html" class="logo">❄️ Snowflake Learn</a>
+      <nav class="topic-nav" aria-label="Study topics">
+        <a href="../index.html">Home</a>
+        <a href="index.html">Virtual Warehouse</a>
+      </nav>
+      <button type="button" class="nav-toggle" aria-label="Open menu" aria-expanded="false">
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+      </button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar" aria-label="Study guide navigation">
+      <details class="sidebar-group" open>
+        <summary>Guides — 01-virtual-warehouse</summary>
+        <div class="sidebar-group-content">
+          <ul class="guide-list chapter-list">
+            <li><a href="index.html">Category index</a></li>
+            <li><a href="overview.html">Overview</a><span class="sidebar-doc">00-overview.md</span></li>
+            <li><a href="multi-cluster.html">Multi-cluster</a><span class="sidebar-doc">01-multi-cluster.md</span></li>
+            <li><a href="considerations.html">Considerations</a><span class="sidebar-doc">02-considerations.md</span></li>
+            <li><a href="working-with-warehouses.html">Working with</a><span class="sidebar-doc">03-working-with-warehouses.md</span></li>
+            <li><a href="next-gen-warehouses.html" class="is-active">Gen2</a><span class="sidebar-doc">04-next-gen-standard-warehouses.md</span></li>
+            <li><a href="query-acceleration.html">Query Acceleration (QAS)</a><span class="sidebar-doc">05-query-acceleration.md</span></li>
+            <li><a href="monitoring-load.html">Monitoring load</a><span class="sidebar-doc">06-monitoring-load.md</span></li>
+            <li><a href="snowpark-optimized-warehouses.html">Snowpark-optimized</a><span class="sidebar-doc">07-snowpark-optimized-warehouses.md</span></li>
+            <li><a href="interactive-tables.html">Interactive tables</a><span class="sidebar-doc">08-interactive-tables.md</span></li>
+            <li><a href="example-workflow-equity-research.html">Example workflow</a><span class="sidebar-doc">09-example-workflow-equity-research.md</span></li>
+          </ul>
+        </div>
+      </details>
+      <details class="sidebar-group" open>
+        <summary>In this guide</summary>
+        <div class="sidebar-group-content">
+          <ul class="chapter-list">
+            <li><a href="#intro" class="nav-link" data-section="intro">Introduction</a></li>
+            <li><a href="#what-is" class="nav-link" data-section="what-is">What is Gen2?</a></li>
+            <li><a href="#how-to-specify" class="nav-link" data-section="how-to-specify">How to specify Gen1 vs Gen2</a></li>
+            <li><a href="#defaults" class="nav-link" data-section="defaults">Defaults by region</a></li>
+            <li><a href="#changing" class="nav-link" data-section="changing">Changing generations</a></li>
+            <li><a href="#regions" class="nav-link" data-section="regions">Region availability</a></li>
+            <li><a href="#cost" class="nav-link" data-section="cost">Cost and billing</a></li>
+            <li><a href="#examples" class="nav-link" data-section="examples">SQL examples</a></li>
+          </ul>
+        </div>
+      </details>
+      <div class="sidebar-footer">
+        <p class="progress-label">Your progress</p>
+        <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="8" aria-label="Sections completed">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <p class="progress-count" id="progress-count">0/8 sections</p>
+      </div>
+    </aside>
+
+    <main id="main" class="content">
+      <article class="guide">
+        <p class="breadcrumb"><a href="../index.html">Home</a> <span>›</span> <a href="index.html">Virtual Warehouse</a> <span>›</span> Gen2</p>
+        <div class="guide-header">
+          <h1>Gen2 Standard Warehouses</h1>
+          <p class="lead">Snowflake’s “next generation” standard warehouse runs on faster hardware and software. Most queries can finish faster and you can do more work at once. You choose Gen1 or Gen2 when you create or alter a warehouse (SQL only for now).</p>
+        </div>
+
+        <section id="intro" class="section" data-section="intro">
+          <div class="section-badge">Start here</div>
+          <h2>Introduction</h2>
+          <p class="key-takeaway">Gen2 is a newer type of <strong>standard</strong> warehouse (not Snowpark-optimized). It uses faster hardware and software so many queries run faster and concurrency can be better. You set it in SQL with <code>GENERATION = '2'</code> or <code>RESOURCE_CONSTRAINT = STANDARD_GEN_2</code>; it’s not in the Snowsight UI yet.</p>
+          <p>In the <a href="overview.html">Warehouse overview</a> we talked about standard warehouses and their sizes. Snowflake also has a <strong>Generation 2 (Gen2)</strong> version of the standard warehouse. Gen2 is built on faster hardware and software (including better delete, update, merge, and table scan behavior). In practice, many queries finish faster and you can often do more work at the same time. How much you gain depends on your workload and configuration—Snowflake recommends testing. This guide covers how to use Gen2 and what to watch for (defaults, regions, converting, billing).</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="intro" aria-label="Mark Introduction as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <section id="what-is" class="section" data-section="what-is">
+          <h2>What is Gen2?</h2>
+          <p class="key-takeaway">Gen2 = next-generation <strong>standard</strong> warehouse only. It does not apply to Snowpark-optimized warehouses. Gen2 is not available for 5X-Large and 6X-Large sizes.</p>
+          <p>Gen2 is an updated version of Snowflake’s standard virtual warehouse. It’s still a “standard” warehouse (the same type you use for normal SQL queries and data loading), not a Snowpark-optimized warehouse. The improvements are in performance and throughput: faster hardware and software optimizations so that, in general, more queries finish faster and the warehouse can handle more concurrent work.</p>
+          <p>Gen2 applies only to <strong>standard</strong> warehouses. It does not apply to Snowpark-optimized warehouses. Also, Gen2 is <strong>not available</strong> for warehouse sizes 5X-Large (X5LARGE) and 6X-Large (X6LARGE)—those sizes use Gen1. For memory and resource semantics: the original standard warehouse (Gen1) is equivalent to <code>STANDARD_GEN_1</code> in the resource constraint model, and has the same memory capacity as <code>MEMORY_1X</code> for Snowpark-optimized warehouses.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="what-is" aria-label="Mark What is Gen2 as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <section id="how-to-specify" class="section" data-section="how-to-specify">
+          <h2>How to specify Gen1 vs Gen2</h2>
+          <p class="key-takeaway">Use the <strong>GENERATION</strong> clause (recommended): <code>GENERATION = '1'</code> or <code>GENERATION = '2'</code>. Or use <strong>RESOURCE_CONSTRAINT</strong>: <code>STANDARD_GEN_1</code> or <code>STANDARD_GEN_2</code>. You must use SQL—these options are not in Snowsight yet.</p>
+          <p>When you create or alter a standard warehouse, you can choose the generation in two ways. The <strong>recommended</strong> way is the <strong>GENERATION</strong> clause: <code>GENERATION = '1'</code> for the original standard warehouse, <code>GENERATION = '2'</code> for the next generation. The other way is the <strong>RESOURCE_CONSTRAINT</strong> clause: <code>STANDARD_GEN_1</code> for Gen1, <code>STANDARD_GEN_2</code> for Gen2. Both work in <code>CREATE WAREHOUSE</code> and <code>ALTER WAREHOUSE</code>.</p>
+          <p>Right now the GENERATION clause and the STANDARD_GEN_1 / STANDARD_GEN_2 values are <strong>not available in Snowsight</strong>. You have to set them using SQL. So to create or switch to a Gen2 warehouse, run a <code>CREATE WAREHOUSE</code> or <code>ALTER WAREHOUSE</code> command with one of these options. Remember: Gen2 is not supported for 5X-Large and 6X-Large; use another size if you want Gen2.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="how-to-specify" aria-label="Mark How to specify Gen1 vs Gen2 as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <section id="defaults" class="section" data-section="defaults">
+          <h2>Defaults by region</h2>
+          <p class="key-takeaway">In some regions, new organizations get Gen2 as the default for standard warehouses (e.g. AWS Oregon, AWS Frankfurt, Azure Virginia, Azure Netherlands for orgs created after June 27, 2025; other Gen2-capable regions for orgs after July 15, 2025). Elsewhere, or for older orgs, new standard warehouses default to Gen1 unless you specify Gen2.</p>
+          <p>Snowflake is rolling out Gen2 as the default for new organizations in certain regions. For accounts in <strong>AWS US West (Oregon)</strong>, <strong>AWS EU (Frankfurt)</strong>, <strong>Azure East US 2 (Virginia)</strong>, and <strong>Azure West Europe (Netherlands)</strong>, any account in a new organization created after <strong>June 27, 2025</strong> will have standard warehouses default to Gen2. In all other regions where Gen2 is available, new organizations created after <strong>July 15, 2025</strong> get Gen2 as the default for standard warehouses. For the exact list of regions, see Snowflake’s region availability docs.</p>
+          <p>If your region or organization doesn’t fall into those cases, and you don’t specify <code>GENERATION</code> or <code>RESOURCE_CONSTRAINT</code> when you create a standard warehouse, Snowflake creates a <strong>Gen1</strong> standard warehouse. So depending on where and when your account was created, “create a warehouse” might give you Gen1 or Gen2 unless you set it explicitly.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="defaults" aria-label="Mark Defaults by region as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <section id="changing" class="section" data-section="changing">
+          <h2>Changing generations (and warehouse type)</h2>
+          <p class="key-takeaway">You can switch a warehouse between Gen1 and Gen2 (or between standard Gen2 and Snowpark-optimized) with <code>ALTER WAREHOUSE</code>, running or suspended. If you convert Gen1 → Gen2 while the warehouse is running, existing queries keep using Gen1 and new ones use Gen2—you’re charged for both until the old queries finish. Convert while suspended to avoid that.</p>
+          <p>You can change a standard warehouse from Gen1 to Gen2 or from Gen2 to Gen1 by altering it and setting a different <code>GENERATION</code> or <code>RESOURCE_CONSTRAINT</code>. You can do this whether the warehouse is running or suspended. You can also switch between a Gen2 standard warehouse and a Snowpark-optimized warehouse by changing <code>WAREHOUSE_TYPE</code> and <code>RESOURCE_CONSTRAINT</code> (the <code>GENERATION</code> clause applies only to standard warehouses and can’t be used with Snowpark-optimized).</p>
+          <p>Important: if you <strong>convert Gen1 to Gen2 without suspending</strong> first, any queries already running continue on Gen1 compute until they finish, while new queries use Gen2 compute. During that time you are <strong>charged for both</strong> sets of compute. The warehouse doesn’t auto-suspend. When the old queries complete, everything runs on Gen2. So you can convert while running to maximize availability, or convert while suspended to avoid double billing. The same idea applies when converting between standard and Snowpark-optimized (or any other <code>RESOURCE_CONSTRAINT</code> change): in-flight queries keep their original type/constraint; new queries use the new one.</p>
+          <p>You can see the current setting in the <code>resource_constraint</code> column of <code>SHOW WAREHOUSES</code> output. This setting is not reflected in the INFORMATION_SCHEMA views for warehouses.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="changing" aria-label="Mark Changing generations as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <section id="regions" class="section" data-section="regions">
+          <h2>Region availability</h2>
+          <p class="key-takeaway">Gen2 standard warehouses are available on AWS, Azure, and GCP, in most regions. Exceptions include AWS Zurich, AWS Cape Town, GCP Dammam, and Azure US Gov Virginia. If you use account replication, secondary regions must support Gen2 for Gen2 warehouses to resume after failover.</p>
+          <p>Gen2 standard warehouses are available on <strong>AWS</strong>, <strong>Azure</strong>, and <strong>GCP</strong>. They’re available in all CSP regions except a few. Currently Gen2 is <strong>not</strong> available in: AWS EU (Zurich), AWS Africa (Cape Town), GCP Middle East Central2 (Dammam), Azure US Gov Virginia (FedRAMP High Plus), and Azure US Gov Virginia. Check Snowflake’s region availability docs for the latest list.</p>
+          <p>If you use <strong>account replication</strong> and you create Gen2 warehouses, any <strong>secondary</strong> regions must also support Gen2. Otherwise those Gen2 warehouses may not be able to resume in the secondary region after a failover. Test that Gen2 warehouses can resume in your secondary regions.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="regions" aria-label="Mark Region availability as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <section id="cost" class="section" data-section="cost">
+          <h2>Cost and billing</h2>
+          <p class="key-takeaway">Credit usage for warehouses in general is described in the Warehouse overview and Considerations guides. For Gen2 specifically, credit consumption is documented in the Snowflake Service Consumption Table—check there for current Gen2 rates.</p>
+          <p>For how credits work with virtual warehouses in general (size, clusters, per-second billing, 60-second minimum), see the <a href="overview.html#billing">Warehouse overview</a> and <a href="considerations.html#credits">Considerations</a> guides. For the actual credit consumption of <strong>Gen2</strong> standard warehouses, Snowflake publishes the details in the <strong>Snowflake Service Consumption Table</strong>. Look up that table for your region and warehouse size to see Gen2 rates; they can differ from Gen1.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="cost" aria-label="Mark Cost and billing as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <section id="examples" class="section" data-section="examples">
+          <h2>SQL examples</h2>
+          <p class="key-takeaway">Create Gen2 with <code>GENERATION = '2'</code> or <code>RESOURCE_CONSTRAINT = STANDARD_GEN_2</code>. Convert with <code>ALTER WAREHOUSE ... SET GENERATION = '2'</code> (or <code>SET RESOURCE_CONSTRAINT = STANDARD_GEN_2</code>). To switch to/from Snowpark-optimized, set <code>WAREHOUSE_TYPE</code> and <code>RESOURCE_CONSTRAINT</code> together.</p>
+          <p><strong>Create a Gen2 warehouse (default size):</strong></p>
+          <pre class="code-block"><code>CREATE OR REPLACE WAREHOUSE my_wh
+  GENERATION = '2';</code></pre>
+          <p><strong>Create a Gen2 warehouse with a specific size:</strong></p>
+          <pre class="code-block"><code>CREATE OR REPLACE WAREHOUSE my_wh
+  GENERATION = '2'
+  WAREHOUSE_SIZE = SMALL;</code></pre>
+          <p>Using <code>RESOURCE_CONSTRAINT</code> instead: <code>RESOURCE_CONSTRAINT = STANDARD_GEN_2</code> in the same places.</p>
+          <p><strong>Convert an existing Gen1 warehouse to Gen2:</strong></p>
+          <pre class="code-block"><code>ALTER WAREHOUSE my_wh
+  SET GENERATION = '2';</code></pre>
+          <p>Or <code>SET RESOURCE_CONSTRAINT = STANDARD_GEN_2;</code> The warehouse size stays the same.</p>
+          <p><strong>Convert Gen2 standard to Snowpark-optimized:</strong> set both <code>WAREHOUSE_TYPE</code> and <code>RESOURCE_CONSTRAINT</code>. For an X-Small–sized standard warehouse, use a memory constraint compatible with Snowpark (e.g. <code>MEMORY_1X</code>):</p>
+          <pre class="code-block"><code>ALTER WAREHOUSE my_wh
+  SET WAREHOUSE_TYPE = 'SNOWPARK-OPTIMIZED' RESOURCE_CONSTRAINT = MEMORY_1X;</code></pre>
+          <p><strong>Convert Snowpark-optimized to Gen2 standard:</strong> set type to standard and generation to 2. Memory capacity will align to the standard Gen2 model (equivalent to MEMORY_1X for Snowpark).</p>
+          <pre class="code-block"><code>ALTER WAREHOUSE my_wh
+  SET WAREHOUSE_TYPE = STANDARD GENERATION = '2';</code></pre>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="examples" aria-label="Mark SQL examples as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <footer class="guide-footer">
+          <p>You’ve finished the Gen2 standard warehouses guide. <a href="index.html">All Virtual Warehouse guides</a></p>
+          <p class="guide-footer-links"><a href="overview.html">Overview</a> · <a href="multi-cluster.html">Multi-cluster</a> · <a href="considerations.html">Considerations</a> · <a href="working-with-warehouses.html">Working with</a> · <a href="query-acceleration.html">Query Acceleration</a> · <a href="monitoring-load.html">Monitoring load</a> · <a href="snowpark-optimized-warehouses.html">Snowpark-optimized</a> · <a href="interactive-tables.html">Interactive tables</a> · <a href="example-workflow-equity-research.html">Example workflow</a></p>
+        </footer>
+      </article>
+    </main>
+  </div>
+
+  <script src="../js/app.js"></script>
+</body>
+</html>

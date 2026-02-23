@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Search optimization — Snowflake Learn</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body data-guide-id="search-optimization">
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../index.html" class="logo">❄️ Snowflake Learn</a>
+      <nav class="topic-nav" aria-label="Study topics">
+        <a href="../index.html">Home</a>
+        <a href="index.html">Databases, Tables &amp; Views</a>
+      </nav>
+      <button type="button" class="nav-toggle" aria-label="Open menu" aria-expanded="false">
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+      </button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar" aria-label="Study guide navigation">
+      <details class="sidebar-group" open>
+        <summary>Guides — 02-databases-tables-views</summary>
+        <div class="sidebar-group-content">
+          <ul class="guide-list chapter-list">
+            <li><a href="index.html">Category index</a></li>
+            <li><a href="table-structures.html">Table structures</a><span class="sidebar-doc">01-table-structures.md</span></li>
+            <li><a href="temporary-transient-tables.html">Temporary &amp; transient</a><span class="sidebar-doc">02-temporary-transient-tables.md</span></li>
+            <li><a href="external-tables.html">External tables</a><span class="sidebar-doc">03-external-tables.md</span></li>
+            <li><a href="hybrid-tables.html">Hybrid tables</a><span class="sidebar-doc">04-hybrid-tables.md</span></li>
+            <li><a href="interactive-tables.html">Interactive tables</a><span class="sidebar-doc">05-interactive-tables.md</span></li>
+            <li><a href="tables-snowsight.html">Tables in Snowsight</a><span class="sidebar-doc">06-tables-Snowsight.md</span></li>
+            <li><a href="search-optimization.html" class="is-active">Search optimization</a><span class="sidebar-doc">07-search-optimization.md</span></li>
+          </ul>
+        </div>
+      </details>
+      <details class="sidebar-group" open>
+        <summary>In this guide</summary>
+        <div class="sidebar-group-content">
+          <ul class="chapter-list">
+            <li><a href="#intro" class="nav-link" data-section="intro">Introduction</a></li>
+            <li><a href="#when-it-helps" class="nav-link" data-section="when-it-helps">When search optimization helps</a></li>
+            <li><a href="#enabling" class="nav-link" data-section="enabling">Enabling and configuring</a></li>
+            <li><a href="#verifying-monitoring" class="nav-link" data-section="verifying-monitoring">Verifying and monitoring</a></li>
+            <li><a href="#point-joins" class="nav-link" data-section="point-joins">Point lookups and joins</a></li>
+            <li><a href="#text-substring" class="nav-link" data-section="text-substring">Text and substring queries</a></li>
+            <li><a href="#semi-structured" class="nav-link" data-section="semi-structured">Semi-structured and geospatial</a></li>
+            <li><a href="#cost" class="nav-link" data-section="cost">Cost</a></li>
+            <li><a href="#working-with" class="nav-link" data-section="working-with">Working with search-optimized tables</a></li>
+            <li><a href="#limitations" class="nav-link" data-section="limitations">Limitations</a></li>
+          </ul>
+        </div>
+      </details>
+      <div class="sidebar-footer">
+        <p class="progress-label">Your progress</p>
+        <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="10" aria-label="Sections completed">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <p class="progress-count" id="progress-count">0/10 sections</p>
+      </div>
+    </aside>
+
+    <main id="main" class="content">
+      <article class="guide">
+        <p class="breadcrumb"><a href="../index.html">Home</a> <span>›</span> <a href="index.html">Databases, Tables &amp; Views</a> <span>›</span> Search optimization</p>
+        <div class="guide-header">
+          <h1>Search optimization service</h1>
+          <p class="lead">The search optimization service improves performance of selective lookup and analytical queries by maintaining a search access path that tracks which values appear in which micro-partitions, so some partitions can be skipped during scans. It supports equality, IN, substring, full-text, semi-structured, and geospatial predicates.</p>
+        </div>
+
+        <section id="intro" class="section" data-section="intro">
+          <h2>Introduction</h2>
+          <p>The <strong>search optimization service</strong> creates and maintains a persistent <strong>search access path</strong> for tables. This structure records which column values might be in each micro-partition, so the engine can skip partitions that cannot contain matching rows. A background maintenance service builds and updates the path when you enable search optimization and when data changes; queries are not accelerated until the path is fully built. You do not need a warehouse for maintenance, but storage and compute for the service incur cost.</p>
+          <div class="callout note">
+            <p>Search optimization is an Enterprise Edition (or higher) feature. Supported table types include standard, interactive, Iceberg, dynamic, and transient tables. It is not supported on external, hybrid, or temporary tables, or on materialized views.</p>
+          </div>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="intro" aria-label="Mark Introduction as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="when-it-helps" class="section" data-section="when-it-helps">
+          <h2>When search optimization helps</h2>
+          <p>Search optimization helps most when: the query filters on columns other than (or in addition to) the primary cluster key; the query typically runs for a few seconds or more without it; and filtered columns have on the order of 100,000 or more distinct values. Use <code>APPROX_COUNT_DISTINCT(column)</code> to check cardinality. It does not improve sub-second queries much, and it does not improve Time Travel queries (only active data).</p>
+          <p>Supported data types include fixed-point numbers, string/binary, date/time, VARIANT/OBJECT/ARRAY (semi-structured), structured ARRAY/OBJECT/MAP, and GEOGRAPHY. FLOAT, DECFLOAT, and GEOMETRY are not supported. Views can benefit indirectly when their base tables have search optimization and the query uses selective predicates on those tables.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="when-it-helps" aria-label="Mark When it helps as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="enabling" class="section" data-section="enabling">
+          <h2>Enabling and configuring</h2>
+          <p>You need <strong>OWNERSHIP</strong> on the table and <strong>ADD SEARCH OPTIMIZATION</strong> on the schema. Use <code>ALTER TABLE ... ADD SEARCH OPTIMIZATION</code> to enable for the whole table (equality/IN on all eligible columns) or <code>ADD SEARCH OPTIMIZATION ON ...</code> for specific columns and methods.</p>
+          <p><strong>Search methods:</strong> <code>ON EQUALITY(col1, col2)</code> for equality and IN; <code>ON SUBSTRING(col)</code> for LIKE, ILIKE, RLIKE, CONTAINS, etc.; <code>ON FULL_TEXT(col, ANALYZER => '...')</code> for SEARCH and SEARCH_IP (analyzer must match the one used in the SEARCH function); <code>ON GEO(col)</code> for GEOGRAPHY predicates (e.g. ST_INTERSECTS, ST_DWITHIN). You can enable multiple methods on the same column. Best practice: enable only on columns you query, to control cost.</p>
+          <p>For semi-structured columns or elements (e.g. <code>c4:user.uuid</code>), use <code>ON EQUALITY(...)</code> or <code>ON SUBSTRING(...)</code> explicitly; table-level search optimization does not cover them. Remove with <code>ALTER TABLE ... DROP SEARCH OPTIMIZATION</code> (with or without <code>ON ...</code>). Use <code>DESCRIBE SEARCH OPTIMIZATION ON table_name</code> to show the configuration.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="enabling" aria-label="Mark Enabling as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="verifying-monitoring" class="section" data-section="verifying-monitoring">
+          <h2>Verifying and monitoring</h2>
+          <p><code>SHOW TABLES</code> shows <code>SEARCH_OPTIMIZATION</code> (ON/OFF) and <code>SEARCH_OPTIMIZATION_PROGRESS</code> (percentage). Wait until progress is 100% before measuring performance. The optimizer decides automatically when to use search optimization; you cannot force it. In Snowsight query profiles, look for a <strong>Search Optimization Access</strong> node and statistics such as partitions scanned vs. partitions pruned by search optimization.</p>
+          <p>If search optimization was not used, the Table Scan node’s Search Optimization Usage Info explains why: predicate mismatch (no match between predicates and configured search methods), cost-based decision (optimizer estimated no benefit), or predicate limit exceeded (too many distinct predicates). Use <code>SEARCH_OPTIMIZATION_BENEFITS</code> view to assess partition pruning from search optimization.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="verifying-monitoring" aria-label="Mark Verifying and monitoring as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="point-joins" class="section" data-section="point-joins">
+          <h2>Point lookups and joins</h2>
+          <p>Point lookup queries (equality and IN) benefit when search optimization is enabled on the filtered columns. Casts on <strong>constants</strong> are supported (e.g. <code>WHERE timestamp1 = '2020-01-01'::date</code>); casts on <strong>table columns</strong> are not (except NUMBER/INTEGER to VARCHAR). DELETE, UPDATE, and MERGE can use search optimization for their WHERE clauses. Conjunctions (AND) of supported predicates are supported; for OR, all disjuncts must be selective for search optimization to help.</p>
+          <p>Join queries can benefit when the <strong>probe side</strong> (typically the larger/fact table) has search optimization on the join columns and the build side has few distinct values. Equality join predicates and AND of multiple equalities are supported; OR in join predicates, LIKE/RLIKE joins, VARIANT join columns, and EQUAL_NULL are not. Scalar subqueries and scalar functions in equality predicates are also supported when the column has EQUALITY search optimization.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="point-joins" aria-label="Mark Point lookups and joins as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="text-substring" class="section" data-section="text-substring">
+          <h2>Text and substring queries</h2>
+          <p>For <strong>SEARCH</strong> and <strong>SEARCH_IP</strong>, enable <code>ON FULL_TEXT(col [, ANALYZER => '...'])</code> on VARCHAR, VARIANT, ARRAY, or OBJECT columns; the analyzer in the ALTER TABLE must match the one in the SEARCH function call. For <strong>substring and regular expressions</strong> (LIKE, ILIKE, RLIKE, REGEXP, CONTAINS, STARTSWITH, ENDSWITH, etc.), use <code>ON SUBSTRING(col)</code>. Substring optimization typically requires substrings of at least five characters; shorter substrings may not use the search access path. RLIKE/REGEXP work best when the pattern has a literal substring of five or more characters that must appear at least once.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="text-substring" aria-label="Mark Text and substring as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="semi-structured" class="section" data-section="semi-structured">
+          <h2>Semi-structured and geospatial</h2>
+          <p><strong>Semi-structured (VARIANT, OBJECT, ARRAY):</strong> Enable with <code>ON EQUALITY(col)</code> or <code>ON EQUALITY(col:path.to.element)</code>, and <code>ON SUBSTRING(...)</code> for substring searches. Supported predicates include equality, IN, ARRAY_CONTAINS, ARRAYS_OVERLAP, IS_NULL_VALUE, and path IS NOT NULL (with some limitations). Table-level search optimization does not apply to semi-structured columns; you must use the ON clause.</p>
+          <p><strong>Structured ARRAY/OBJECT/MAP:</strong> Same idea—use ON clause for specific columns or paths; SUBSTRING only on string-typed elements. <strong>Geospatial:</strong> Use <code>ON GEO(geography_col)</code> for predicates with ST_INTERSECTS, ST_CONTAINS, ST_WITHIN, ST_DWITHIN, ST_COVERS, ST_COVEREDBY; one argument must be the GEOGRAPHY column and the other a GEOGRAPHY constant. GEOMETRY is not supported. Clustering by geohash (or similar) can improve performance together with search optimization.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="semi-structured" aria-label="Mark Semi-structured and geospatial as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="cost" class="section" data-section="cost">
+          <h2>Cost</h2>
+          <p>Search optimization uses <strong>storage</strong> for the search access path (often around 1/4 of table size; can be higher if many columns and very high cardinality). <strong>Compute</strong> is used for the initial build and for ongoing maintenance when data changes; high churn increases cost. Automatic clustering can increase maintenance cost when used with search optimization. Billing is in 1-second increments; see the Serverless Feature Credit Table in the Snowflake Service Consumption Table.</p>
+          <p>Use <code>SYSTEM$ESTIMATE_SEARCH_OPTIMIZATION_COSTS</code> to estimate build and maintenance costs; actual costs can vary. Start with a few tables and monitor. To reduce cost: enable only on columns that need it; batch DML where possible; for full table recluster, consider dropping search optimization before and re-adding after; estimate costs before enabling SUBSTRING or VARIANT equality. View actual costs via the web interface or SQL (Exploring compute cost).</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="cost" aria-label="Mark Cost as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="working-with" class="section" data-section="working-with">
+          <h2>Working with search-optimized tables</h2>
+          <p><strong>Schema changes:</strong> Adding, dropping, or renaming columns does not invalidate the path; with table-level search optimization, new columns get EQUALITY automatically, but with ON clause they do not. Changing a column’s default value invalidates the path—drop and re-add search optimization. Dropping the table drops the property and path; undrop restores the property. Cloning copies the property and search access path (zero-copy); if the path is out-of-date at clone time, both tables incur maintenance. To avoid extra cost on a clone, drop search optimization on the clone after creating it. <code>CREATE TABLE ... LIKE</code> does not copy search optimization. Replicated tables get the property in the secondary, but search access paths are rebuilt there (not replicated).</p>
+          <p>Search optimization is compatible with masking and row access policies. Be aware that faster “no rows” results can make it easier for users to infer absence of restricted data; consider whether that is acceptable for sensitive data.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="working-with" aria-label="Mark Working with as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="limitations" class="section" data-section="limitations">
+          <h2>Limitations</h2>
+          <p>Not supported: materialized views; column concatenation; analytical expressions; predicates that cast the table column (except numeric to VARCHAR); Time Travel queries; FLOAT, DECFLOAT, GEOMETRY; external, hybrid, temporary tables. Collation: EQUALITY supports any collation; FULL_TEXT and SUBSTRING support 'utf8' or 'bin'; predicates that change collation with COLLATE function are not supported. For Iceberg tables, search optimization has additional limits (e.g. no semi-structured or geospatial columns; very large Parquet files may not benefit fully). Predicates where the constant is a scalar subquery result are not supported for semi-structured/structured types. See Snowflake docs for full lists and predicate limits.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="limitations" aria-label="Mark Limitations as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <footer class="guide-footer">
+          <p>You've finished the Search optimization guide. <a href="index.html">All Databases, Tables &amp; Views guides</a></p>
+          <p class="guide-footer-links"><a href="table-structures.html">Table structures</a> · <a href="temporary-transient-tables.html">Temporary &amp; transient tables</a> · <a href="external-tables.html">External tables</a> · <a href="hybrid-tables.html">Hybrid tables</a> · <a href="interactive-tables.html">Interactive tables</a> · <a href="tables-snowsight.html">Tables in Snowsight</a></p>
+        </footer>
+      </article>
+    </main>
+  </div>
+
+  <script src="../js/app.js"></script>
+</body>
+</html>

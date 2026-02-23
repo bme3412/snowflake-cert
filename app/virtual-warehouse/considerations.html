@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Snowflake Study Guide — Warehouse Considerations</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body data-guide-id="considerations">
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../index.html" class="logo">❄️ Snowflake Learn</a>
+      <nav class="topic-nav" aria-label="Study topics">
+        <a href="../index.html">Home</a>
+        <a href="index.html">Virtual Warehouse</a>
+      </nav>
+      <button type="button" class="nav-toggle" aria-label="Open menu" aria-expanded="false">
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+      </button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar" aria-label="Study guide navigation">
+      <details class="sidebar-group" open>
+        <summary>Guides — 01-virtual-warehouse</summary>
+        <div class="sidebar-group-content">
+          <ul class="guide-list chapter-list">
+            <li><a href="index.html">Category index</a></li>
+            <li><a href="overview.html">Overview</a><span class="sidebar-doc">00-overview.md</span></li>
+            <li><a href="multi-cluster.html">Multi-cluster</a><span class="sidebar-doc">01-multi-cluster.md</span></li>
+            <li><a href="considerations.html" class="is-active">Considerations</a><span class="sidebar-doc">02-considerations.md</span></li>
+            <li><a href="working-with-warehouses.html">Working with</a><span class="sidebar-doc">03-working-with-warehouses.md</span></li>
+            <li><a href="next-gen-warehouses.html">Gen2</a><span class="sidebar-doc">04-next-gen-standard-warehouses.md</span></li>
+            <li><a href="query-acceleration.html">Query Acceleration (QAS)</a><span class="sidebar-doc">05-query-acceleration.md</span></li>
+            <li><a href="monitoring-load.html">Monitoring load</a><span class="sidebar-doc">06-monitoring-load.md</span></li>
+            <li><a href="snowpark-optimized-warehouses.html">Snowpark-optimized</a><span class="sidebar-doc">07-snowpark-optimized-warehouses.md</span></li>
+            <li><a href="interactive-tables.html">Interactive tables</a><span class="sidebar-doc">08-interactive-tables.md</span></li>
+            <li><a href="example-workflow-equity-research.html">Example workflow</a><span class="sidebar-doc">09-example-workflow-equity-research.md</span></li>
+          </ul>
+        </div>
+      </details>
+      <details class="sidebar-group" open>
+        <summary>In this guide</summary>
+        <div class="sidebar-group-content">
+          <ul class="chapter-list">
+            <li><a href="#intro" class="nav-link" data-section="intro">Introduction</a></li>
+            <li><a href="#credits" class="nav-link" data-section="credits">How credits are charged</a></li>
+            <li><a href="#query-composition" class="nav-link" data-section="query-composition">Query composition</a></li>
+            <li><a href="#caching" class="nav-link" data-section="caching">Warehouse caching</a></li>
+            <li><a href="#creating" class="nav-link" data-section="creating">Creating a warehouse</a></li>
+            <li><a href="#initial-size" class="nav-link" data-section="initial-size">Choosing initial size</a></li>
+            <li><a href="#snowsight" class="nav-link" data-section="snowsight">Warehouse for Snowsight</a></li>
+            <li><a href="#notebooks" class="nav-link" data-section="notebooks">Notebook default warehouse</a></li>
+            <li><a href="#auto-suspend" class="nav-link" data-section="auto-suspend">Auto-suspend</a></li>
+            <li><a href="#auto-resume" class="nav-link" data-section="auto-resume">Auto-resume</a></li>
+            <li><a href="#scale-up-out" class="nav-link" data-section="scale-up-out">Scale up vs scale out</a></li>
+            <li><a href="#multi-cluster-tips" class="nav-link" data-section="multi-cluster-tips">Multi-cluster tips</a></li>
+          </ul>
+        </div>
+      </details>
+      <div class="sidebar-footer">
+        <p class="progress-label">Your progress</p>
+        <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="12" aria-label="Sections completed">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <p class="progress-count" id="progress-count">0/12 sections</p>
+      </div>
+    </aside>
+
+    <main id="main" class="content">
+      <article class="guide">
+        <p class="breadcrumb"><a href="../index.html">Home</a> <span>›</span> <a href="index.html">Virtual Warehouse</a> <span>›</span> Considerations</p>
+        <div class="guide-header">
+          <h1>Warehouse Considerations</h1>
+          <p class="lead">Guidelines and best practices for using warehouses: billing, query behavior, caching, auto-suspend/resume, and when to resize vs use multi-cluster. No hard numbers—your workload decides.</p>
+        </div>
+
+        <section id="intro" class="section" data-section="intro">
+          <div class="section-badge">Start here</div>
+          <h2>Introduction</h2>
+          <p class="key-takeaway">There are no one-size-fits-all settings. Experiment with warehouse sizes and query types, and use per-second billing and auto-suspend so you can run larger warehouses when needed and stop them when idle.</p>
+          <p>This guide gives general guidelines and best practices for using virtual warehouses to run queries in Snowflake. It doesn’t give specific numbers or “always do this” rules, because every workload is different: concurrent users, query mix, table sizes, and your own needs for cost, latency, and availability all matter. Data loading has its own considerations and is covered elsewhere.</p>
+          <p>Two ideas to keep in mind: <strong>experiment</strong> with different warehouse sizes and query types to see what works best for you, and <strong>don’t overthink warehouse size</strong>. Snowflake bills per second, so you can use larger warehouses (Large, X-Large, 2X-Large, etc.) when you need them and suspend them when you don’t. These guidelines apply to both single-cluster and multi-cluster warehouses (multi-cluster is available in Enterprise Edition and above).</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="intro" aria-label="Mark Introduction as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <section id="credits" class="section" data-section="credits">
+          <h2>How are credits charged for warehouses?</h2>
+          <p class="key-takeaway">Credits depend on warehouse size, number of clusters (if multi-cluster), and how long each cluster runs. There’s a 60-second minimum each time compute is provisioned; after that it’s per second. Resizing can trigger extra billing; downsizing from 5XL/6XL to smaller can briefly double-charge.</p>
+          <p>Credit charges are based on: the warehouse size, the number of clusters (for multi-cluster), and how long the compute in each cluster runs. For example, an X-Small bills 1 credit per full hour per cluster; a 4X-Large bills 128 credits per full hour per cluster.</p>
+          <p>When compute is provisioned (warehouse starts or you add capacity), the <strong>minimum billable time is 60 seconds</strong>. So there’s no benefit to stopping the warehouse before 60 seconds—you’ve already been charged for that minute. After the first 60 seconds, billing is per second until all compute is shut down. Examples: 30–60 seconds of run time is billed as 60 seconds; 61 seconds is billed as 61 seconds; if a warehouse runs 61 seconds, stops, then starts again and runs under 60 seconds, you’re billed for 60 + 1 + 60 = 121 seconds.</p>
+          <p>When you <strong>resize</strong> a warehouse, you’re adding (or removing) compute. The new resources are billed from the time they’re provisioned. So resizing up increases credits from that moment; the existing queries keep using the old capacity until the new one is ready. One special case: resizing <em>down</em> from a 5XL or 6XL warehouse to 4XL or smaller can cause a short period where you’re charged for both the old and new warehouse while the old one is shutting down. Credit usage in the UI is shown in hour increments, but with per-second billing you’ll see fractional amounts.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="credits" aria-label="Mark How credits are charged as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <section id="query-composition" class="section" data-section="query-composition">
+          <h2>How does query composition impact warehouse processing?</h2>
+          <p class="key-takeaway">Compute needed depends on query size and complexity. Table size (and data shape) usually matters more than row count. Filtering and joins affect work. Running similar queries on the same warehouse makes it easier to pick the right size.</p>
+          <p>The compute a query needs depends on how big and how complex it is. In general, query cost scales with warehouse size in a roughly linear way, especially for larger, more complex queries. A few things that affect processing: the <strong>overall size of the tables</strong> (and how the data is organized) usually has more impact than the raw number of rows; <strong>predicates</strong> (WHERE clauses) and how many <strong>joins</strong> or tables are in the query also matter.</p>
+          <p>Snowflake recommends running relatively <strong>similar</strong> queries (in complexity and data sets) on the same warehouse. If one warehouse runs a mix of tiny metadata lookups and huge multi-table joins, it’s harder to reason about load and to choose a warehouse size that fits. Grouping similar work makes it easier to tune.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="query-composition" aria-label="Mark Query composition as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <section id="caching" class="section" data-section="caching">
+          <h2>How does warehouse caching impact queries?</h2>
+          <p class="key-takeaway">Each running warehouse keeps a cache of table data it has read. Bigger warehouse = bigger cache. The cache is dropped when the warehouse is suspended (or when you downsize). Trade off: suspend to save credits vs. keep running to keep cache and get faster repeat queries.</p>
+          <p>While a warehouse is running, it keeps a <strong>cache</strong> of table data that queries have read. Later queries that hit the same data can read from this cache instead of from storage, which can improve performance. Cache size is tied to the warehouse’s compute resources—larger warehouse, larger cache.</p>
+          <p>The cache is <strong>dropped when the warehouse is suspended</strong>. So after a suspend and resume, the first queries may be slower until the cache is rebuilt. When you’re deciding whether to suspend a warehouse or leave it running, weigh saving credits (suspend when idle) against keeping that cache warm for the next burst of queries. The same idea applies when you <strong>decrease</strong> the size of a running warehouse: the compute you remove takes its cache with it, so performance can drop in a similar way to right after a resume.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="caching" aria-label="Mark Warehouse caching as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <section id="creating" class="section" data-section="creating">
+          <h2>Creating a warehouse</h2>
+          <p class="key-takeaway">When you create a warehouse, the two main levers are warehouse size (compute) and how it’s managed: manual vs automatic start/suspend/resume. If you use Enterprise Edition, the number of clusters (multi-cluster) is also important.</p>
+          <p>When you create a warehouse, the two most important things from a cost and performance perspective are: <strong>warehouse size</strong> (how much compute it has) and <strong>whether you manage it manually or let Snowflake automate it</strong> (starting, resuming, and suspending). If you’re on Enterprise Edition (or higher) and use multi-cluster warehouses, the number of clusters is another key choice—see the “Scale up vs scale out” and “Multi-cluster tips” sections below.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="creating" aria-label="Mark Creating a warehouse as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <section id="initial-size" class="section" data-section="initial-size">
+          <h2>Choosing an initial warehouse size</h2>
+          <p class="key-takeaway">Match size to the task: data loading depends on file count and size; small test environments often need only X-Small to Medium; production query workloads may justify Large or bigger. You can start larger and shrink later; larger isn’t always faster for small, simple queries.</p>
+          <p>The size you pick depends on what the warehouse will do. For <strong>data loading</strong>, size should match the number of files and how much data is in each file (see Snowflake’s data loading docs). For <strong>queries</strong>: in small test environments, X-Small, Small, or Medium is often enough; in large production environments, Large, X-Large, 2X-Large, etc. can be more cost effective because they finish work faster. Per-second billing and auto-suspend mean you can start with a larger size and reduce it later if your workload doesn’t need it.</p>
+          <p>Larger is not always faster for small, simple queries. Those usually don’t benefit from an X-Large or bigger warehouse. Try to match warehouse size to the expected size and complexity of the queries. Snowflake suggests experimenting: run the same queries on different warehouse sizes (e.g. X-Large, Large, Medium) using queries that typically finish in a few minutes, and see what gives you the best balance of speed and cost.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="initial-size" aria-label="Mark Choosing initial size as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <section id="snowsight" class="section" data-section="snowsight">
+          <h2>Selecting a warehouse for Snowsight</h2>
+          <p class="key-takeaway">Some Snowsight pages (e.g. Task Run History, Data Preview) need a warehouse to run SQL. Use an X-Small unless you’re a large account; consider a dedicated X-Small for UI tasks if the shared warehouse is overloaded.</p>
+          <p>Some pages in Snowsight (the Snowflake web UI)—for example Task Run History or Data Preview—need to run SQL and therefore need a warehouse. On those pages you’ll see a warehouse selector; a green dot means the warehouse is active. An <strong>X-Small warehouse is usually enough</strong> for these UI-driven queries; very large accounts might see better performance with a slightly larger one.</p>
+          <p>Some operations don’t use a warehouse (e.g. <code>SHOW TABLES</code> only needs metadata), so no warehouse charges apply. If Snowsight feels slow or inconsistent, the warehouse behind those UI queries might be overloaded—other workloads might be queuing in front of the UI. In that case, consider using a dedicated X-Small (or similar) for UI-related tasks. You can see which queries are client-generated (including from the web UI) in Monitoring → Query History by enabling the “Client-generated statements” filter.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="snowsight" aria-label="Mark Warehouse for Snowsight as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <section id="notebooks" class="section" data-section="notebooks">
+          <h2>Default warehouse for Notebook apps</h2>
+          <p class="key-takeaway">Accounts get a multi-cluster X-Small warehouse for Notebook Python workloads. Use it for notebooks to reduce fragmentation and cost; keep heavy SQL/reporting on a separate warehouse.</p>
+          <p>Each account is provisioned with a warehouse (e.g. <code>SYSTEM$STREAMLIT_NOTEBOOK_WH</code>) designed for running Notebook Python code. It’s a multi-cluster X-Small that helps with cost and “bin-packing” of notebook workloads. Use it for notebook execution; for heavy SQL or reporting from notebooks, point those to a separate warehouse you control. See the <a href="overview.html#sessions">Warehouse overview</a> section on sessions and notebook defaults for more detail.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="notebooks" aria-label="Mark Notebook default warehouse as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <section id="auto-suspend" class="section" data-section="auto-suspend">
+          <h2>Automating warehouse suspension</h2>
+          <p class="key-takeaway">Set auto-suspend to a short interval (e.g. 5–10 minutes) so idle warehouses don’t burn credits—but make sure the interval is longer than typical gaps between queries, or the warehouse will keep suspending and resuming (and you pay the 60-second minimum each resume). Disable auto-suspend only if you have steady load or need zero delay; larger warehouses left on 24/7 can get expensive.</p>
+          <p>You can set a warehouse to <strong>auto-suspend</strong> after a period of inactivity. Snowflake recommends a <strong>low value</strong> (e.g. 5 or 10 minutes) so warehouses don’t sit around burning credits when nobody is using them. Per-second billing means you only pay for what you use once the warehouse is up, so suspending soon after idle saves money.</p>
+          <p>The value should still match your workload. If you have regular 2–3 minute gaps between queries, setting auto-suspend to 1 or 2 minutes will cause the warehouse to suspend and resume often; each resume triggers at least 60 seconds of billing. So pick an interval a bit longer than your typical gaps. You might <strong>disable</strong> auto-suspend (set to “Never” in the UI, or 0/NULL in SQL) if the warehouse has a heavy, steady workload or you need it to be available with no delay. Provisioning is usually fast (e.g. 1–2 seconds) but can be longer for big warehouses or when capacity is tight. If you disable auto-suspend, remember that the warehouse will consume credits whenever it’s running, even with no queries—and that cost can be large for X-Large, 2X-Large, and bigger.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="auto-suspend" aria-label="Mark Auto-suspend as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <section id="auto-resume" class="section" data-section="auto-resume">
+          <h2>Automating warehouse resumption</h2>
+          <p class="key-takeaway">Enable auto-resume if you want the warehouse to start whenever a query needs it (with a short provisioning delay). Disable it if you want to control cost or who can use the warehouse by resuming it manually.</p>
+          <p>Warehouses can be set to <strong>auto-resume</strong> when a new query is submitted. If cost and access aren’t a concern, enabling auto-resume is convenient—the warehouse comes up whenever someone (or something) needs it. There may be a short delay while it provisions. If you want to control cost or restrict who can use a given warehouse, leave auto-resume off and <strong>resume the warehouse manually</strong> only when you’re ready for it to run.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="auto-resume" aria-label="Mark Auto-resume as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <section id="scale-up-out" class="section" data-section="scale-up-out">
+          <h2>Scaling up vs scaling out</h2>
+          <p class="key-takeaway">Scale <strong>up</strong> = resize the warehouse (bigger size) for better performance per query. Scale <strong>out</strong> = add clusters (multi-cluster) for more concurrency. Resize doesn’t fix concurrency by itself—use more warehouses or multi-cluster. Resizing doesn’t change already-running queries; downsizing drops cache.</p>
+          <p>Snowflake gives you two ways to scale: <strong>scale up</strong> by resizing the warehouse (same cluster, more compute per cluster) and <strong>scale out</strong> by adding clusters in a multi-cluster warehouse (Enterprise Edition and above).</p>
+          <p><strong>Resizing</strong> generally improves query performance, especially for larger, more complex queries, and can reduce queuing when the warehouse doesn’t have enough compute for all concurrent work. Resizing is not meant to solve concurrency by itself—for that, use additional warehouses or a multi-cluster warehouse. You can resize at any time, even while the warehouse is running. The new compute doesn’t help queries that are already running; it’s used by queued and new queries. Remember: larger isn’t always faster for small, simple queries. And when you <strong>decrease</strong> size, the compute you remove drops its cache, which can hurt performance similar to suspending the warehouse. Resizing down from 5XL or 6XL to 4XL or smaller can briefly charge for both the old and new warehouse while the old one shuts down.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="scale-up-out" aria-label="Mark Scale up vs scale out as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <section id="multi-cluster-tips" class="section" data-section="multi-cluster-tips">
+          <h2>Multi-cluster warehouse tips</h2>
+          <p class="key-takeaway">Multi-cluster is for concurrency (many users/queries). If you’re on Enterprise Edition, consider making warehouses multi-cluster. Use Auto-scale unless you need Maximized; keep min at 1 (or higher for high availability); set max as high as makes sense for cost.</p>
+          <p>Multi-cluster warehouses are built for <strong>concurrency</strong>—lots of users or queries at once—and for automating capacity as that load changes. If you’re on Snowflake Enterprise Edition (or higher), Snowflake recommends configuring your warehouses as multi-cluster where it makes sense.</p>
+          <p>Unless you have a specific need for Maximized mode (all clusters always on), use <strong>Auto-scale</strong> so Snowflake can start and stop clusters based on load. For min/max: keep the <strong>minimum at 1</strong> (so extra clusters only start when needed) unless you care about high availability—in that case a higher minimum helps if a cluster fails. Set the <strong>maximum</strong> as high as you can while staying within your credit budget. For example, an X-Large warehouse with max 10 clusters can use up to 160 credits per hour if all 10 clusters run for that hour, so size and max together determine your peak cost.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="multi-cluster-tips" aria-label="Mark Multi-cluster tips as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <footer class="guide-footer">
+          <p>You’ve finished the Warehouse considerations guide. <a href="index.html">All Virtual Warehouse guides</a></p>
+          <p class="guide-footer-links"><a href="overview.html">Overview</a> · <a href="multi-cluster.html">Multi-cluster</a> · <a href="working-with-warehouses.html">Working with</a> · <a href="next-gen-warehouses.html">Gen2</a> · <a href="query-acceleration.html">Query Acceleration</a> · <a href="monitoring-load.html">Monitoring load</a> · <a href="snowpark-optimized-warehouses.html">Snowpark-optimized</a> · <a href="interactive-tables.html">Interactive tables</a> · <a href="example-workflow-equity-research.html">Example workflow</a></p>
+        </footer>
+      </article>
+    </main>
+  </div>
+
+  <script src="../js/app.js"></script>
+</body>
+</html>

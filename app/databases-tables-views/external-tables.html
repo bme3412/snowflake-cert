@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>External tables — Snowflake Learn</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body data-guide-id="external-tables">
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../index.html" class="logo">❄️ Snowflake Learn</a>
+      <nav class="topic-nav" aria-label="Study topics">
+        <a href="../index.html">Home</a>
+        <a href="index.html">Databases, Tables &amp; Views</a>
+      </nav>
+      <button type="button" class="nav-toggle" aria-label="Open menu" aria-expanded="false">
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+      </button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar" aria-label="Study guide navigation">
+      <details class="sidebar-group" open>
+        <summary>Guides — 02-databases-tables-views</summary>
+        <div class="sidebar-group-content">
+          <ul class="guide-list chapter-list">
+            <li><a href="index.html">Category index</a></li>
+            <li><a href="table-structures.html">Table structures</a><span class="sidebar-doc">01-table-structures.md</span></li>
+            <li><a href="temporary-transient-tables.html">Temporary &amp; transient</a><span class="sidebar-doc">02-temporary-transient-tables.md</span></li>
+            <li><a href="external-tables.html" class="is-active">External tables</a><span class="sidebar-doc">03-external-tables.md</span></li>
+            <li><a href="hybrid-tables.html">Hybrid tables</a><span class="sidebar-doc">04-hybrid-tables.md</span></li>
+            <li><a href="interactive-tables.html">Interactive tables</a><span class="sidebar-doc">05-interactive-tables.md</span></li>
+            <li><a href="tables-snowsight.html">Tables in Snowsight</a><span class="sidebar-doc">06-tables-Snowsight.md</span></li>
+            <li><a href="search-optimization.html">Search optimization</a><span class="sidebar-doc">07-search-optimization.md</span></li>
+          </ul>
+        </div>
+      </details>
+      <details class="sidebar-group" open>
+        <summary>In this guide</summary>
+        <div class="sidebar-group-content">
+          <ul class="chapter-list">
+            <li><a href="#intro" class="nav-link" data-section="intro">Introduction</a></li>
+            <li><a href="#what-are" class="nav-link" data-section="what-are">What are external tables?</a></li>
+            <li><a href="#stages-location" class="nav-link" data-section="stages-location">Stages and location</a></li>
+            <li><a href="#creating" class="nav-link" data-section="creating">Creating an external table</a></li>
+            <li><a href="#partitioning" class="nav-link" data-section="partitioning">Partitioning</a></li>
+            <li><a href="#metadata-refresh" class="nav-link" data-section="metadata-refresh">Metadata refresh</a></li>
+            <li><a href="#auto-refresh-s3" class="nav-link" data-section="auto-refresh-s3">Auto-refresh: Amazon S3</a></li>
+            <li><a href="#auto-refresh-gcs" class="nav-link" data-section="auto-refresh-gcs">Auto-refresh: Google Cloud</a></li>
+            <li><a href="#auto-refresh-azure" class="nav-link" data-section="auto-refresh-azure">Auto-refresh: Azure</a></li>
+            <li><a href="#manual-security" class="nav-link" data-section="manual-security">Manual refresh &amp; security</a></li>
+            <li><a href="#troubleshooting" class="nav-link" data-section="troubleshooting">Troubleshooting</a></li>
+            <li><a href="#hive-integration" class="nav-link" data-section="hive-integration">Hive metastore integration</a></li>
+          </ul>
+        </div>
+      </details>
+      <div class="sidebar-footer">
+        <p class="progress-label">Your progress</p>
+        <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="12" aria-label="Sections completed">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <p class="progress-count" id="progress-count">0/12 sections</p>
+      </div>
+    </aside>
+
+    <main id="main" class="content">
+      <article class="guide">
+        <p class="breadcrumb"><a href="../index.html">Home</a> <span>›</span> <a href="index.html">Databases, Tables &amp; Views</a> <span>›</span> External tables</p>
+        <div class="guide-header">
+          <h1>External tables</h1>
+          <p class="lead">Query data stored in cloud storage (S3, GCS, Azure) without loading it into Snowflake. External tables use metadata that can be refreshed manually or automatically via cloud event notifications.</p>
+        </div>
+
+        <section id="intro" class="section" data-section="intro">
+          <h2>Introduction</h2>
+          <p><strong>External tables</strong> let you query files in external stages (Amazon S3, Google Cloud Storage, or Microsoft Azure) as if they were tables. Snowflake stores only <strong>metadata</strong> about the files (paths, sizes, etc.); the data stays in your cloud storage. Refreshing this metadata keeps the table in sync with new, changed, or removed files.</p>
+          <div class="callout note">
+            <p>External tables do not support storage versioning (e.g. S3 versioning, GCS object versioning, or Azure blob versioning).</p>
+          </div>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="intro" aria-label="Mark Introduction as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="what-are" class="section" data-section="what-are">
+          <h2>What are external tables?</h2>
+          <p>An external table is a Snowflake object that maps to a set of files in an external stage. When you query the table, Snowflake reads the files from cloud storage on demand. You specify a <strong>file format</strong> (e.g. JSON, Parquet, CSV) so Snowflake can parse the data. Columns can be explicitly defined or inferred (e.g. from Parquet/ORC), and you can add virtual columns from <code>METADATA$FILENAME</code> and <code>METADATA$FILE_ROW_NUMBER</code>.</p>
+          <p>Use external tables when you want to explore or query data in place without running a <code>COPY INTO</code> load, or when data is produced by external systems and you want it to appear in Snowflake as soon as files land.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="what-are" aria-label="Mark What are external tables as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="stages-location" class="section" data-section="stages-location">
+          <h2>Stages and location</h2>
+          <p>External tables are created with <code>WITH LOCATION = @stage_name/path/</code>. The stage can be a named external stage (S3, GCS, or Azure) or a user stage. The path you give is appended to the stage URL, so the table sees only files under that prefix.</p>
+          <p>Secure access to cloud storage is typically done via <strong>storage integrations</strong>: Snowflake uses an IAM user (AWS), service account (GCS), or app registration (Azure) that your cloud admin grants permissions to. This avoids storing credentials in stage definitions.</p>
+          <div class="callout important">
+            <p>Snowflake strongly recommends configuring secure access (storage integration) so you don't need to supply cloud credentials when creating stages or external tables.</p>
+          </div>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="stages-location" aria-label="Mark Stages and location as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="creating" class="section" data-section="creating">
+          <h2>Creating an external table</h2>
+          <p>Use <code>CREATE EXTERNAL TABLE</code> with at least a location and a file format. Example for JSON files in a stage path:</p>
+          <pre><code>CREATE OR REPLACE EXTERNAL TABLE ext_table
+ WITH LOCATION = @mystage/path1/
+ FILE_FORMAT = (TYPE = JSON);</code></pre>
+          <p>You can add <code>PARTITION BY</code> (e.g. by subpath or expression), <code>AUTO_REFRESH = TRUE/FALSE</code>, and for auto-refresh on AWS you may specify <code>AWS_SNS_TOPIC</code> when using an existing SNS topic. The role needs <code>CREATE EXTERNAL TABLE</code> and <code>CREATE STAGE</code> on the schema, and <code>USAGE</code> (and <code>READ</code> for the stage) on the stage.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="creating" aria-label="Mark Creating an external table as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="partitioning" class="section" data-section="partitioning">
+          <h2>Partitioning</h2>
+          <p>External tables can be partitioned so Snowflake can prune files by partition. Partitions are defined as subpaths or expressions (e.g. <code>PARTITION BY (year, month)</code> with <code>AS (metadata$filename)</code> or path parts). You can add partitions with <code>ALTER EXTERNAL TABLE ... ADD PARTITION ... LOCATION '...'</code>. Partition paths must be under the table's stage location, and two partitions cannot point to the exact same storage path.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="partitioning" aria-label="Mark Partitioning as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="metadata-refresh" class="section" data-section="metadata-refresh">
+          <h2>Metadata refresh</h2>
+          <p>External table metadata (the list of files and their properties) can be updated in two ways:</p>
+          <ul>
+            <li><strong>Manual refresh:</strong> <code>ALTER EXTERNAL TABLE ext_table REFRESH;</code> — scans the stage path and updates metadata. Use this when you don't have auto-refresh or to sync after bulk changes.</li>
+            <li><strong>Automatic refresh:</strong> Cloud event notifications (SQS for S3, Pub/Sub for GCS, Event Grid for Azure) notify Snowflake when files are added, changed, or removed; Snowflake then refreshes the table metadata. Requires a notification integration (and for S3, either a new S3 event notification or SNS fan-out).</li>
+          </ul>
+          <p>When auto-refresh is enabled (<code>AUTO_REFRESH = TRUE</code>), run a manual <code>REFRESH</code> once after creating the table so initial metadata is populated; thereafter the cloud notifications drive refreshes.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="metadata-refresh" aria-label="Mark Metadata refresh as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="auto-refresh-s3" class="section" data-section="auto-refresh-s3">
+          <h2>Auto-refresh: Amazon S3</h2>
+          <p>On AWS, automatic refresh uses <strong>Amazon SQS</strong>. Snowflake creates and manages SQS queues; <code>SHOW EXTERNAL TABLES</code> shows the queue ARN in <code>notification_channel</code>. You create an S3 event notification that sends <code>ObjectCreate</code> and <code>ObjectRemoved</code> events to that SQS queue. New, modified, or removed files in the path then trigger a metadata refresh.</p>
+          <p>If you already have an S3 event notification for the same path, use <strong>Amazon SNS</strong>: create an SNS topic, subscribe the Snowflake SQS queue to it, and add <code>AWS_SNS_TOPIC = 'arn:aws:sns:...'</code> to <code>CREATE EXTERNAL TABLE</code>. S3 publishes to the topic and SNS fans out to SQS (and any other subscribers).</p>
+          <div class="callout note">
+            <p>Auto-refresh via SQS is supported only for Snowflake accounts on AWS. VPS and AWS PrivateLink customers: SQS is not available as a VPC endpoint, so traffic to SQS is not inside the VPC.</p>
+          </div>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="auto-refresh-s3" aria-label="Mark Auto-refresh S3 as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="auto-refresh-gcs" class="section" data-section="auto-refresh-gcs">
+          <h2>Auto-refresh: Google Cloud Storage</h2>
+          <p>On Google Cloud, automatic refresh uses <strong>Pub/Sub</strong>. You create a Pub/Sub topic and subscription for the GCS bucket (e.g. <code>gsutil notification create -t &lt;topic&gt; -f json -e OBJECT_FINALIZE -e OBJECT_DELETE gs://&lt;bucket&gt;</code>). In Snowflake you create a <strong>notification integration</strong> with <code>NOTIFICATION_PROVIDER = GCP_PUBSUB</code> and <code>GCP_PUBSUB_SUBSCRIPTION_NAME</code>. Grant the Snowflake service account (from <code>DESC NOTIFICATION INTEGRATION</code>) the Pub/Sub Subscriber role on the subscription. Then create the external table with <code>INTEGRATION = 'MY_NOTIFICATION_INT'</code>. Only <code>OBJECT_FINALIZE</code> and <code>OBJECT_DELETE</code> events are used; send only these to reduce cost and noise.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="auto-refresh-gcs" aria-label="Mark Auto-refresh GCS as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="auto-refresh-azure" class="section" data-section="auto-refresh-azure">
+          <h2>Auto-refresh: Azure Blob Storage</h2>
+          <p>On Azure, automatic refresh uses <strong>Event Grid</strong>. You create an Event Grid subscription that sends <code>Microsoft.Storage.BlobCreated</code> and <code>Microsoft.Storage.BlobDeleted</code> events to an Azure Storage Queue. In Snowflake you create a <strong>notification integration</strong> with <code>NOTIFICATION_PROVIDER = AZURE_STORAGE_QUEUE</code>, <code>AZURE_STORAGE_QUEUE_PRIMARY_URI</code>, and <code>AZURE_TENANT_ID</code>. Grant the Snowflake app (from <code>DESC NOTIFICATION INTEGRATION</code>) access to the queue (e.g. Storage Queue Data Message Processor). Create the external table with <code>INTEGRATION = 'MY_NOTIFICATION_INT'</code>. Supported account types include Blob storage, Data Lake Storage Gen2, and General-purpose v2. Automatic refresh is not supported for Microsoft Fabric OneLake; use manual <code>ALTER EXTERNAL TABLE ... REFRESH</code> for OneLake.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="auto-refresh-azure" aria-label="Mark Auto-refresh Azure as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="manual-security" class="section" data-section="manual-security">
+          <h2>Manual refresh and security</h2>
+          <p>After creating an external table (with or without auto-refresh), run <code>ALTER EXTERNAL TABLE ext_table REFRESH;</code> once to sync metadata with the current file list. For auto-refresh setups, this ensures the table is queryable immediately; otherwise the first results depend on the first event-driven refresh.</p>
+          <p>To let other roles query the external table, grant:</p>
+          <ul>
+            <li>Database: <code>USAGE</code>; Schema: <code>USAGE</code>; Stage: <code>USAGE</code>, <code>READ</code>; Named file format (if used): <code>USAGE</code>; External table: <code>SELECT</code>.</li>
+          </ul>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="manual-security" aria-label="Mark Manual refresh and security as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="troubleshooting" class="section" data-section="troubleshooting">
+          <h2>Troubleshooting</h2>
+          <p><strong>Auto-refresh disabled after ownership change:</strong> If ownership of the external table is transferred to another role, <code>AUTO_REFRESH</code> is set to <code>FALSE</code>. Re-enable with <code>ALTER EXTERNAL TABLE ext_table SET AUTO_REFRESH = TRUE</code>. Also verify the cloud messaging configuration (SQS, Pub/Sub, or Event Grid) is still correct.</p>
+          <p><strong>Checking refresh progress:</strong> Use <code>SYSTEM$EXTERNAL_TABLE_PIPE_STATUS</code> to see the status of the internal pipe used for metadata refresh (e.g. <code>lastReceivedMessageTimestamp</code>, <code>lastForwardedMessageTimestamp</code>). If timestamps are stale or empty, check the event notification setup.</p>
+          <p><strong>Integration not found:</strong> If the stage's storage integration was recreated (<code>CREATE OR REPLACE STORAGE INTEGRATION</code>), the stage's link to it (by internal ID) breaks. Run <code>ALTER STAGE stage_name SET STORAGE_INTEGRATION = storage_integration_name</code> to reattach.</p>
+          <p><strong>Stage location altered:</strong> If the stage URL was changed with <code>ALTER STAGE ... SET URL</code>, existing external tables that reference the stage can become invalid. Recreate them with <code>CREATE OR REPLACE EXTERNAL TABLE</code>.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="troubleshooting" aria-label="Mark Troubleshooting as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="hive-integration" class="section" data-section="hive-integration">
+          <h2>Hive metastore integration</h2>
+          <p>Snowflake offers a <strong>Hive metastore connector</strong> that keeps external tables in Snowflake in sync with tables in an Apache Hive metastore. The connector listens for Hive events (create/drop table, add/drop partition, etc.) and creates or updates the corresponding external tables in Snowflake. Data files must be in cloud storage (S3, GCS, or Azure) accessible via a Snowflake storage integration.</p>
+          <p>Supported: external and managed Hive tables, partitioned and unpartitioned; CSV, JSON, Avro, ORC, Parquet; common Hive data types map to Snowflake types. Unsupported: Hive views; most <code>ALTER</code> variants other than TOUCH/ADD COLUMNS/DROP COLUMNS; custom SerDe properties. Refreshing external table metadata for new files in cloud storage is not driven by the connector—use <code>ALTER TABLE ... TOUCH</code> in Hive or manual <code>ALTER EXTERNAL TABLE ... REFRESH</code> in Snowflake to sync file lists.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="hive-integration" aria-label="Mark Hive integration as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <footer class="guide-footer">
+          <p>You've finished the External tables guide. <a href="index.html">All Databases, Tables &amp; Views guides</a></p>
+          <p class="guide-footer-links"><a href="table-structures.html">Table structures</a> · <a href="temporary-transient-tables.html">Temporary &amp; transient tables</a> · <a href="hybrid-tables.html">Hybrid tables</a> · <a href="interactive-tables.html">Interactive tables</a> · <a href="tables-snowsight.html">Tables in Snowsight</a> · <a href="search-optimization.html">Search optimization</a></p>
+        </footer>
+      </article>
+    </main>
+  </div>
+
+  <script src="../js/app.js"></script>
+</body>
+</html>

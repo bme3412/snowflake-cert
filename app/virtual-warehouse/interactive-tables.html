@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Snowflake Study Guide — Interactive tables and warehouses</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body data-guide-id="interactive-tables">
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../index.html" class="logo">❄️ Snowflake Learn</a>
+      <nav class="topic-nav" aria-label="Study topics">
+        <a href="../index.html">Home</a>
+        <a href="index.html">Virtual Warehouse</a>
+      </nav>
+      <button type="button" class="nav-toggle" aria-label="Open menu" aria-expanded="false">
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+      </button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar" aria-label="Study guide navigation">
+      <details class="sidebar-group" open>
+        <summary>Guides — 01-virtual-warehouse</summary>
+        <div class="sidebar-group-content">
+          <ul class="guide-list chapter-list">
+            <li><a href="index.html">Category index</a></li>
+            <li><a href="overview.html">Overview</a><span class="sidebar-doc">00-overview.md</span></li>
+            <li><a href="multi-cluster.html">Multi-cluster</a><span class="sidebar-doc">01-multi-cluster.md</span></li>
+            <li><a href="considerations.html">Considerations</a><span class="sidebar-doc">02-considerations.md</span></li>
+            <li><a href="working-with-warehouses.html">Working with</a><span class="sidebar-doc">03-working-with-warehouses.md</span></li>
+            <li><a href="next-gen-warehouses.html">Gen2</a><span class="sidebar-doc">04-next-gen-standard-warehouses.md</span></li>
+            <li><a href="query-acceleration.html">Query Acceleration (QAS)</a><span class="sidebar-doc">05-query-acceleration.md</span></li>
+            <li><a href="monitoring-load.html">Monitoring load</a><span class="sidebar-doc">06-monitoring-load.md</span></li>
+            <li><a href="snowpark-optimized-warehouses.html">Snowpark-optimized</a><span class="sidebar-doc">07-snowpark-optimized-warehouses.md</span></li>
+            <li><a href="interactive-tables.html" class="is-active">Interactive tables</a><span class="sidebar-doc">08-interactive-tables.md</span></li>
+            <li><a href="example-workflow-equity-research.html">Example workflow</a><span class="sidebar-doc">09-example-workflow-equity-research.md</span></li>
+          </ul>
+        </div>
+      </details>
+      <details class="sidebar-group" open>
+        <summary>In this guide</summary>
+        <div class="sidebar-group-content">
+          <ul class="chapter-list">
+            <li><a href="#intro" class="nav-link" data-section="intro">Introduction</a></li>
+            <li><a href="#overview" class="nav-link" data-section="overview">Overview and use cases</a></li>
+            <li><a href="#regions" class="nav-link" data-section="regions">Region availability</a></li>
+            <li><a href="#limitations" class="nav-link" data-section="limitations">Limitations</a></li>
+            <li><a href="#getting-started" class="nav-link" data-section="getting-started">Getting started</a></li>
+            <li><a href="#creating-table" class="nav-link" data-section="creating-table">Creating an interactive table</a></li>
+            <li><a href="#creating-warehouse" class="nav-link" data-section="creating-warehouse">Creating an interactive warehouse</a></li>
+            <li><a href="#performance" class="nav-link" data-section="performance">Performance considerations</a></li>
+            <li><a href="#add-remove" class="nav-link" data-section="add-remove">Adding and removing tables</a></li>
+            <li><a href="#resume-suspend" class="nav-link" data-section="resume-suspend">Resume and suspend</a></li>
+            <li><a href="#querying" class="nav-link" data-section="querying">Querying</a></li>
+            <li><a href="#benchmarking" class="nav-link" data-section="benchmarking">Benchmarking</a></li>
+            <li><a href="#cost" class="nav-link" data-section="cost">Cost and billing</a></li>
+          </ul>
+        </div>
+      </details>
+      <div class="sidebar-footer">
+        <p class="progress-label">Your progress</p>
+        <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="13" aria-label="Sections completed">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <p class="progress-count" id="progress-count">0/13 sections</p>
+      </div>
+    </aside>
+
+    <main id="main" class="content">
+      <article class="guide">
+        <p class="breadcrumb"><a href="../index.html">Home</a> <span>›</span> <a href="index.html">Virtual Warehouse</a> <span>›</span> Interactive tables</p>
+        <div class="guide-header">
+          <h1>Interactive tables and interactive warehouses</h1>
+          <p class="lead">Interactive tables and interactive warehouses deliver low-latency query performance for high-concurrency, interactive workloads such as dashboards and APIs. This feature is generally available in select AWS regions.</p>
+        </div>
+
+        <section id="intro" class="section" data-section="intro">
+          <h2>Introduction</h2>
+          <p>This topic introduces Snowflake <strong>interactive tables</strong> and <strong>interactive warehouses</strong>. They deliver low-latency query performance for high-concurrency, interactive workloads. Interactive tables now support join queries.</p>
+          <div class="callout note">
+            <p><strong>Region availability:</strong> This feature is generally available in select Amazon Web Services (AWS) regions only. See the Region availability section below.</p>
+          </div>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="intro" aria-label="Mark Introduction as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="overview" class="section" data-section="overview">
+          <h2>Overview of interactive warehouses and interactive tables</h2>
+          <p>When you run queries on interactive tables using interactive warehouses, performance is generally better than with standard Snowflake tables.</p>
+          <dl>
+            <dt>Interactive warehouse</dt>
+            <dd>A specialized warehouse optimized for low-latency, interactive workloads. It tunes the engine for these workloads and uses additional metadata and indexes in interactive tables to accelerate queries. Optimized to run continuously with high concurrency. All interactive warehouses run on the latest generation of hardware.</dd>
+            <dt>Interactive table</dt>
+            <dd>A specialized table optimized for low-latency, interactive queries. Best performance when queried through interactive warehouses. Interactive tables have different ingestion methods and support a more limited set of SQL than standard tables.</dd>
+          </dl>
+          <h3>Use cases</h3>
+          <p>Interactive tables are optimized for fast, simple queries when you need consistent low-latency responses. Use cases include real-time dashboards, data-powered APIs, and high-concurrency serving. Simple queries that work best are usually <code>SELECT</code> with selective <code>WHERE</code> clauses, optionally <code>GROUP BY</code> on a few dimensions. Avoid large joins and large subqueries. Performance with window functions depends on data shape.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="overview" aria-label="Mark Overview and use cases as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="regions" class="section" data-section="regions">
+          <h2>Region availability</h2>
+          <p>Interactive tables and interactive warehouses are available in these AWS regions: us-east-1 (N. Virginia), us-west-2 (Oregon), us-east-2 (Ohio), ca-central-1 (Canada Central), ap-northeast-1 (Tokyo), ap-southeast-2 (Sydney), eu-central-1 (Frankfurt), eu-west-1 (Ireland), eu-west-2 (London). See Snowflake documentation for supported cloud regions.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="regions" aria-label="Mark Region availability as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="limitations" class="section" data-section="limitations">
+          <h2>Limitations of interactive warehouses and interactive tables</h2>
+          <h3>Interactive warehouses</h3>
+          <ul>
+            <li>No long-running queries: <code>SELECT</code> query timeout defaults to 5 seconds (can reduce, cannot increase). Other commands (e.g. SHOW, INSERT OVERWRITE) are not subject to this timeout.</li>
+            <li>Always running by design; no auto-suspend. Manual suspend is possible but resume has significant latency.</li>
+            <li>You cannot query standard Snowflake tables from an interactive warehouse. Use <code>USE WAREHOUSE</code> to switch warehouse type for the table type.</li>
+            <li>Multi-cluster interactive warehouses do not auto-scale: set <code>MIN_CLUSTER_COUNT</code> and <code>MAX_CLUSTER_COUNT</code> to the same value.</li>
+            <li>No <code>CALL</code> (stored procedures) or <code>-&gt;&gt;</code> pipe operator.</li>
+            <li>No replication; not in failover or replication groups.</li>
+          </ul>
+          <h3>Interactive tables</h3>
+          <ul>
+            <li>No UPDATE/DELETE; only DML is <code>INSERT OVERWRITE</code>. No replication; no fail-safe. Time Travel is supported. Query insights not collected.</li>
+            <li>Cannot use as source for materialized view; limited <code>ALTER TABLE</code> (e.g. can rename, set comments, masking/row access policies, storage lifecycle; see docs for full list). No streams; cannot be base table for dynamic table; no <code>RESAMPLE</code>; Time Travel retention inherited from schema/database/account.</li>
+          </ul>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="limitations" aria-label="Mark Limitations as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="getting-started" class="section" data-section="getting-started">
+          <h2>Getting started with interactive tables</h2>
+          <ol>
+            <li>Create an interactive table using a <strong>standard</strong> warehouse.</li>
+            <li>Create an interactive warehouse.</li>
+            <li>Resume the interactive warehouse.</li>
+            <li>Add the interactive table to the interactive warehouse.</li>
+            <li>Query the interactive table through the interactive warehouse.</li>
+          </ol>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="getting-started" aria-label="Mark Getting started as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="creating-table" class="section" data-section="creating-table">
+          <h2>Creating an interactive table</h2>
+          <p>Use <code>CREATE INTERACTIVE TABLE</code> with CTAS-style syntax and the required <code>CLUSTER BY</code> clause. Choose clustering columns to match <code>WHERE</code> clauses in your most time-critical queries; they significantly affect performance. Run <code>CREATE INTERACTIVE TABLE</code> with a <strong>standard</strong> warehouse; use the interactive warehouse only for querying later.</p>
+          <pre><code>CREATE INTERACTIVE TABLE
+  IF NOT EXISTS orders
+  CLUSTER BY (id)
+AS
+  SELECT * FROM demoSource;</code></pre>
+          <h3>Auto-refresh</h3>
+          <p>To auto-refresh from another table, use <code>TARGET_LAG</code> with an interval (e.g. <code>'20 minutes'</code>) and <code>WAREHOUSE</code> (a standard warehouse for refresh). Minimum is 60 seconds. Example:</p>
+          <pre><code>CREATE INTERACTIVE TABLE my_dynamic_interactive_table
+  CLUSTER BY (c1, c2)
+  TARGET_LAG = '20 minutes'
+  WAREHOUSE = my_standard_warehouse
+AS SELECT c1, SUM(c2) FROM my_source_table GROUP BY c1;</code></pre>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="creating-table" aria-label="Mark Creating an interactive table as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="creating-warehouse" class="section" data-section="creating-warehouse">
+          <h2>Creating an interactive warehouse</h2>
+          <p>Use <code>CREATE WAREHOUSE</code> or <code>CREATE OR REPLACE WAREHOUSE</code> with the <code>INTERACTIVE</code> keyword. Optionally use the <code>TABLES</code> clause to associate interactive tables immediately.</p>
+          <pre><code>CREATE OR REPLACE INTERACTIVE WAREHOUSE interactive_demo
+  TABLES (orders)
+  WAREHOUSE_SIZE = 'XSMALL';</code></pre>
+          <p>Or create without tables and add them later with <code>ALTER WAREHOUSE ... ADD TABLES</code>. Interactive warehouses stay active by default (no auto-suspend).</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="creating-warehouse" aria-label="Mark Creating an interactive warehouse as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="performance" class="section" data-section="performance">
+          <h2>Performance considerations</h2>
+          <h3>Query best practices</h3>
+          <p>Interactive warehouses benefit most from selective queries (few columns, selective <code>WHERE</code>). Avoid <code>SELECT *</code> and broad time ranges (e.g. a full year). Large joins and compute-heavy expressions (e.g. regex) can reduce concurrency.</p>
+          <h3>Data layout</h3>
+          <p>Cluster by columns you filter on (e.g. <code>sale_date</code> for date-range queries). See Clustering Keys &amp; Clustered Tables in Snowflake docs.</p>
+          <h3>Search optimization</h3>
+          <p>Use search optimization for point lookups (e.g. <code>WHERE some_id = some_UUID</code>).</p>
+          <h3>Sizing the warehouse</h3>
+          <p>Size based on the working set (frequently queried portion). Interactive warehouses use local storage caching; non-cached data has higher read latency on first read. Sizes XSMALL–3XLARGE; multi-cluster is supported but min and max cluster count must be equal (no auto-scale). Suggested sizes: &lt;500 GB → XSMALL; 500 GB–1 TB → SMALL; 1–2 TB → MEDIUM; 2–4 TB → LARGE; 4–8 TB → XLARGE; 8–16 TB → 2XLARGE; &gt;16 TB → 3XLARGE. You don’t need the entire working set in cache—hot data is enough.</p>
+          <h3>Troubleshooting</h3>
+          <p><strong>Single query slow:</strong> Query may need more compute (e.g. regex, COUNT(DISTINCT)). Try a larger warehouse. <strong>Sudden high tail/P95 latency:</strong> Often insufficient cache; increase warehouse size; allow cache warm-up after resume. <strong>Queuing or low concurrency:</strong> Scale out with <code>MIN_CLUSTER_COUNT</code> and <code>MAX_CLUSTER_COUNT</code> (set equal); multi-cluster doesn’t auto-scale.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="performance" aria-label="Mark Performance considerations as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="add-remove" class="section" data-section="add-remove">
+          <h2>Adding and removing interactive tables</h2>
+          <p>Add tables to an interactive warehouse (one-time) so you can query them; otherwise you get object not found. Use <code>ALTER WAREHOUSE ... ADD TABLES (orders);</code> (comma-separated for multiple). This starts cache warming, which can take significant time. You can associate one interactive table with multiple interactive warehouses.</p>
+          <p>Remove with <code>ALTER WAREHOUSE interactive_demo DROP TABLES (orders, customers);</code>. The tables still exist; this only detaches them from the warehouse.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="add-remove" aria-label="Mark Adding and removing tables as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="resume-suspend" class="section" data-section="resume-suspend">
+          <h2>Resuming and suspending an interactive warehouse</h2>
+          <p>Interactive warehouses are created suspended. Resume with <code>ALTER WAREHOUSE interactive_demo RESUME;</code>. Queries will be slow while the cache warms (minutes to an hour depending on data). Suspend with <code>ALTER WAREHOUSE interactive_demo SUSPEND;</code>. In production you typically leave them running; Snowflake does not auto-suspend interactive warehouses. To remove entirely: <code>DROP WAREHOUSE</code>; this removes associations but interactive tables remain and can be used with other interactive warehouses.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="resume-suspend" aria-label="Mark Resume and suspend as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="querying" class="section" data-section="querying">
+          <h2>Querying an interactive table</h2>
+          <p>Set the session warehouse to your interactive warehouse: <code>USE WAREHOUSE interactive_demo;</code>. Then run queries against the interactive table normally. In an interactive warehouse you can only query interactive tables; switch to a standard warehouse to query standard or hybrid tables.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="querying" aria-label="Mark Querying as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="benchmarking" class="section" data-section="benchmarking">
+          <h2>Benchmarking best practices</h2>
+          <ul>
+            <li>Turn off query result cache (e.g. <code>USE_CACHED_RESULT</code> session parameter) for consistent benchmark runs.</li>
+            <li>Wait after create/resume for cache warm-up before measuring.</li>
+            <li>Don’t interleave standard and interactive table queries when comparing; run full benchmark on one, then the other.</li>
+            <li>Match clustering columns to <code>WHERE</code> predicates; avoid high-cardinality columns (e.g. unique IDs) as sole clustering key.</li>
+            <li>For short, simple queries, consider higher <code>MAX_CONCURRENCY_LEVEL</code> on the interactive warehouse.</li>
+          </ul>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="benchmarking" aria-label="Mark Benchmarking as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="cost" class="section" data-section="cost">
+          <h2>Cost and billing</h2>
+          <p><strong>Storage lifecycle policies</strong> can be used to archive or expire rows on interactive tables. You cannot use both <code>TARGET_LAG</code> (auto-refresh) and a storage lifecycle policy on the same interactive table.</p>
+          <p><strong>Interactive warehouses</strong> incur compute charges when active. Minimum billable period is one hour, then one-second granularity. Resuming a paused warehouse starts a new minimum billable period—avoid pausing and resuming repeatedly in a short period.</p>
+          <p><strong>Interactive tables</strong> use standard storage pricing (same as standard tables). They may be larger than equivalent standard tables due to encoding and indexes; that size is included in storage volume. See the Snowflake service consumption table for details.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="cost" aria-label="Mark Cost and billing as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <footer class="guide-footer">
+          <p>You've finished the Interactive tables guide. <a href="index.html">All Virtual Warehouse guides</a></p>
+          <p class="guide-footer-links"><a href="overview.html">Overview</a> · <a href="multi-cluster.html">Multi-cluster</a> · <a href="considerations.html">Considerations</a> · <a href="working-with-warehouses.html">Working with</a> · <a href="next-gen-warehouses.html">Gen2</a> · <a href="query-acceleration.html">Query Acceleration (QAS)</a> · <a href="monitoring-load.html">Monitoring load</a> · <a href="snowpark-optimized-warehouses.html">Snowpark-optimized</a> · <a href="example-workflow-equity-research.html">Example workflow</a></p>
+        </footer>
+      </article>
+    </main>
+  </div>
+
+  <script src="../js/app.js"></script>
+</body>
+</html>

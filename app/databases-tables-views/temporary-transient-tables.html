@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Temporary and transient tables — Snowflake Learn</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body data-guide-id="temporary-transient">
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../index.html" class="logo">❄️ Snowflake Learn</a>
+      <nav class="topic-nav" aria-label="Study topics">
+        <a href="../index.html">Home</a>
+        <a href="index.html">Databases, Tables &amp; Views</a>
+      </nav>
+      <button type="button" class="nav-toggle" aria-label="Open menu" aria-expanded="false">
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+      </button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar" aria-label="Study guide navigation">
+      <details class="sidebar-group" open>
+        <summary>Guides — 02-databases-tables-views</summary>
+        <div class="sidebar-group-content">
+          <ul class="guide-list chapter-list">
+            <li><a href="index.html">Category index</a></li>
+            <li><a href="table-structures.html">Table structures</a><span class="sidebar-doc">01-table-structures.md</span></li>
+            <li><a href="temporary-transient-tables.html" class="is-active">Temporary &amp; transient</a><span class="sidebar-doc">02-temporary-transient-tables.md</span></li>
+            <li><a href="external-tables.html">External tables</a><span class="sidebar-doc">03-external-tables.md</span></li>
+            <li><a href="hybrid-tables.html">Hybrid tables</a><span class="sidebar-doc">04-hybrid-tables.md</span></li>
+            <li><a href="interactive-tables.html">Interactive tables</a><span class="sidebar-doc">05-interactive-tables.md</span></li>
+            <li><a href="tables-snowsight.html">Tables in Snowsight</a><span class="sidebar-doc">06-tables-Snowsight.md</span></li>
+            <li><a href="search-optimization.html">Search optimization</a><span class="sidebar-doc">07-search-optimization.md</span></li>
+          </ul>
+        </div>
+      </details>
+      <details class="sidebar-group" open>
+        <summary>In this guide</summary>
+        <div class="sidebar-group-content">
+          <ul class="chapter-list">
+            <li><a href="#intro" class="nav-link" data-section="intro">Introduction</a></li>
+            <li><a href="#temporary" class="nav-link" data-section="temporary">Temporary tables</a></li>
+            <li><a href="#temp-storage" class="nav-link" data-section="temp-storage">Temp: storage &amp; maintenance</a></li>
+            <li><a href="#naming" class="nav-link" data-section="naming">Naming conflicts</a></li>
+            <li><a href="#creating-temp" class="nav-link" data-section="creating-temp">Creating temporary</a></li>
+            <li><a href="#transient" class="nav-link" data-section="transient">Transient tables</a></li>
+            <li><a href="#transient-storage" class="nav-link" data-section="transient-storage">Transient: storage &amp; clones</a></li>
+            <li><a href="#creating-transient" class="nav-link" data-section="creating-transient">Creating transient</a></li>
+            <li><a href="#comparison" class="nav-link" data-section="comparison">Comparison of types</a></li>
+            <li><a href="#time-travel-failsafe" class="nav-link" data-section="time-travel-failsafe">Time Travel &amp; Fail-safe</a></li>
+          </ul>
+        </div>
+      </details>
+      <div class="sidebar-footer">
+        <p class="progress-label">Your progress</p>
+        <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="10" aria-label="Sections completed">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <p class="progress-count" id="progress-count">0/10 sections</p>
+      </div>
+    </aside>
+
+    <main id="main" class="content">
+      <article class="guide">
+        <p class="breadcrumb"><a href="../index.html">Home</a> <span>›</span> <a href="index.html">Databases, Tables &amp; Views</a> <span>›</span> Temporary &amp; transient</p>
+        <div class="guide-header">
+          <h1>Working with temporary and transient tables</h1>
+          <p class="lead">In addition to permanent tables, Snowflake supports temporary and transient tables for transitory data that does not need long-term retention or full Fail-safe protection.</p>
+        </div>
+
+        <section id="intro" class="section" data-section="intro">
+          <h2>Introduction</h2>
+          <p>Besides <strong>permanent</strong> tables (the default), Snowflake supports <strong>temporary</strong> and <strong>transient</strong> tables. They are useful for data that does not need to be kept for a long time.</p>
+          <div class="callout note">
+            <p>You cannot create hybrid tables that are temporary or transient, or create hybrid tables inside transient schemas or databases.</p>
+          </div>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="intro" aria-label="Mark Introduction as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="temporary" class="section" data-section="temporary">
+          <h2>Temporary tables</h2>
+          <p><strong>Temporary tables</strong> store non-permanent data (e.g. ETL, session-specific data). They exist only in the session that created them and persist only until the session ends. They are not visible to other users or sessions. When the session ends, the data is purged and is not recoverable.</p>
+          <div class="callout note">
+            <p>Snowflake also supports other temporary objects (e.g. stages) with the same session-based semantics.</p>
+          </div>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="temporary" aria-label="Mark Temporary tables as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="temp-storage" class="section" data-section="temp-storage">
+          <h2>Temporary tables: storage and maintenance</h2>
+          <p>While a temporary table exists, its data counts toward storage charges. To avoid unexpected charges—especially with large temp tables in long-lived sessions (e.g. over 24 hours)—drop them when no longer needed or end the session.</p>
+          <p>High volumes of temporary tables can slow queries against the Information Schema <code>COLUMNS</code> and <code>TABLES</code> views. Best practices: drop temporary tables explicitly before the session ends, and have users log out of inactive sessions (see session policies).</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="temp-storage" aria-label="Mark Temp storage and maintenance as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="naming" class="section" data-section="naming">
+          <h2>Potential naming conflicts</h2>
+          <p>Temporary tables live in a database and schema but are session-based, so they are not subject to the same uniqueness rules. You can have a temporary and a non-temporary table with the same name in the same schema. The <strong>temporary table takes precedence</strong> in the session: it hides any other table with that name, and all operations in the session affect the temporary table.</p>
+          <p>This can cause conflicts when doing DDL (e.g. creating a temp table with the same name as an existing table, or creating a permanent table with the same name as an existing temp table). Be careful when dropping a table and using Time Travel to restore it, or when using <code>CREATE OR REPLACE</code> (which drops then recreates).</p>
+          <div class="callout note">
+            <p><strong>Important:</strong> Note this behavior with Time Travel restores and <code>CREATE OR REPLACE</code>.</p>
+          </div>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="naming" aria-label="Mark Naming conflicts as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="creating-temp" class="section" data-section="creating-temp">
+          <h2>Creating a temporary table</h2>
+          <p>Use the <code>TEMPORARY</code> (or <code>TEMP</code>) keyword in <code>CREATE TABLE</code>. Creating a temporary table does not require the <code>CREATE TABLE</code> privilege on the schema.</p>
+          <pre><code>CREATE TEMPORARY TABLE mytemptable (id NUMBER, creation_date DATE);</code></pre>
+          <div class="callout note">
+            <p>After creation, temporary tables cannot be converted to another table type.</p>
+          </div>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="creating-temp" aria-label="Mark Creating temporary as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="transient" class="section" data-section="transient">
+          <h2>Transient tables</h2>
+          <p><strong>Transient tables</strong> persist until explicitly dropped and are visible to all users with the right privileges. They are like permanent tables except they have <strong>no Fail-safe</strong> period. Use them for transitory data that must outlive a session but does not need the same level of protection as permanent tables.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="transient" aria-label="Mark Transient tables as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="transient-storage" class="section" data-section="transient-storage">
+          <h2>Transient tables: storage and clones</h2>
+          <p>Transient tables contribute to storage charges like permanent tables, but there are no Fail-safe storage costs.</p>
+          <p>When you create a <strong>transient table as a clone</strong> of a permanent table, Snowflake creates a zero-copy clone (shared micro-partitions). When you add, delete, or update rows in the clone, new micro-partitions are created for the transient table. If the source permanent table is dropped, shared micro-partitions enter Fail-safe only after the transient clone is dropped (which can delay when Fail-safe bytes are billed).</p>
+          <p>Snowflake also supports <strong>transient databases and schemas</strong>. Tables created in a transient schema, and schemas in a transient database, are transient by default.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="transient-storage" aria-label="Mark Transient storage and clones as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="creating-transient" class="section" data-section="creating-transient">
+          <h2>Creating transient tables, schemas, and databases</h2>
+          <p>Use the <code>TRANSIENT</code> keyword in <code>CREATE TABLE</code>, <code>CREATE SCHEMA</code>, or <code>CREATE DATABASE</code>.</p>
+          <pre><code>CREATE TRANSIENT TABLE mytranstable (id NUMBER, creation_date DATE);</code></pre>
+          <div class="callout note">
+            <p>After creation, transient tables cannot be converted to another table type.</p>
+          </div>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="creating-transient" aria-label="Mark Creating transient as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="comparison" class="section" data-section="comparison">
+          <h2>Comparison of table types</h2>
+          <p>Summary of persistence, cloning, Time Travel, and Fail-safe:</p>
+          <table>
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Persistence</th>
+                <th>Time Travel (days)</th>
+                <th>Fail-safe (days)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Temporary</td>
+                <td>Remainder of session</td>
+                <td>0 or 1 (default 1)</td>
+                <td>0</td>
+              </tr>
+              <tr>
+                <td>Transient</td>
+                <td>Until dropped</td>
+                <td>0 or 1 (default 1)</td>
+                <td>0</td>
+              </tr>
+              <tr>
+                <td>Permanent (Standard)</td>
+                <td>Until dropped</td>
+                <td>0 or 1 (default 1)</td>
+                <td>7</td>
+              </tr>
+              <tr>
+                <td>Permanent (Enterprise+)</td>
+                <td>Until dropped</td>
+                <td>0 to 90 (configurable)</td>
+                <td>7</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>Cloning: temporary and transient can be cloned to temporary or transient; permanent can be cloned to temporary, transient, or permanent.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="comparison" aria-label="Mark Comparison as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="time-travel-failsafe" class="section" data-section="time-travel-failsafe">
+          <h2>Time Travel and Fail-safe notes</h2>
+          <p>Time Travel retention can be set at create time or later. Within that period, Time Travel operations (queries, clone, restore) are available. If a permanent table has retention 0 and is dropped, it goes straight into Fail-safe.</p>
+          <p>Temporary tables can have 1-day Time Travel, but the table is purged when the session ends, so effective retention is the shorter of 24 hours or the session. Long-running Time Travel queries delay purging of temporary and transient tables until the query finishes.</p>
+          <p>Fail-safe is not configurable. Temporary and transient tables have no Fail-safe, so no extra storage beyond Time Travel. Because transient tables have no Fail-safe, they can reduce cost for large transitory tables, but <strong>data is not recoverable</strong> after the Time Travel period (e.g. after 1 day if the table is dropped or lost). Use transient tables only for data that does not need failure protection or that can be rebuilt outside Snowflake. See Data storage considerations in Snowflake docs.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="time-travel-failsafe" aria-label="Mark Time Travel and Fail-safe as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <footer class="guide-footer">
+          <p>You've finished the Temporary and transient tables guide. <a href="index.html">All Databases, Tables &amp; Views guides</a></p>
+          <p class="guide-footer-links"><a href="table-structures.html">Table structures</a> · <a href="external-tables.html">External tables</a> · <a href="hybrid-tables.html">Hybrid tables</a> · <a href="interactive-tables.html">Interactive tables</a> · <a href="tables-snowsight.html">Tables in Snowsight</a> · <a href="search-optimization.html">Search optimization</a></p>
+        </footer>
+      </article>
+    </main>
+  </div>
+
+  <script src="../js/app.js"></script>
+</body>
+</html>

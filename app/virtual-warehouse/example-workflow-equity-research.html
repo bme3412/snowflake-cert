@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Snowflake Study Guide — Example workflow: Equity research in Cursor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body data-guide-id="example-workflow">
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../index.html" class="logo">❄️ Snowflake Learn</a>
+      <nav class="topic-nav" aria-label="Study topics">
+        <a href="../index.html">Home</a>
+        <a href="index.html">Virtual Warehouse</a>
+      </nav>
+      <button type="button" class="nav-toggle" aria-label="Open menu" aria-expanded="false">
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+      </button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar" aria-label="Study guide navigation">
+      <details class="sidebar-group" open>
+        <summary>Guides — 01-virtual-warehouse</summary>
+        <div class="sidebar-group-content">
+          <ul class="guide-list chapter-list">
+            <li><a href="index.html">Category index</a></li>
+            <li><a href="overview.html">Overview</a><span class="sidebar-doc">00-overview.md</span></li>
+            <li><a href="multi-cluster.html">Multi-cluster</a><span class="sidebar-doc">01-multi-cluster.md</span></li>
+            <li><a href="considerations.html">Considerations</a><span class="sidebar-doc">02-considerations.md</span></li>
+            <li><a href="working-with-warehouses.html">Working with</a><span class="sidebar-doc">03-working-with-warehouses.md</span></li>
+            <li><a href="next-gen-warehouses.html">Gen2</a><span class="sidebar-doc">04-next-gen-standard-warehouses.md</span></li>
+            <li><a href="query-acceleration.html">Query Acceleration (QAS)</a><span class="sidebar-doc">05-query-acceleration.md</span></li>
+            <li><a href="monitoring-load.html">Monitoring load</a><span class="sidebar-doc">06-monitoring-load.md</span></li>
+            <li><a href="snowpark-optimized-warehouses.html">Snowpark-optimized</a><span class="sidebar-doc">07-snowpark-optimized-warehouses.md</span></li>
+            <li><a href="interactive-tables.html">Interactive tables</a><span class="sidebar-doc">08-interactive-tables.md</span></li>
+            <li><a href="example-workflow-equity-research.html" class="is-active">Example workflow</a><span class="sidebar-doc">09-example-workflow-equity-research.md</span></li>
+          </ul>
+        </div>
+      </details>
+      <details class="sidebar-group" open>
+        <summary>In this guide</summary>
+        <div class="sidebar-group-content">
+          <ul class="chapter-list">
+            <li><a href="#intro" class="nav-link" data-section="intro">Scenario and goals</a></li>
+            <li><a href="#cursor" class="nav-link" data-section="cursor">Using Snowflake from Cursor</a></li>
+            <li><a href="#ad-hoc" class="nav-link" data-section="ad-hoc">Ad hoc research warehouse</a></li>
+            <li><a href="#batch" class="nav-link" data-section="batch">Batch / load warehouse</a></li>
+            <li><a href="#qas" class="nav-link" data-section="qas">Query Acceleration</a></li>
+            <li><a href="#monitoring" class="nav-link" data-section="monitoring">Monitoring and tuning</a></li>
+            <li><a href="#optional-interactive" class="nav-link" data-section="optional-interactive">Optional: Interactive tables</a></li>
+            <li><a href="#optional-snowpark" class="nav-link" data-section="optional-snowpark">Optional: Snowpark for ML</a></li>
+            <li><a href="#gen2" class="nav-link" data-section="gen2">Gen2 and default warehouse</a></li>
+            <li><a href="#putting-together" class="nav-link" data-section="putting-together">Putting it together</a></li>
+          </ul>
+        </div>
+      </details>
+      <div class="sidebar-footer">
+        <p class="progress-label">Your progress</p>
+        <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="10" aria-label="Sections completed">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <p class="progress-count" id="progress-count">0/10 sections</p>
+      </div>
+    </aside>
+
+    <main id="main" class="content">
+      <article class="guide">
+        <p class="breadcrumb"><a href="../index.html">Home</a> <span>›</span> <a href="index.html">Virtual Warehouse</a> <span>›</span> Example workflow</p>
+        <div class="guide-header">
+          <h1>Example workflow: Technology equity research with Snowflake in Cursor</h1>
+          <p class="lead">A realistic workflow for tech stock and equity research: ad hoc SQL from Cursor, batch loads, optional dashboard and ML—using the warehouse concepts from this module.</p>
+        </div>
+
+        <section id="intro" class="section" data-section="intro">
+          <h2>Scenario and goals</h2>
+          <p><strong>Data:</strong> Market data, fundamentals, and your own notes or scores in Snowflake tables.</p>
+          <p><strong>Workloads:</strong> Ad hoc research queries from Cursor; scheduled or on-demand batch loads; optional real-time dashboard for a watchlist or screener.</p>
+          <p><strong>Goals:</strong> Control cost (credits), keep ad hoc work responsive, and—where it matters—deliver low-latency reads for interactive tools.</p>
+          <p>The following sections map each part of this workflow to the virtual warehouse concepts in this module.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="intro" aria-label="Mark Scenario and goals as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="cursor" class="section" data-section="cursor">
+          <h2>Using Snowflake from Cursor</h2>
+          <p>You run SQL against Snowflake from Cursor by using a Snowflake connector or extension (e.g. Snowflake extension for VS Code/Cursor, or a driver used by a script or notebook). In every session, <strong>you must set the warehouse</strong> that will run your queries. If you don't, and no default warehouse is set for your user/role, your statements will queue until a warehouse is assigned.</p>
+          <ul>
+            <li><strong>In a worksheet or script:</strong> Run <code>USE WAREHOUSE &lt;warehouse_name&gt;;</code> at the start of the session (or rely on a default warehouse for your role).</li>
+            <li><strong>In code:</strong> When you connect (e.g. via Python or Node driver), specify the warehouse in the connection parameters or set it with <code>USE WAREHOUSE</code> after connecting.</li>
+          </ul>
+          <p>All of the warehouse choices below (size, type, auto-suspend, multi-cluster, etc.) apply to the warehouse you use from Cursor just as they do in Snowsight or any other client.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="cursor" aria-label="Mark Using Snowflake from Cursor as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="ad-hoc" class="section" data-section="ad-hoc">
+          <h2>1. Ad hoc research warehouse (Cursor, exploration, one-off queries)</h2>
+          <p><em>Concept: Overview, Working with warehouses, Considerations</em></p>
+          <p>Create a <strong>standard</strong> warehouse (e.g. <code>RESEARCH_WH</code>) for ad hoc work: exploration, backtests, and one-off SQL you run from Cursor.</p>
+          <ul>
+            <li><strong>Size:</strong> Start with Small or Medium. Per-second billing means you can use a larger size when needed and suspend when done.</li>
+            <li><strong>Auto-suspend:</strong> Set a short timeout (e.g. 60–300 seconds). When you leave Cursor or stop running queries, the warehouse suspends. When you run the next query, it auto-resumes (with the usual 60-second minimum charge).</li>
+          </ul>
+          <pre><code>CREATE OR REPLACE WAREHOUSE RESEARCH_WH
+  WAREHOUSE_SIZE = 'SMALL'
+  AUTO_SUSPEND = 120
+  AUTO_RESUME = TRUE
+  COMMENT = 'Ad hoc equity research from Cursor';</code></pre>
+          <p>In Cursor, point your session to this warehouse so your interactive queries run here. This keeps ad hoc cost predictable and avoids leaving a warehouse running overnight.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="ad-hoc" aria-label="Mark Ad hoc research warehouse as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="batch" class="section" data-section="batch">
+          <h2>2. Batch / load warehouse (refreshing market data, fundamentals)</h2>
+          <p><em>Concept: Overview (data loading), Multi-cluster (optional), Considerations</em></p>
+          <p>Use a <strong>separate</strong> warehouse for batch jobs: loading new market data, refreshing fundamentals, or running heavier transformations. That way ad hoc research in Cursor doesn't compete with loads.</p>
+          <ul>
+            <li><strong>Size:</strong> For loading many files, consider Medium or Large; loading performance often depends more on file count and size than on warehouse size.</li>
+            <li><strong>Auto-suspend:</strong> Set a timeout so the warehouse suspends after the batch finishes.</li>
+            <li>If <strong>multiple batch jobs or users</strong> run at once, use a <strong>multi-cluster</strong> warehouse (Enterprise Edition) so extra clusters scale out when needed.</li>
+          </ul>
+          <pre><code>CREATE OR REPLACE WAREHOUSE BATCH_LOAD_WH
+  WAREHOUSE_SIZE = 'MEDIUM'
+  AUTO_SUSPEND = 120
+  AUTO_RESUME = TRUE
+  COMMENT = 'Batch loads for market/fundamental data';</code></pre>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="batch" aria-label="Mark Batch / load warehouse as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="qas" class="section" data-section="qas">
+          <h2>3. Query Acceleration for heavy analytical queries</h2>
+          <p><em>Concept: Query Acceleration (QAS)</em></p>
+          <p>When you run <strong>large scans with filters or aggregations</strong> from Cursor (e.g. "all tech names with revenue growth &gt; X and margin &gt; Y"), those queries can be eligible for <strong>Query Acceleration</strong>. QAS offloads part of the work to shared compute and can reduce wall-clock time.</p>
+          <p>Enable QAS on the warehouse you use for ad hoc research: <code>ALTER WAREHOUSE RESEARCH_WH SET ENABLE_QUERY_ACCELERATION = TRUE;</code> (and optionally set <code>QUERY_ACCELERATION_MAX_SCALE_FACTOR</code> to cap cost). Use the same warehouse from Cursor for these analytical queries so they benefit from QAS when eligible.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="qas" aria-label="Mark Query Acceleration as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="monitoring" class="section" data-section="monitoring">
+          <h2>4. Monitoring and tuning</h2>
+          <p><em>Concept: Monitoring warehouse load, Considerations</em></p>
+          <p>Use the <strong>Warehouse Activity</strong> (load) chart in Snowsight for <code>RESEARCH_WH</code> (and <code>BATCH_LOAD_WH</code> if used heavily) to see running vs queued load over time. If you often see queuing from Cursor sessions, consider <strong>scale out</strong> (multi-cluster) or <strong>scale up</strong> (resize to a larger size).</p>
+          <p>Use <strong>Account Usage</strong> (e.g. <code>QUERY_HISTORY</code>) to inspect query patterns, runtimes, and credit use. That helps you decide whether to resize, enable QAS, or separate workloads.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="monitoring" aria-label="Mark Monitoring and tuning as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="optional-interactive" class="section" data-section="optional-interactive">
+          <h2>5. Optional: Interactive tables and warehouse for a screener/dashboard</h2>
+          <p><em>Concept: Interactive tables and interactive warehouses</em></p>
+          <p>If you build a <strong>low-latency screener or watchlist</strong> and want sub-second or very fast reads, consider <strong>interactive tables</strong> and an <strong>interactive warehouse</strong>. Create the interactive table with a standard warehouse, create an interactive warehouse, add the table to it, and point your dashboard to the interactive warehouse. Keep using standard warehouses (e.g. <code>RESEARCH_WH</code>) from Cursor for ad hoc SQL.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="optional-interactive" aria-label="Mark Optional Interactive tables as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="optional-snowpark" class="section" data-section="optional-snowpark">
+          <h2>6. Optional: Snowpark-optimized warehouse for ML scoring</h2>
+          <p><em>Concept: Snowpark-optimized warehouses</em></p>
+          <p>If you run <strong>ML models</strong> (e.g. scoring or ranking) inside Snowflake via <strong>Snowpark Python stored procedures</strong>, use a <strong>Snowpark-optimized</strong> warehouse for that workload. Keep ad hoc SQL and batch loads on standard warehouses; reserve the Snowpark-optimized warehouse for the stored procedure calls.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="optional-snowpark" aria-label="Mark Optional Snowpark as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="gen2" class="section" data-section="gen2">
+          <h2>7. Gen2 and default warehouse</h2>
+          <p><em>Concept: Next-generation (Gen2) standard warehouses</em></p>
+          <p>If your account and region support <strong>Gen2</strong> standard warehouses, you can create <code>RESEARCH_WH</code> (or <code>BATCH_LOAD_WH</code>) as a Gen2 warehouse for the same workflow. Gen2 offers different sizing and billing; see the Gen2 topic and the Snowflake Service Consumption Table. Otherwise, the workflow above is unchanged.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="gen2" aria-label="Mark Gen2 as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="putting-together" class="section" data-section="putting-together">
+          <h2>Putting it together in Cursor</h2>
+          <ol>
+            <li><strong>Connect</strong> to Snowflake from Cursor and set the session warehouse to <code>RESEARCH_WH</code> (or your chosen ad hoc warehouse).</li>
+            <li><strong>Run ad hoc SQL</strong> (screens, backtests, one-off analytics); the warehouse auto-resumes and auto-suspends. Use Query Acceleration on that warehouse for heavy analytical queries.</li>
+            <li><strong>Run or schedule batch loads</strong> on a separate warehouse (e.g. <code>BATCH_LOAD_WH</code>). Use multi-cluster if you have concurrent batch jobs or multiple users.</li>
+            <li><strong>Monitor</strong> with the load chart and <code>QUERY_HISTORY</code>; resize or scale out if you see sustained queuing or slow runtimes.</li>
+            <li><strong>Optionally</strong> add an interactive table + interactive warehouse for a fast screener/dashboard, and a Snowpark-optimized warehouse for ML.</li>
+          </ol>
+          <p>This example ties together warehouse types and size, auto-suspend and billing, multi-cluster, Query Acceleration, monitoring and tuning, and optional interactive and Snowpark-optimized warehouses—all in the context of technology equity research using Snowflake from Cursor.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="putting-together" aria-label="Mark Putting it together as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <footer class="guide-footer">
+          <p>You've finished the Example workflow guide. <a href="index.html">All Virtual Warehouse guides</a></p>
+          <p class="guide-footer-links"><a href="overview.html">Overview</a> · <a href="multi-cluster.html">Multi-cluster</a> · <a href="considerations.html">Considerations</a> · <a href="working-with-warehouses.html">Working with</a> · <a href="next-gen-warehouses.html">Gen2</a> · <a href="query-acceleration.html">Query Acceleration (QAS)</a> · <a href="monitoring-load.html">Monitoring load</a> · <a href="snowpark-optimized-warehouses.html">Snowpark-optimized</a> · <a href="interactive-tables.html">Interactive tables</a></p>
+        </footer>
+      </article>
+    </main>
+  </div>
+
+  <script src="../js/app.js"></script>
+</body>
+</html>

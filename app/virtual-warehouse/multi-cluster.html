@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Snowflake Study Guide — Multi-cluster Warehouses</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body data-guide-id="multicluster">
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../index.html" class="logo">❄️ Snowflake Learn</a>
+      <nav class="topic-nav" aria-label="Study topics">
+        <a href="../index.html">Home</a>
+        <a href="index.html">Virtual Warehouse</a>
+      </nav>
+      <button type="button" class="nav-toggle" aria-label="Open menu" aria-expanded="false">
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+      </button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar" aria-label="Study guide navigation">
+      <details class="sidebar-group" open>
+        <summary>Guides — 01-virtual-warehouse</summary>
+        <div class="sidebar-group-content">
+          <ul class="guide-list chapter-list">
+            <li><a href="index.html">Category index</a></li>
+            <li><a href="overview.html">Overview</a><span class="sidebar-doc">00-overview.md</span></li>
+            <li><a href="multi-cluster.html" class="is-active">Multi-cluster</a><span class="sidebar-doc">01-multi-cluster.md</span></li>
+            <li><a href="considerations.html">Considerations</a><span class="sidebar-doc">02-considerations.md</span></li>
+            <li><a href="working-with-warehouses.html">Working with</a><span class="sidebar-doc">03-working-with-warehouses.md</span></li>
+            <li><a href="next-gen-warehouses.html">Gen2</a><span class="sidebar-doc">04-next-gen-standard-warehouses.md</span></li>
+            <li><a href="query-acceleration.html">Query Acceleration (QAS)</a><span class="sidebar-doc">05-query-acceleration.md</span></li>
+            <li><a href="monitoring-load.html">Monitoring load</a><span class="sidebar-doc">06-monitoring-load.md</span></li>
+            <li><a href="snowpark-optimized-warehouses.html">Snowpark-optimized</a><span class="sidebar-doc">07-snowpark-optimized-warehouses.md</span></li>
+            <li><a href="interactive-tables.html">Interactive tables</a><span class="sidebar-doc">08-interactive-tables.md</span></li>
+            <li><a href="example-workflow-equity-research.html">Example workflow</a><span class="sidebar-doc">09-example-workflow-equity-research.md</span></li>
+          </ul>
+        </div>
+      </details>
+      <details class="sidebar-group" open>
+        <summary>In this guide</summary>
+        <div class="sidebar-group-content">
+          <ul class="chapter-list">
+            <li><a href="#intro" class="nav-link" data-section="intro">Introduction</a></li>
+            <li><a href="#what-is" class="nav-link" data-section="what-is">What is multi-cluster?</a></li>
+            <li><a href="#max-min" class="nav-link" data-section="max-min">Max and min clusters</a></li>
+            <li><a href="#modes" class="nav-link" data-section="modes">Maximized vs Auto-scale</a></li>
+            <li><a href="#credits" class="nav-link" data-section="credits">Credit usage</a></li>
+            <li><a href="#benefits" class="nav-link" data-section="benefits">Why use it?</a></li>
+            <li><a href="#creating" class="nav-link" data-section="creating">Creating one</a></li>
+            <li><a href="#scaling-policy" class="nav-link" data-section="scaling-policy">Scaling policy</a></li>
+            <li><a href="#changing" class="nav-link" data-section="changing">Changing cluster count</a></li>
+            <li><a href="#monitoring" class="nav-link" data-section="monitoring">Monitoring</a></li>
+          </ul>
+        </div>
+      </details>
+      <div class="sidebar-footer">
+        <p class="progress-label">Your progress</p>
+        <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="10" aria-label="Sections completed">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <p class="progress-count" id="progress-count">0/10 sections</p>
+      </div>
+    </aside>
+
+    <main id="main" class="content">
+      <article class="guide">
+        <p class="breadcrumb"><a href="../index.html">Home</a> <span>›</span> <a href="index.html">Virtual Warehouse</a> <span>›</span> Multi-cluster</p>
+        <div class="guide-header">
+          <h1>Multi-cluster Warehouses</h1>
+          <p class="lead">You already know a warehouse has one “cluster” of compute. Multi-cluster means more clusters—so more queries can run at once without you resizing or spinning up extra warehouses by hand.</p>
+        </div>
+
+        <section id="intro" class="section" data-section="intro">
+          <div class="section-badge">Start here</div>
+          <h2>Introduction</h2>
+          <p class="key-takeaway">Multi-cluster warehouses let you scale for <strong>concurrency</strong> (more users and queries at once). Snowflake can start and stop extra clusters automatically, or you can run a fixed number of clusters. This is an Enterprise Edition feature.</p>
+          <p>In the <a href="overview.html">Virtual Warehouse overview</a> we said a warehouse is like a pool of workers: one cluster of compute. When too many queries hit that one cluster, they queue. With a <strong>multi-cluster warehouse</strong>, you attach <em>more than one</em> cluster to the same warehouse. Same warehouse name, same connection from your code—but now there’s a bigger pool of compute, so more queries can run at the same time.</p>
+          <p>You tell Snowflake the <strong>minimum</strong> and <strong>maximum</strong> number of clusters. You can either run that many clusters all the time (maximized mode) or let Snowflake add and remove clusters as load goes up and down (auto-scale mode). Either way, you’re scaling for concurrency without creating a second warehouse or resizing the warehouse size. Multi-cluster warehouses are an <strong>Enterprise Edition</strong> feature.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="intro" aria-label="Mark Introduction as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <section id="what-is" class="section" data-section="what-is">
+          <h2>What is a multi-cluster warehouse?</h2>
+          <p class="key-takeaway">A normal warehouse = one cluster. A multi-cluster warehouse = two or more clusters behind the same warehouse name. Queries spread across clusters; if one cluster is full, Snowflake can start another (in auto-scale) or use one you already have (in maximized).</p>
+          <p>By default, a virtual warehouse has a <strong>single cluster</strong>. All queries that use that warehouse run on that one cluster. If you send more work than the cluster can handle, the extra queries wait in a queue.</p>
+          <p>A multi-cluster warehouse has <strong>multiple clusters</strong>. You set a minimum and a maximum. Snowflake then either keeps a fixed number of clusters running (maximized) or starts and stops clusters based on load (auto-scale). In both cases, the total compute available is “warehouse size × number of clusters.” So a Medium warehouse with 3 clusters has 3× the compute of a single-cluster Medium—and can run many more queries at once.</p>
+          <p>Everything else about the warehouse is the same: you still pick a size (X-Small through 6X-Large), you can resize anytime, and auto-suspend/auto-resume apply to the <em>whole</em> warehouse (all clusters), not to each cluster individually.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="what-is" aria-label="Mark What is multi-cluster as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <section id="max-min" class="section" data-section="max-min">
+          <h2>Max and min clusters: what can you set?</h2>
+          <p class="key-takeaway">You set a maximum (and optionally a minimum) number of clusters. The allowed maximum depends on warehouse size: smaller sizes can have more clusters (e.g. up to 300 for X-Small), larger sizes have lower limits (e.g. 10 for 4X–6X-Large).</p>
+          <p>When you create a multi-cluster warehouse, you set <strong>MAX_CLUSTER_COUNT</strong> to something greater than 1. You can also set <strong>MIN_CLUSTER_COUNT</strong>. The minimum must be less than or equal to the maximum. The <em>highest</em> maximum you’re allowed depends on the warehouse size: bigger sizes have fewer clusters allowed (because each cluster is already big). The table below shows the upper limit and the default max (often 10) for each size.</p>
+          <div class="table-wrap" role="region" aria-label="Max clusters by warehouse size">
+            <table class="data-table">
+              <caption>Maximum number of clusters allowed (and typical default) by warehouse size</caption>
+              <thead>
+                <tr>
+                  <th>Warehouse size</th>
+                  <th>Max clusters allowed</th>
+                  <th>Default max</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>X-Small</td><td>300</td><td>10</td></tr>
+                <tr><td>Small</td><td>300</td><td>10</td></tr>
+                <tr><td>Medium</td><td>300</td><td>10</td></tr>
+                <tr><td>Large</td><td>160</td><td>10</td></tr>
+                <tr><td>X-Large</td><td>80</td><td>10</td></tr>
+                <tr><td>2X-Large</td><td>40</td><td>10</td></tr>
+                <tr><td>3X-Large</td><td>20</td><td>10</td></tr>
+                <tr><td>4X-Large</td><td>10</td><td>10</td></tr>
+                <tr><td>5X-Large</td><td>10</td><td>10</td></tr>
+                <tr><td>6X-Large</td><td>10</td><td>10</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>In the Snowflake web UI (Snowsight), the dropdown for “Max Clusters” often only goes up to 10. To set a higher max (where allowed by size), you use SQL: <code>CREATE WAREHOUSE</code> or <code>ALTER WAREHOUSE</code> with <code>MAX_CLUSTER_COUNT</code>.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="max-min" aria-label="Mark Max and min clusters as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <section id="modes" class="section" data-section="modes">
+          <h2>Maximized vs Auto-scale</h2>
+          <p class="key-takeaway">Maximized = min and max are the same; all those clusters start and run the whole time. Auto-scale = min &lt; max; Snowflake starts and stops clusters as load goes up and down. Start with Auto-scale and small numbers (e.g. max 2–3, min 1).</p>
+          <p>You run a multi-cluster warehouse in one of two modes.</p>
+          <p><strong>Maximized mode</strong> means the minimum and maximum number of clusters are the <em>same</em> (and greater than 1). When the warehouse starts, Snowflake starts <em>all</em> of those clusters and keeps them running. So you get a fixed, large pool of compute. Use this when you have a lot of concurrent users or queries and the load doesn’t change much—you want that capacity available all the time.</p>
+          <p><strong>Auto-scale mode</strong> means the minimum is <em>less</em> than the maximum (e.g. min 1, max 5). Snowflake starts with at least the minimum number of clusters. When more queries show up and start queuing, Snowflake starts more clusters (up to the max). When load drops, it shuts down extra clusters so you’re not paying for idle compute. So capacity grows and shrinks with demand. A <strong>scaling policy</strong> (Standard or Economy) controls how aggressively Snowflake adds or removes clusters; we’ll cover that in a later section.</p>
+          <p>Snowflake suggests starting with Auto-scale and small numbers—for example max 2 or 3, min 1—then watching how your load behaves and raising max/min as needed.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="modes" aria-label="Mark Maximized vs Auto-scale as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <section id="credits" class="section" data-section="credits">
+          <h2>How credits work for multi-cluster</h2>
+          <p class="key-takeaway">You pay per cluster per second (same 60-second minimum per cluster start). Total credits = warehouse size credits × number of clusters × time. In auto-scale, you only pay for clusters that are actually running.</p>
+          <p>Each cluster in a multi-cluster warehouse uses the same credits as a single-cluster warehouse of that size. So a Medium cluster uses 4 credits per full hour. If you have 3 Medium clusters running for one full hour, that’s 12 credits. If only 2 clusters run for that hour, you pay for 2. Billing is still per second (with a 60-second minimum each time a cluster starts), so in auto-scale you only pay for the clusters that are up.</p>
+          <p>If you resize the warehouse (e.g. from Medium to Large), the new size applies to <em>all</em> clusters—both the ones already running and any that start later. So credit usage per cluster goes up with the new size.</p>
+          <p>Example: a Medium multi-cluster warehouse with 3 clusters in <strong>maximized</strong> mode runs all 3 clusters for 2 hours. Each cluster: 4 credits/hour × 2 = 8 credits. Total: 24 credits. In <strong>auto-scale</strong>, if only 1 cluster runs the first hour and 2 run the second hour, you’d pay 4 + 8 = 12 credits for those two hours. So auto-scale can save a lot when load is variable.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="credits" aria-label="Mark Credit usage as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <section id="benefits" class="section" data-section="benefits">
+          <h2>Why use a multi-cluster warehouse?</h2>
+          <p class="key-takeaway">It scales <strong>concurrency</strong> (more users/queries at once) without you manually adding warehouses or resizing. It does not replace resizing for slow single queries or data loading—use multi-cluster for many concurrent things, resize for heavier single jobs.</p>
+          <p>With a single-cluster warehouse, if your load grows you have to either resize the warehouse (bigger size) or create more warehouses and point some users or queries at them. When load drops, you have to downsize or suspend those warehouses yourself. Multi-cluster automates that idea: same warehouse name, more clusters when needed, and in auto-scale Snowflake adds and removes clusters for you.</p>
+          <p>So the main benefit is handling <strong>many concurrent users or queries</strong> without manual intervention. More people (or more jobs) can hit the same warehouse; Snowflake spreads work across clusters and can spin up more clusters when queues build.</p>
+          <p>One important caveat: multi-cluster is best for <strong>concurrency</strong>, not for making a single slow query faster or for speeding up data loads. For those, resizing the warehouse (bigger size) usually helps more. Use multi-cluster when the problem is “too many things at once,” not “this one thing is too slow.”</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="benefits" aria-label="Mark Why use multi-cluster as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <section id="creating" class="section" data-section="creating">
+          <h2>Creating a multi-cluster warehouse</h2>
+          <p class="key-takeaway">In the UI: Compute → Warehouses → + Warehouse, then under Advanced Options check “Multi-cluster Warehouse” and set Max Clusters (and optionally Min Clusters). In SQL: <code>CREATE WAREHOUSE ... WITH MAX_CLUSTER_COUNT = 3</code> (and optionally <code>MIN_CLUSTER_COUNT = 1</code>).</p>
+          <p>In <strong>Snowsight</strong> (the Snowflake web UI): go to Compute → Warehouses → + Warehouse. Expand Advanced Options, check <strong>Multi-cluster Warehouse</strong>, and set Max Clusters to a value greater than 1. You can set Min Clusters too (for auto-scale, set it lower than max). Then fill in the rest (name, size, etc.) and create the warehouse. The UI often only lets you pick up to 10 clusters; for higher limits use SQL.</p>
+          <p>In <strong>SQL</strong>, use <code>CREATE WAREHOUSE</code> with <code>MAX_CLUSTER_COUNT</code> greater than 1. For auto-scale, also set <code>MIN_CLUSTER_COUNT</code> to something less than max. Example: <code>CREATE WAREHOUSE my_wh WITH WAREHOUSE_SIZE = 'MEDIUM', MAX_CLUSTER_COUNT = 3, MIN_CLUSTER_COUNT = 1;</code> That gives you a Medium warehouse that can scale from 1 to 3 clusters.</p>
+          <p>To see your warehouses and their cluster settings: in the UI, Compute → Warehouses (the Clusters column shows min/max and how many are running). In SQL, <code>SHOW WAREHOUSES</code>; the result has <code>min_cluster_count</code>, <code>max_cluster_count</code>, and <code>started_clusters</code>.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="creating" aria-label="Mark Creating a multi-cluster warehouse as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <section id="scaling-policy" class="section" data-section="scaling-policy">
+          <h2>Scaling policy (Auto-scale only)</h2>
+          <p class="key-takeaway">In auto-scale, a <strong>scaling policy</strong> controls when Snowflake adds or removes clusters. <strong>Standard</strong> (default) favors less queuing and starts clusters sooner. <strong>Economy</strong> favors saving credits and keeps clusters busier, so queries may queue more.</p>
+          <p>When the warehouse is in <strong>Auto-scale</strong> mode, Snowflake has to decide: “Do I start another cluster now?” and “Do I shut down this cluster now?” The <strong>scaling policy</strong> controls that. (In Maximized mode there’s nothing to scale—all clusters are always on—so the policy doesn’t apply.)</p>
+          <p><strong>Standard</strong> (the default) tries to avoid or minimize queuing. When a query is queued or Snowflake thinks the current clusters can’t handle more work, it starts more clusters (within your max). When load has been low for a while, it shuts down the least busy clusters. So you get good responsiveness and throughput, but you may use more credits because clusters are started sooner.</p>
+          <p><strong>Economy</strong> tries to conserve credits. It only starts a new cluster if the system thinks there’s enough work to keep that cluster busy for at least 6 minutes. It shuts down a cluster when it estimates the cluster has less than 6 minutes of work left. So you save money, but queries may wait in the queue longer. Use Economy when cost matters more than latency.</p>
+          <p>You set the policy when creating the warehouse or later: in Snowsight, edit the warehouse and choose Scaling Policy (only visible for multi-cluster with max &gt; min). In SQL: <code>CREATE WAREHOUSE ... SCALING_POLICY = 'STANDARD'</code> or <code>ALTER WAREHOUSE my_wh SET SCALING_POLICY = 'ECONOMY';</code></p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="scaling-policy" aria-label="Mark Scaling policy as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <section id="changing" class="section" data-section="changing">
+          <h2>Changing the cluster count</h2>
+          <p class="key-takeaway">You can change min and max clusters anytime, even while the warehouse is running. In the UI, edit the warehouse (or use <code>ALTER WAREHOUSE</code>). Increasing max in auto-scale doesn’t start clusters immediately—they start when needed. Increasing min starts extra clusters right away if you’re below the new min.</p>
+          <p>You can increase or decrease the maximum and minimum number of clusters at any time, including while the warehouse is running and processing queries. In Snowsight: Compute → Warehouses → click the warehouse → Edit (you can also turn off multi-cluster by unchecking the option, which effectively sets min/max back to 1). In SQL: <code>ALTER WAREHOUSE my_wh SET MAX_CLUSTER_COUNT = 5, MIN_CLUSTER_COUNT = 2;</code> The UI may still cap max at 10; use SQL to go higher when the size allows it.</p>
+          <p>What happens when you change the numbers depends on the mode. In <strong>Maximized</strong>: if you raise max and min, the extra clusters start right away; if you lower them, the extra clusters shut down after they finish their work and the auto-suspend logic applies. In <strong>Auto-scale</strong>: raising max doesn’t start new clusters until load needs them; lowering max can cause excess clusters to shut down when they’re done. Raising min will start more clusters immediately if you’re currently below the new minimum; lowering min lets Snowflake shut down clusters when the scaling policy says so.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="changing" aria-label="Mark Changing cluster count as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <section id="monitoring" class="section" data-section="monitoring">
+          <h2>Monitoring multi-cluster warehouses</h2>
+          <p class="key-takeaway">Use Compute → Warehouses and click a warehouse to see its details, running queries, and cluster usage. Use Monitoring → Query History and filter by warehouse to see activity across time. You can see which cluster ran each query.</p>
+          <p>In Snowsight, go to <strong>Compute → Warehouses</strong>. The list shows each warehouse and (for multi-cluster) the min/max clusters and how many are currently running. Click a warehouse name to open its detail page: you can see queries that are running or queued, and how the warehouse is behaving.</p>
+          <p>For a broader view, go to <strong>Monitoring → Query History</strong>. You’ll see queries from all warehouses; use the Filters dropdown and choose Warehouse, then pick your warehouse name to see only that warehouse’s activity. For each query you can see how long it ran, how much data it scanned, and which <strong>cluster</strong> ran it (e.g. “Cluster 1” or “Cluster 2”). That helps you understand how work is spreading across clusters and whether you need to adjust min/max or the scaling policy.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="monitoring" aria-label="Mark Monitoring as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <footer class="guide-footer">
+          <p>You’ve finished the Multi-cluster guide. <a href="index.html">All Virtual Warehouse guides</a></p>
+          <p class="guide-footer-links"><a href="overview.html">Overview</a> · <a href="multi-cluster.html">Multi-cluster</a> · <a href="considerations.html">Considerations</a> · <a href="working-with-warehouses.html">Working with</a> · <a href="next-gen-warehouses.html">Gen2</a> · <a href="query-acceleration.html">Query Acceleration</a> · <a href="monitoring-load.html">Monitoring load</a> · <a href="snowpark-optimized-warehouses.html">Snowpark-optimized</a> · <a href="interactive-tables.html">Interactive tables</a> · <a href="example-workflow-equity-research.html">Example workflow</a></p>
+        </footer>
+      </article>
+    </main>
+  </div>
+
+  <script src="../js/app.js"></script>
+</body>
+</html>

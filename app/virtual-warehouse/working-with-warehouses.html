@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Snowflake Study Guide — Working with Warehouses</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body data-guide-id="working-with">
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../index.html" class="logo">❄️ Snowflake Learn</a>
+      <nav class="topic-nav" aria-label="Study topics">
+        <a href="../index.html">Home</a>
+        <a href="index.html">Virtual Warehouse</a>
+      </nav>
+      <button type="button" class="nav-toggle" aria-label="Open menu" aria-expanded="false">
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+      </button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar" aria-label="Study guide navigation">
+      <details class="sidebar-group" open>
+        <summary>Guides — 01-virtual-warehouse</summary>
+        <div class="sidebar-group-content">
+          <ul class="guide-list chapter-list">
+            <li><a href="index.html">Category index</a></li>
+            <li><a href="overview.html">Overview</a><span class="sidebar-doc">00-overview.md</span></li>
+            <li><a href="multi-cluster.html">Multi-cluster</a><span class="sidebar-doc">01-multi-cluster.md</span></li>
+            <li><a href="considerations.html">Considerations</a><span class="sidebar-doc">02-considerations.md</span></li>
+            <li><a href="working-with-warehouses.html" class="is-active">Working with</a><span class="sidebar-doc">03-working-with-warehouses.md</span></li>
+            <li><a href="next-gen-warehouses.html">Gen2</a><span class="sidebar-doc">04-next-gen-standard-warehouses.md</span></li>
+            <li><a href="query-acceleration.html">Query Acceleration (QAS)</a><span class="sidebar-doc">05-query-acceleration.md</span></li>
+            <li><a href="monitoring-load.html">Monitoring load</a><span class="sidebar-doc">06-monitoring-load.md</span></li>
+            <li><a href="snowpark-optimized-warehouses.html">Snowpark-optimized</a><span class="sidebar-doc">07-snowpark-optimized-warehouses.md</span></li>
+            <li><a href="interactive-tables.html">Interactive tables</a><span class="sidebar-doc">08-interactive-tables.md</span></li>
+            <li><a href="example-workflow-equity-research.html">Example workflow</a><span class="sidebar-doc">09-example-workflow-equity-research.md</span></li>
+          </ul>
+        </div>
+      </details>
+      <details class="sidebar-group" open>
+        <summary>In this guide</summary>
+        <div class="sidebar-group-content">
+          <ul class="chapter-list">
+            <li><a href="#intro" class="nav-link" data-section="intro">Introduction</a></li>
+            <li><a href="#creating" class="nav-link" data-section="creating">Creating a warehouse</a></li>
+            <li><a href="#starting-resuming" class="nav-link" data-section="starting-resuming">Starting or resuming</a></li>
+            <li><a href="#suspending" class="nav-link" data-section="suspending">Suspending</a></li>
+            <li><a href="#resizing" class="nav-link" data-section="resizing">Resizing</a></li>
+            <li><a href="#resize-running" class="nav-link" data-section="resize-running">Resizing a running warehouse</a></li>
+            <li><a href="#resize-suspended" class="nav-link" data-section="resize-suspended">Resizing a suspended warehouse</a></li>
+            <li><a href="#using-warehouse" class="nav-link" data-section="using-warehouse">Using a warehouse in a session</a></li>
+            <li><a href="#delegating" class="nav-link" data-section="delegating">Delegating warehouse management</a></li>
+            <li><a href="#snowsight-details" class="nav-link" data-section="snowsight-details">Reviewing warehouses in Snowsight</a></li>
+          </ul>
+        </div>
+      </details>
+      <div class="sidebar-footer">
+        <p class="progress-label">Your progress</p>
+        <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="10" aria-label="Sections completed">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <p class="progress-count" id="progress-count">0/10 sections</p>
+      </div>
+    </aside>
+
+    <main id="main" class="content">
+      <article class="guide">
+        <p class="breadcrumb"><a href="../index.html">Home</a> <span>›</span> <a href="index.html">Virtual Warehouse</a> <span>›</span> Working with</p>
+        <div class="guide-header">
+          <h1>Working with Warehouses</h1>
+          <p class="lead">How to create, start, suspend, and resize warehouses from the web UI or SQL (and Python). Plus how to use a warehouse in a session and how to delegate management to other roles.</p>
+        </div>
+
+        <section id="intro" class="section" data-section="intro">
+          <div class="section-badge">Start here</div>
+          <h2>Introduction</h2>
+          <p class="key-takeaway">Everything you do with warehouses can be done from the Snowflake web interface (Snowsight) or with SQL. Python users can use the Snowflake connector APIs. This guide walks through the main tasks: create, start, suspend, resize, and use a warehouse.</p>
+          <p>You can manage warehouses in two main ways: through the <strong>Snowflake web interface</strong> (Snowsight) or with <strong>SQL</strong> (DDL commands like <code>CREATE WAREHOUSE</code> and <code>ALTER WAREHOUSE</code>). If you use Python, the Snowflake connector also exposes APIs for creating and operating warehouses. The behavior is the same no matter which interface you use.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="intro" aria-label="Mark Introduction as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <section id="creating" class="section" data-section="creating">
+          <h2>Creating a warehouse</h2>
+          <p class="key-takeaway">Create a warehouse in Snowsight (Compute → Warehouses → + Warehouse), with SQL (<code>CREATE WAREHOUSE</code>), or via the Python API. You can create it in “Started” (running) or “Suspended” state; if Started, it consumes credits once provisioned and may take a bit to be fully ready.</p>
+          <p>You can create a warehouse from Snowsight, SQL, or Python. In <strong>Snowsight</strong>: open the navigation menu, go to Compute → Warehouses, then click the “+ Warehouse” (or “Warehouse”) button and fill in the name, size, and other options. In <strong>SQL</strong>, run a <code>CREATE WAREHOUSE</code> command. In <strong>Python</strong>, use the connector’s warehouse create API (e.g. <code>WarehouseCollection.create</code>).</p>
+          <p>When you create a warehouse, you choose whether it is initially <strong>Started</strong> (running) or <strong>Suspended</strong>. If you choose Started, the warehouse begins consuming credits once all of its compute resources are provisioned. Provisioning can take a little time, so the warehouse might not be fully available for queries immediately. If you choose Suspended, no compute is provisioned until you start or resume the warehouse later.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="creating" aria-label="Mark Creating a warehouse as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <section id="starting-resuming" class="section" data-section="starting-resuming">
+          <h2>Starting or resuming a warehouse</h2>
+          <p class="key-takeaway">Start/resume from Snowsight (Compute → Warehouses → warehouse → More → Resume), SQL (<code>ALTER WAREHOUSE ... RESUME</code>), or Python. Credits start when compute is provisioned; there’s a 60-second minimum charge each time. Queries don’t run until the warehouse is fully provisioned (or at least 50% if some resources fail).</p>
+          <p>You can start a warehouse when you create it or anytime after. Once it exists, “resuming” a suspended warehouse is the same as starting it. In <strong>Snowsight</strong>: Compute → Warehouses → click the suspended warehouse → More options → Resume. In <strong>SQL</strong>: <code>ALTER WAREHOUSE &lt;name&gt; RESUME;</code> In <strong>Python</strong>: use the warehouse <code>resume</code> API.</p>
+          <p>Starting or resuming usually takes only a few seconds. In rare cases it can take longer while Snowflake provisions compute. <strong>Credits</strong>: the warehouse starts consuming credits once all requested compute resources are provisioned. If some resources fail to provision, you’re only charged for what was provisioned until the rest are repaired. Snowflake doesn’t run SQL statements submitted to the warehouse until all resources are provisioned—except if some fail during startup, in which case Snowflake may start processing once at least 50% of the requested resources are up. Billing is per second with a <strong>1-minute minimum</strong> each time the warehouse is resumed; the UI often shows usage in hourly increments.</p>
+          <p>A warehouse must be <strong>running</strong> and set as the <strong>current warehouse for your session</strong> to process the SQL you submit. See “Using a warehouse in a session” below.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="starting-resuming" aria-label="Mark Starting or resuming as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <section id="suspending" class="section" data-section="suspending">
+          <h2>Suspending a warehouse</h2>
+          <p class="key-takeaway">You can suspend a warehouse anytime, even while it’s running queries. Idle compute shuts down right away; compute that’s running statements keeps going until those statements finish, then shuts down (quiesce). After everything is down, the warehouse stops consuming credits.</p>
+          <p>A running warehouse can be suspended at any time, including while it is executing SQL. Once all compute has shut down, the warehouse stops consuming credits. In <strong>Snowsight</strong>: Compute → Warehouses → click the warehouse → More options → Suspend. In <strong>SQL</strong>: <code>ALTER WAREHOUSE &lt;name&gt; SUSPEND;</code> In <strong>Python</strong>: use the warehouse <code>suspend</code> API.</p>
+          <p>When you suspend, Snowflake <strong>immediately</strong> shuts down any idle compute. Compute that is currently running statements is allowed to finish those statements; when they complete, that compute shuts down and the warehouse status becomes “Suspended.” That “finish then shut down” phase is sometimes called <strong>quiesce</strong>. So you don’t lose running work—you just stop new work and let the rest complete.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="suspending" aria-label="Mark Suspending as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <section id="resizing" class="section" data-section="resizing">
+          <h2>Resizing a warehouse</h2>
+          <p class="key-takeaway">You can resize a warehouse up or down anytime, including while it’s running. Do it in Snowsight (warehouse → More → Edit) or with <code>ALTER WAREHOUSE ... SET WAREHOUSE_SIZE = ...</code> Resizing up helps large queries and heavy load/unload; it doesn’t affect statements already running.</p>
+          <p>You can change a warehouse’s size (X-Small, Small, Medium, etc.) at any time, including while it is running and processing statements. In <strong>Snowsight</strong>: Compute → Warehouses → click the warehouse → More options → Edit, then change the size. In <strong>SQL</strong>: <code>ALTER WAREHOUSE &lt;name&gt; SET WAREHOUSE_SIZE = 'LARGE';</code> (or whatever size). In <strong>Python</strong>: use the create-or-alter warehouse API.</p>
+          <p>Resizing <strong>up</strong> is useful when the warehouse would benefit from more compute—for example to speed up large, complex queries or to improve performance when loading or unloading a lot of data. The next two sections describe what happens when you resize a running warehouse vs a suspended one.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="resizing" aria-label="Mark Resizing as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <section id="resize-running" class="section" data-section="resize-running">
+          <h2>Effects of resizing a running warehouse</h2>
+          <p class="key-takeaway">Resizing adds or removes compute per cluster. New compute is billed when provisioned but doesn’t run statements until it’s all ready. Existing statements keep running on the old capacity; new capacity is used for queued and new statements. Removed compute is taken away only when it’s no longer running any statements. Use <code>WAIT_FOR_COMPLETION</code> or <code>SHOW WAREHOUSES</code> to confirm provisioning.</p>
+          <p>When you resize a <strong>running</strong> warehouse, Snowflake adds or removes compute in each cluster. The same credit and usage rules as for starting/suspending apply: new compute starts using credits when it’s provisioned, but it doesn’t start executing statements until all of it is provisioned (unless some fails, in which case Snowflake may use what’s available). Compute that you remove is only taken away when it’s no longer running any statements.</p>
+          <p>Resizing has <strong>no effect</strong> on statements that are already running. When you resize <em>up</em>, the new compute, once fully provisioned, is used only for statements that are already in the queue and for any new statements submitted to the warehouse. So current work keeps going on the old capacity; the extra capacity kicks in for waiting and future work. To wait until the new size is fully provisioned before continuing, you can add <code>WAIT_FOR_COMPLETION = TRUE</code> to the <code>ALTER WAREHOUSE</code> command. You can also run <code>SHOW WAREHOUSES</code> to check the warehouse state.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="resize-running" aria-label="Mark Resizing a running warehouse as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <section id="resize-suspended" class="section" data-section="resize-suspended">
+          <h2>Effects of resizing a suspended warehouse</h2>
+          <p class="key-takeaway">Resizing a suspended warehouse doesn’t provision anything right away. It just records the new size; when you next resume the warehouse, Snowflake provisions compute for the new size and the usual start/resume billing rules apply.</p>
+          <p>If the warehouse is <strong>suspended</strong> when you resize it, Snowflake does not provision any new compute immediately. It only updates the warehouse’s size setting. The next time you start or resume the warehouse, Snowflake provisions compute according to the new size, and the same credit and usage rules for starting a warehouse apply. So resizing while suspended is a way to change size without any provisioning or billing until you’re ready to run the warehouse again.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="resize-suspended" aria-label="Mark Resizing a suspended warehouse as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <section id="using-warehouse" class="section" data-section="using-warehouse">
+          <h2>Using a warehouse in a session</h2>
+          <p class="key-takeaway">To run a query or DML statement, a warehouse must be running and must be the “current” warehouse for your session. A session has only one current warehouse at a time. Set or change it with <code>USE WAREHOUSE &lt;name&gt;</code> or the Python equivalent.</p>
+          <p>To run a query or DML statement in Snowflake, two things must be true: the warehouse must be <strong>running</strong>, and it must be the <strong>current warehouse</strong> for the session where you submit the query. A session can have only one current warehouse at a time. You set or change it with the <code>USE WAREHOUSE &lt;warehouse_name&gt;</code> SQL command or the equivalent in the Python API (e.g. <code>WarehouseResource.use_warehouse</code>).</p>
+          <p>Once a running warehouse is set as the current warehouse for your session, any queries and DML statements you submit in that session are processed by that warehouse. In Snowsight you can see which warehouse was used for each query: check Query History or the Workspaces page. Some Snowsight features (e.g. Task Run History, Data Preview for a table) need a warehouse to run their SQL; an X-Small is usually enough. See the <a href="considerations.html#snowsight">Considerations</a> guide for more on choosing a warehouse for the UI.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="using-warehouse" aria-label="Mark Using a warehouse as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <section id="delegating" class="section" data-section="delegating">
+          <h2>Delegating warehouse management</h2>
+          <p class="key-takeaway">By default only ACCOUNTADMIN can manage all warehouses. You can give another role the <code>MANAGE WAREHOUSES</code> privilege so it can suspend, resume, resize, and describe any warehouse in the account without owning it.</p>
+          <p>By default, the <strong>ACCOUNTADMIN</strong> role can alter, suspend, describe, and perform other operations on all warehouses in the account. If you want someone else (or another role) to manage warehouses without being ACCOUNTADMIN, you can grant the <strong>MANAGE WAREHOUSES</strong> privilege to a custom role. Granting <code>MANAGE WAREHOUSES</code> is the same as granting MODIFY, MONITOR, and OPERATE on all warehouses in the account.</p>
+          <p>Example: you might have one role that <em>creates</em> and <em>owns</em> a warehouse (e.g. <code>create_wh_role</code> with <code>CREATE WAREHOUSE ON ACCOUNT</code>), and a second role that <em>manages</em> all warehouses (e.g. <code>manage_wh_role</code> with <code>MANAGE WAREHOUSES ON ACCOUNT</code>). The managing role doesn’t need to own a warehouse to suspend it, resume it, resize it, or describe it. In SQL you’d create the roles, grant the privileges, then use <code>ALTER WAREHOUSE test_wh SUSPEND/RESUME</code> or <code>ALTER WAREHOUSE test_wh SET WAREHOUSE_SIZE = 'SMALL'</code> or <code>DESC WAREHOUSE test_wh</code> while using the <code>manage_wh_role</code>.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="delegating" aria-label="Mark Delegating warehouse management as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <section id="snowsight-details" class="section" data-section="snowsight-details">
+          <h2>Reviewing warehouses in Snowsight</h2>
+          <p class="key-takeaway">Compute → Warehouses shows a table of all warehouses (name, status, size, clusters, running/queued statements, owner, when resumed). Click a warehouse for activity graphs, details (min/max clusters, scaling policy, auto-suspend/resume), and privileges.</p>
+          <p>To view and manage warehouses in the web UI: sign in to Snowsight, then in the navigation menu go to <strong>Compute → Warehouses</strong>. You’ll see a table of warehouses. You can search, filter by status or size, and by default you’ll see: <strong>Name</strong>, <strong>Status</strong> (Started, Resuming, Suspended), <strong>Size</strong>, <strong>Clusters</strong> (with a bar and hover for active count), <strong>Running</strong> and <strong>Queued</strong> (number of SQL statements), <strong>Owner</strong>, and <strong>Resumed</strong> (when it was last resumed). You can add columns for things like QAS scale factor, Scaling Policy, Auto Resume, Auto Suspend, and Created.</p>
+          <p>When you <strong>click a warehouse name</strong>, you get more: the <strong>Warehouse Activity</strong> section shows a graph of load over time (useful for understanding why a query might be slow), and the <strong>Details</strong> section shows status, size, min/max clusters, scaling policy, running and queued tasks, auto-suspend period, auto-resume on/off, and last resumed time. The <strong>Privileges</strong> section lets you view, grant, and revoke privileges on that warehouse. You need ACCOUNTADMIN or a role with the right warehouse privileges to see and manage these details.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="snowsight-details" aria-label="Mark Reviewing warehouses in Snowsight as complete" />
+            <span>I’ve read this</span>
+          </label>
+        </section>
+
+        <footer class="guide-footer">
+          <p>You’ve finished the Working with warehouses guide. <a href="index.html">All Virtual Warehouse guides</a></p>
+          <p class="guide-footer-links"><a href="overview.html">Overview</a> · <a href="multi-cluster.html">Multi-cluster</a> · <a href="considerations.html">Considerations</a> · <a href="next-gen-warehouses.html">Gen2</a> · <a href="query-acceleration.html">Query Acceleration</a> · <a href="monitoring-load.html">Monitoring load</a> · <a href="snowpark-optimized-warehouses.html">Snowpark-optimized</a> · <a href="interactive-tables.html">Interactive tables</a> · <a href="example-workflow-equity-research.html">Example workflow</a></p>
+        </footer>
+      </article>
+    </main>
+  </div>
+
+  <script src="../js/app.js"></script>
+</body>
+</html>

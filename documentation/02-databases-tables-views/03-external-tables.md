@@ -1,0 +1,2090 @@
+Refresh external tables automatically for Amazon S3
+You can create external tables and refresh the external table metadata automatically by using Amazon SQS (Simple Queue Service) notifications for an S3 bucket. This operation synchronizes the metadata with the latest set of associated files in the external stage and path:
+
+New files in the path are added to the table metadata.
+
+Changes to files in the path are updated in the table metadata.
+
+Files no longer in the path are removed from the table metadata.
+
+Prerequisites
+Before you proceed, ensure you meet the following prerequisites:
+
+This feature is limited to Snowflake accounts on Amazon Web Services (AWS).
+
+To perform the tasks described in this topic, you must use a role that has the CREATE STAGE and CREATE EXTERNAL TABLE privileges on a schema.
+
+In addition, you must have administrative access to AWS. If you are not an AWS administrator, ask your AWS administrator to complete the steps required to configure AWS event notifications.
+
+Snowflake recommends that you only send supported events for external tables to reduce costs, event noise, and latency.
+
+External tables don’t support storage versioning (S3 versioning, Object Versioning in Google Cloud Storage, or versioning for Azure Storage).
+
+Limitations of refreshing external tables automatically by using Amazon SQS
+Virtual Private Snowflake (VPS) and AWS PrivateLink customers: Amazon SQS isn’t currently supported by AWS as a VPC endpoint. Although AWS services within a VPC (including VPS) can communicate with SQS, this traffic isn’t within the VPC, and therefore isn’t protected by the VPC.
+
+SQS notifications notify Snowflake when new files arrive in monitored S3 buckets and are ready to load. SQS notifications contain the S3 event and a list of the file names. They don’t include the actual data in the files.
+
+Cloud platform support
+Triggering automated external metadata refreshes by using S3 event messages is supported by Snowflake accounts hosted on AWS only.
+
+Configure secure access to cloud storage
+Important
+
+If you have already configured secure access to the S3 bucket that stores your data files, skip this section and proceed to Create a new S3 event notification or use an existing notification.
+
+This section describes how to use storage integrations to allow Snowflake to read data from and write data to an Amazon S3 bucket referenced in an external (i.e. S3) stage. Integrations are named, first-class Snowflake objects that avoid the need for passing explicit cloud provider credentials such as secret keys or access tokens. Integration objects store an AWS identity and access management (IAM) user ID. An administrator in your organization grants the integration IAM user permissions in the AWS account.
+
+An integration can also list buckets (and optional paths) that limit the locations users can specify when creating external stages that use the integration.
+
+Note
+
+Completing the instructions in this section requires permissions in AWS to create and manage IAM policies and roles. If you are not an AWS administrator, ask your AWS administrator to perform these tasks.
+
+Note that currently, accessing S3 storage in government regions using a storage integration is limited to Snowflake accounts hosted on AWS in the same government region. Accessing your S3 storage from an account hosted outside of the government region using direct credentials is supported.
+
+The following diagram shows the integration flow for a S3 stage:
+
+Amazon S3 Stage Integration Flow
+An external (i.e. S3) stage references a storage integration object in its definition.
+
+Snowflake automatically associates the storage integration with a S3 IAM user created for your account. Snowflake creates a single IAM user that is referenced by all S3 storage integrations in your Snowflake account.
+
+An AWS administrator in your organization grants permissions to the IAM user to access the bucket referenced in the stage definition. Note that many external stage objects can reference different buckets and paths and use the same storage integration for authentication.
+
+When a user loads or unloads data from or to a stage, Snowflake verifies the permissions granted to the IAM user on the bucket before allowing or denying access.
+
+Important
+
+Snowflake strongly recommends that you configure secure access so that you don’t need to supply IAM credentials when you access cloud storage. For more storage access options, see Configuring secure access to Amazon S3.
+
+Step 1: Configure access permissions for the S3 bucket
+AWS access control requirements
+Snowflake requires the following permissions on an S3 bucket and folder to be able to access files in the folder (and sub-folders):
+
+s3:GetBucketLocation
+
+s3:GetObject
+
+s3:GetObjectVersion
+
+s3:ListBucket
+
+As a best practice, Snowflake recommends that you create an IAM policy for Snowflake access to the S3 bucket. You can then attach the policy to the role, and then use the security credentials generated by AWS for the role to access files in the bucket.
+
+Create an IAM policy
+Complete the following steps to configure access permissions for Snowflake to access your S3 bucket:
+
+Sign in to the AWS Management Console.
+
+From the home dashboard, search for and then select IAM.
+
+From the left-hand navigation pane, select Account settings.
+
+Under Security Token Service (STS) in the Endpoints list, find the Snowflake region where your account is located.
+
+If the STS status is inactive, move the toggle to Active.
+
+From the left-hand navigation pane, select Policies.
+
+Select Create Policy.
+
+For Policy editor, select JSON.
+
+To add a policy document that allows Snowflake to access the S3 bucket and folder, copy and paste the following syntax block into the policy editor:
+
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+              "s3:GetObject",
+              "s3:GetObjectVersion"
+            ],
+            "Resource": "arn:aws:s3:::<bucket>/<prefix>/*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:ListBucket",
+                "s3:GetBucketLocation"
+            ],
+            "Resource": "arn:aws:s3:::<bucket>",
+            "Condition": {
+                "StringLike": {
+                    "s3:prefix": [
+                        "<prefix>/*"
+                    ]
+                }
+            }
+        }
+    ]
+}
+Note
+
+This policy document (in JSON format) provides Snowflake with the required permissions to load or unload data by using a single bucket and folder path.
+
+Amazon Resource Names (ARN) for buckets in government regions have a arn:aws-us-gov:s3::: prefix.
+
+Setting the "s3:prefix": condition to either ["*"] or ["<path>/*"] grants access to all prefixes in the specified bucket or path in the bucket, respectively.
+
+AWS policies support a variety of different security use cases.
+
+Replace bucket and prefix with your actual bucket name and folder path prefix.
+
+Select Next.
+
+Enter a Policy name (for example, snowflake_access) and an optional Description.
+
+Select Create policy.
+
+Step 2: Create the IAM role in AWS
+To configure access permissions for Snowflake in the AWS Management Console, do the following:
+
+From the left-hand navigation pane in the Identity and Access Management (IAM) Dashboard, select Roles.
+
+Select Create role.
+
+Select AWS account as the trusted entity type.
+
+Select Another AWS account
+
+Select trusted entity page in AWS Management Console
+In the Account ID field, enter your own AWS account ID temporarily. Later, you modify the trust relationship and grant access to Snowflake.
+
+Select the Require external ID option. An external ID is used to grant access to your AWS resources (such as S3 buckets) to a third party like Snowflake.
+
+Enter a placeholder ID such as 0000. In a later step, you will modify the trust relationship for your IAM role and specify the external ID for your storage integration.
+
+Select Next.
+
+Select the policy you created in Step 1: Configure access permissions for the S3 bucket (in this topic).
+
+Select Next.
+
+Review Page in AWS Management Console
+Enter a name and description for the role, then select Create role.
+
+You have now created an IAM policy for a bucket, created an IAM role, and attached the policy to the role.
+
+On the role summary page, locate and record the Role ARN value. In the next step, you will create a Snowflake integration that references this role.
+
+Note
+
+Snowflake caches the temporary credentials for a period that cannot exceed the 60-minute expiration time. If you revoke access from Snowflake, users might be able to list files and access data from the cloud storage location until the cache expires.
+
+Step 3: Create a cloud storage integration in Snowflake
+Create a storage integration using the CREATE STORAGE INTEGRATION command. A storage integration is a Snowflake object that stores a generated identity and access management (IAM) user for your S3 cloud storage, along with an optional set of allowed or blocked storage locations (that is, buckets). Cloud provider administrators in your organization grant permissions on the storage locations to the generated user. This option allows users to avoid supplying credentials when creating stages or loading data.
+
+A single storage integration can support multiple external (that is, S3) stages. The URL in the stage definition must align with the S3 buckets (and optional paths) specified for the STORAGE_ALLOWED_LOCATIONS parameter.
+
+Note
+
+Only account administrators (users with the ACCOUNTADMIN role) or a role with the global CREATE INTEGRATION privilege can execute this SQL command.
+
+CREATE STORAGE INTEGRATION <integration_name>
+  TYPE = EXTERNAL_STAGE
+  STORAGE_PROVIDER = 'S3'
+  ENABLED = TRUE
+  STORAGE_AWS_ROLE_ARN = '<iam_role>'
+  STORAGE_ALLOWED_LOCATIONS = ('<protocol>://<bucket>/<path>/', '<protocol>://<bucket>/<path>/')
+  [ STORAGE_BLOCKED_LOCATIONS = ('<protocol>://<bucket>/<path>/', '<protocol>://<bucket>/<path>/') ]
+Where:
+
+integration_name is the name of the new integration.
+
+iam_role is the Amazon Resource Name (ARN) of the role you created in Step 2: Create the IAM role in AWS (in this topic).
+
+protocol is one of the following:
+
+s3 refers to S3 storage in public AWS regions outside of China.
+
+s3china refers to S3 storage in public AWS regions in China.
+
+s3gov refers to S3 storage in government regions.
+
+bucket is the name of a S3 bucket that stores your data files (for example, mybucket). The required STORAGE_ALLOWED_LOCATIONS parameter and optional STORAGE_BLOCKED_LOCATIONS parameter restrict or block access to these buckets, respectively, when stages that reference this integration are created or modified.
+
+path is an optional path that can be used to provide granular control over objects in the bucket.
+
+The following example creates an integration that allows access to all buckets in the account but blocks access to the defined sensitivedata folders.
+
+Additional external stages that also use this integration can reference the allowed buckets and paths:
+
+CREATE STORAGE INTEGRATION s3_int
+  TYPE = EXTERNAL_STAGE
+  STORAGE_PROVIDER = 'S3'
+  ENABLED = TRUE
+  STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::001234567890:role/myrole'
+  STORAGE_ALLOWED_LOCATIONS = ('*')
+  STORAGE_BLOCKED_LOCATIONS = ('s3://mybucket1/mypath1/sensitivedata/', 's3://mybucket2/mypath2/sensitivedata/');
+Note
+
+Optionally, use the STORAGE_AWS_EXTERNAL_ID parameter to specify your own external ID. You might choose this option to use the same external ID across multiple external volumes and/or storage integrations.
+
+Step 4: Retrieve the AWS IAM user for your Snowflake account
+To retrieve the ARN for the IAM user that was created automatically for your Snowflake account, use the DESCRIBE INTEGRATION.
+
+DESC INTEGRATION <integration_name>;
+Where:
+
+integration_name is the name of the integration you created in Step 3: Create a Cloud Storage Integration in Snowflake (in this topic).
+
+For example:
+
+DESC INTEGRATION s3_int;
++---------------------------+---------------+--------------------------------------------------------------------------------+------------------+
+| property                  | property_type | property_value                                                                 | property_default |
++---------------------------+---------------+--------------------------------------------------------------------------------+------------------|
+| ENABLED                   | Boolean       | true                                                                           | false            |
+| STORAGE_ALLOWED_LOCATIONS | List          | s3://mybucket1/mypath1/,s3://mybucket2/mypath2/                                | []               |
+| STORAGE_BLOCKED_LOCATIONS | List          | s3://mybucket1/mypath1/sensitivedata/,s3://mybucket2/mypath2/sensitivedata/    | []               |
+| STORAGE_AWS_IAM_USER_ARN  | String        | arn:aws:iam::123456789001:user/abc1-b-self1234                                 |                  |
+| STORAGE_AWS_ROLE_ARN      | String        | arn:aws:iam::001234567890:role/myrole                                          |                  |
+| STORAGE_AWS_EXTERNAL_ID   | String        | MYACCOUNT_SFCRole=2_a123456/s0aBCDEfGHIJklmNoPq=                               |                  |
++---------------------------+---------------+--------------------------------------------------------------------------------+------------------+
+Record the values for the following properties:
+
+Property
+
+Description
+
+STORAGE_AWS_IAM_USER_ARN
+
+The AWS IAM user created for your Snowflake account; for example, arn:aws:iam::123456789001:user/abc1-b-self1234. Snowflake provisions a single IAM user for your entire Snowflake account. All S3 storage integrations in your account use that IAM user.
+
+STORAGE_AWS_EXTERNAL_ID
+
+The external ID that Snowflake uses to establish a trust relationship with AWS. If you didn’t specify an external ID (STORAGE_AWS_EXTERNAL_ID) when you created the storage integration, Snowflake generates an ID for you to use.
+
+You provide these values in the next section.
+
+Step 5: Grant the IAM user permissions to access bucket objects
+The following step-by-step instructions describe how to configure IAM access permissions for Snowflake in your AWS Management Console so that you can use a S3 bucket to load and unload data:
+
+Sign in to the AWS Management Console.
+
+Select IAM.
+
+From the left-hand navigation pane, select Roles.
+
+Select the role you created in Step 2: Create the IAM role in AWS (in this topic).
+
+Select the Trust relationships tab.
+
+Select Edit trust policy.
+
+Modify the policy document with the DESC STORAGE INTEGRATION output values you recorded in Step 4: Retrieve the AWS IAM user for your Snowflake account (in this topic):
+
+Policy document for IAM role
+
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "<snowflake_user_arn>"
+      },
+      "Action": "sts:AssumeRole",
+      "Condition": {
+        "StringEquals": {
+          "sts:ExternalId": "<snowflake_external_id>"
+        }
+      }
+    }
+  ]
+}
+Where:
+
+snowflake_user_arn is the STORAGE_AWS_IAM_USER_ARN value you recorded.
+
+snowflake_external_id is the STORAGE_AWS_EXTERNAL_ID value you recorded.
+
+In this example, the snowflake_external_id value is MYACCOUNT_SFCRole=2_a123456/s0aBCDEfGHIJklmNoPq=.
+
+Note
+
+For security reasons, if you create a new storage integration (or recreate an existing storage integration using the CREATE OR REPLACE STORAGE INTEGRATION syntax) without specifying an external ID, the new integration has a different external ID and can’t resolve the trust relationship unless you update the trust policy.
+
+Select Update policy to save your changes.
+
+Note
+
+Snowflake caches the temporary credentials for a period that cannot exceed the 60-minute expiration time. If you revoke access from Snowflake, users might be able to list files and load data from the cloud storage location until the cache expires.
+
+Note
+
+You can use the SYSTEM$VALIDATE_STORAGE_INTEGRATION function to validate the configuration for your storage integration.
+
+Create a new S3 event notification or use an existing notification
+Before you proceed, determine whether an S3 event notification exists for the target path (or prefix, in AWS terminology) in your S3 bucket where your data files are located. AWS rules prohibit creating conflicting notifications for the same path.
+
+You have two options to automate the refreshing of external table metadata by using Amazon SQS:
+
+Option 1: Create a new S3 event notification
+This is the most common option. Create an event notification for the target path in your S3 bucket. The event notification informs Snowflake via an SQS queue when new, removed, or modified files in the path require a refresh of the external table metadata.
+
+Important
+
+If a conflicting event notification exists for your S3 bucket, use Option 2 instead.
+
+For step-by-step instructions, see Option 1: Create a new S3 event notification.
+
+Option 2: Configure Amazon SNS
+When you have an existing event notification, configure Amazon Simple Notification Service (SNS) as a broadcaster to share notifications for a given path with multiple endpoints (or subscribers, for example, SQS queues or AWS Lambda workloads), including the Snowflake SQS queue for external table refresh automation. An S3 event notification published by SNS informs Snowflake of file changes in the path through an SQS queue.
+
+For step-by-step instructions, see Option 2: Configure Amazon SNS later in this topic.
+
+Option 1: Create a new S3 event notification
+This section provides step-by-step instructions for the most common option to automatically refresh external table metadata by using Amazon Simple Queue Service (SQS) notifications for an S3 bucket. The steps show you how to create an event notification for the target path (or prefix, in AWS terminology) in your S3 bucket where your data files are stored.
+
+Important
+
+If a conflicting event notification exists for your S3 bucket, use Option 2: Configure Amazon SNS later in this topic instead. AWS rules prohibit creating conflicting notifications for the same target path.
+
+(Optional) Step 1: Create a stage
+Create an external stage that references your S3 bucket by using the CREATE STAGE command. Snowflake reads your staged data files into the external table metadata. Alternatively, you can use an existing external stage.
+
+Note
+
+To configure secure access to the cloud storage location, see Configure secure access to cloud storage (in this topic).
+
+To reference a storage integration in the CREATE STAGE statement, the role must have the USAGE privilege on the storage integration object.
+
+The following example creates a stage named mystage in the active schema for the user session. The cloud storage URL includes the path files. The stage references a storage integration named my_storage_int.
+
+USE SCHEMA mydb.public;
+
+CREATE STAGE mystage
+  URL = 's3://mybucket/files'
+  STORAGE_INTEGRATION = my_storage_int;
+Step 2: Create an external table
+Create an external table by using the CREATE EXTERNAL TABLE command. For example, create an external table in the mydb.public schema that reads JSON data from staged files.
+
+The stage reference includes a folder path named path1. The external table appends this path to the stage definition, that is, the external table references the data files in @mystage/files/path1.
+
+The AUTO_REFRESH parameter is TRUE by default:
+
+CREATE OR REPLACE EXTERNAL TABLE ext_table
+ WITH LOCATION = @mystage/path1/
+ FILE_FORMAT = (TYPE = JSON);
+Step 3: Configure event notifications
+Configure event notifications for your S3 bucket to notify Snowflake when new or updated data is available to read into the external table metadata. The auto-refresh feature relies on SQS queues to deliver event notifications from S3 to Snowflake.
+
+For ease of use, these SQS queues are created and managed by Snowflake. The SHOW EXTERNAL TABLES command output displays the Amazon Resource Name (ARN) of your SQS queue.
+
+Run the SHOW EXTERNAL TABLES command:
+
+SHOW EXTERNAL TABLES;
+In the notification_channel column, find the ARN of the SQS queue for the external table, and then copy the ARN to a convenient location.
+
+Note
+
+Following AWS guidelines, Snowflake designates no more than one SQS queue per AWS S3 region. This SQS queue can be shared among multiple buckets in the same AWS account. The SQS queue coordinates notifications for all external tables reading data files from the same S3 bucket. When a new or modified data file is uploaded into the bucket, all external table definitions that match the stage directory path read the file details into their metadata.
+
+Sign in to the AWS Management Console.
+
+Configure an event notification for your S3 bucket by using the instructions provided in the Amazon S3 documentation. Complete the fields as shown in the following list:
+
+Name: Name of the event notification (for example, Auto-ingest Snowflake).
+
+Events: Select the ObjectCreate (All) and ObjectRemoved options.
+
+Send to: Select SQS Queue from the dropdown list.
+
+SQS: Select Add SQS queue ARN from the dropdown list.
+
+SQS queue ARN: Paste the SQS queue name from the SHOW EXTERNAL TABLES output.
+
+Note
+
+These instructions create a single event notification that monitors activity for the entire S3 bucket. This is the simplest approach. This notification handles all external tables configured at a more granular level in the S3 bucket directory.
+
+Alternatively, in the previous steps, configure one or more paths and file extensions (or prefixes and suffixes, in AWS terminology) to filter event activity. For instructions, see the object key name filtering information in the relevant AWS documentation topic. Repeat these steps for each additional path or file extension that you want the notification to monitor.
+
+AWS limits the number of these notification queue configurations to a maximum of 100 per S3 bucket.
+
+AWS doesn’t allow overlapping queue configurations (across event notifications) for the same S3 bucket. For example, if an existing notification is configured for s3://mybucket/files/path1, then you can’t create another notification at a higher level, such as s3://mybucket/files, or vice versa.
+
+After you complete this step, the external stage with auto-refresh is configured.
+
+When new or updated data files are added to the S3 bucket, the event notification informs Snowflake to scan them into the external table metadata.
+
+Step 4: Manually refresh external table metadata
+Manually refresh the external table metadata one time by using ALTER EXTERNAL TABLE with the REFRESH parameter; for example:
+
+ALTER EXTERNAL TABLE ext_table REFRESH;
+This step ensures the metadata is synchronized with any changes to the file list that occurred after Step 2. Thereafter, the S3 event notifications trigger the metadata refresh automatically.
+
+Step 5: Configure security
+For each additional role that you will use to query the external table, grant sufficient access control privileges on the various objects (that is, the databases, schemas, stage, and table) by using GRANT <privileges> … TO ROLE:
+
+Object
+
+Privilege
+
+Notes
+
+Database
+
+USAGE
+
+Schema
+
+USAGE
+
+Named stage
+
+USAGE , READ
+
+Named file format
+
+USAGE
+
+External table
+
+SELECT
+
+Option 2: Configure Amazon SNS
+This section provides step-by-step instructions about how to trigger external table metadata refreshing automatically by using Amazon SQS (Simple Queue Service) notifications for an S3 bucket. The steps show you how to configure Amazon Simple Notification Service (SNS) as a broadcaster to publish event notifications for your S3 bucket to multiple subscribers (for example, SQS queues or AWS Lambda workloads), including the Snowflake SQS queue for external table refresh automation.
+
+Note
+
+For these instructions to work, you must have an event notification for the target path in your S3 bucket where your data files are located. If no event notification exists, do one of the following tasks:
+
+Follow Option 1: Create a New S3 Event Notification earlier in this topic instead.
+
+Create an event notification for your S3 bucket, and then proceed with the instructions in this section. For more information, see the Amazon S3 documentation.
+
+Prerequisite: Create an Amazon SNS Topic and Subscription
+Create an SNS topic in your AWS account to handle all messages for the Snowflake stage location on your S3 bucket.
+
+Subscribe your target destinations for the S3 event notifications (for example, other SQS queues or AWS Lambda workloads) to this topic. SNS publishes event notifications for your bucket to all subscribers to the topic.
+
+For instructions, see the SNS documentation.
+
+Step 1: Subscribe the Snowflake SQS Queue to the SNS Topic
+Sign in to the AWS Management Console.
+
+From the home dashboard, choose Simple Notification Service (SNS).
+
+Choose Topics from the left-hand navigation pane.
+
+Locate the topic for your S3 bucket. Note the topic ARN.
+
+Using a Snowflake client, query the SYSTEM$GET_AWS_SNS_IAM_POLICY system function with your SNS topic ARN:
+
+select system$get_aws_sns_iam_policy('<sns_topic_arn>');
+The function returns an IAM policy that grants a Snowflake SQS queue permission to subscribe to the SNS topic.
+
+For example:
+
+select system$get_aws_sns_iam_policy('arn:aws:sns:us-west-2:001234567890:s3_mybucket');
+
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| SYSTEM$GET_AWS_SNS_IAM_POLICY('ARN:AWS:SNS:US-WEST-2:001234567890:S3_MYBUCKET')                                                                                                                                                                   |
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| {"Version":"2012-10-17","Statement":[{"Sid":"1","Effect":"Allow","Principal":{"AWS":"arn:aws:iam::123456789001:user/vj4g-a-abcd1234"},"Action":["sns:Subscribe"],"Resource":["arn:aws:sns:us-west-2:001234567890:s3_mybucket"]}]}                 |
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+Return to the AWS Management Console. Choose Topics from the left-hand navigation pane.
+
+Select the topic for your S3 bucket, and click the Edit button. The Edit page opens.
+
+Click Access policy - Optional to expand this area of the page.
+
+Merge the IAM policy addition from the SYSTEM$GET_AWS_SNS_IAM_POLICY function results into the JSON document.
+
+For example:
+
+Original IAM policy (abbreviated):
+
+{
+  "Version":"2008-10-17",
+  "Id":"__default_policy_ID",
+  "Statement":[
+     {
+        "Sid":"__default_statement_ID",
+        "Effect":"Allow",
+        "Principal":{
+           "AWS":"*"
+        }
+        ..
+     }
+   ]
+ }
+Merged IAM policy:
+
+{
+  "Version":"2008-10-17",
+  "Id":"__default_policy_ID",
+  "Statement":[
+     {
+        "Sid":"__default_statement_ID",
+        "Effect":"Allow",
+        "Principal":{
+           "AWS":"*"
+        }
+        ..
+     },
+     {
+        "Sid":"1",
+        "Effect":"Allow",
+        "Principal":{
+          "AWS":"arn:aws:iam::123456789001:user/vj4g-a-abcd1234"
+         },
+         "Action":[
+           "sns:Subscribe"
+         ],
+         "Resource":[
+           "arn:aws:sns:us-west-2:001234567890:s3_mybucket"
+         ]
+     }
+   ]
+ }
+Add an additional policy grant to allow S3 to publish event notifications for the bucket to the SNS topic.
+
+For example (using the SNS topic ARN and S3 bucket used throughout these instructions):
+
+{
+    "Sid":"s3-event-notifier",
+    "Effect":"Allow",
+    "Principal":{
+       "Service":"s3.amazonaws.com"
+    },
+    "Action":"SNS:Publish",
+    "Resource":"arn:aws:sns:us-west-2:001234567890:s3_mybucket",
+    "Condition":{
+       "ArnLike":{
+          "aws:SourceArn":"arn:aws:s3:*:*:s3_mybucket"
+       }
+    }
+ }
+Merged IAM policy:
+
+{
+  "Version":"2008-10-17",
+  "Id":"__default_policy_ID",
+  "Statement":[
+     {
+        "Sid":"__default_statement_ID",
+        "Effect":"Allow",
+        "Principal":{
+           "AWS":"*"
+        }
+        ..
+     },
+     {
+        "Sid":"1",
+        "Effect":"Allow",
+        "Principal":{
+          "AWS":"arn:aws:iam::123456789001:user/vj4g-a-abcd1234"
+         },
+         "Action":[
+           "sns:Subscribe"
+         ],
+         "Resource":[
+           "arn:aws:sns:us-west-2:001234567890:s3_mybucket"
+         ]
+     },
+     {
+        "Sid":"s3-event-notifier",
+        "Effect":"Allow",
+        "Principal":{
+           "Service":"s3.amazonaws.com"
+        },
+        "Action":"SNS:Publish",
+        "Resource":"arn:aws:sns:us-west-2:001234567890:s3_mybucket",
+        "Condition":{
+           "ArnLike":{
+              "aws:SourceArn":"arn:aws:s3:*:*:s3_mybucket"
+           }
+        }
+      }
+   ]
+ }
+Click Save changes.
+
+(Optional) Step 2: Create a stage
+Create an external stage that references your S3 bucket by using the CREATE STAGE command. Snowflake reads your staged data files into the external table metadata.
+
+Alternatively, you can use an existing external stage.
+
+Note
+
+To configure secure access to the cloud storage location, see Configure Secure Access to Cloud Storage earlier in this topic.
+
+To reference a storage integration in the CREATE STAGE statement, the role must have the USAGE privilege on the storage integration object.
+
+The following example creates a stage named mystage in the active schema for the user session. The cloud storage URL includes the path files. The stage references a storage integration named my_storage_int:
+
+USE SCHEMA mydb.public;
+
+CREATE STAGE mystage
+  URL = 's3://mybucket/files'
+  STORAGE_INTEGRATION = my_storage_int;
+Step 3: Create an external table
+Create an external table by using CREATE EXTERNAL TABLE. Identify the SNS topic ARN from Prerequisite: Create an Amazon SNS Topic and Subscription:
+
+CREATE EXTERNAL TABLE <table_name>
+ ..
+ AWS_SNS_TOPIC = '<sns_topic_arn>';
+Where:
+
+AWS_SNS_TOPIC = '<sns_topic_arn>'
+Specifies the ARN for the SNS topic for your S3 bucket. The CREATE EXTERNAL TABLE statement subscribes the Snowflake SQS queue to the specified SNS topic.
+
+For example, create an external table in the mydb.public schema that reads JSON data from staged files. The stage reference includes a folder path named path1. The external table appends this path to the stage definition, that is, the external table references the data files in @mystage/files/path1. The AUTO_REFRESH parameter is TRUE by default:
+
+CREATE EXTERNAL TABLE ext_table
+ WITH LOCATION = @mystage/path1/
+ FILE_FORMAT = (TYPE = JSON)
+ AWS_SNS_TOPIC = 'arn:aws:sns:us-west-2:001234567890:s3_mybucket';
+To remove this parameter from an external table, you must recreate the external table by using the CREATE OR REPLACE EXTERNAL TABLE syntax.
+
+Step 4: Manually refresh external table metadata
+Manually refresh the external table metadata one time by using ALTER EXTERNAL TABLE with the REFRESH parameter; for example:
+
+ALTER EXTERNAL TABLE ext_table REFRESH;
+This step ensures that the metadata is synchronized with any changes to the file list that occurred after Step 3. Thereafter, the S3 event notifications trigger the metadata refresh automatically.
+
+Step 5: Configure security
+For each additional role that you will use to query the external table, grant sufficient access control privileges on the various objects (that is, the databases, schemas, stage, and table) by using GRANT <privileges> … TO ROLE:
+
+Object
+
+Privilege
+
+Notes
+
+Database
+
+USAGE
+
+Schema
+
+USAGE
+
+Named stage
+
+USAGE , READ
+
+Named file format
+
+USAGE
+
+External table
+
+SELECT
+
+Refresh external tables automatically for Google Cloud Storage
+You can trigger external table metadata refreshes by using Google Cloud Pub/Sub messages for Google Cloud Storage (GCS) events.
+
+Prerequisites
+Before you proceed, ensure you meet the following prerequisites:
+
+A role that has the CREATE STAGE and CREATE EXTERNAL TABLE privileges on a schema.
+
+Administrative access to Google Cloud (GC). If you aren’t a GC administrator, ask your GC administrator to complete the prerequisite steps.
+
+Only OBJECT_DELETE and OBJECT_FINALIZE events trigger refreshes for external table metadata. To reduce costs, event noise, and latency, send only supported events for external tables.
+
+External tables don’t support storage versioning (S3 versioning, Object Versioning in Google Cloud Storage, or versioning for Azure Storage).
+
+Cloud platform support
+Triggering automated external metadata refreshes by using GCS Pub/Sub event messages is supported by Snowflake accounts hosted on Google Cloud (GC).
+
+Configure secure access to Cloud Storage
+Important
+
+If you have already configured secure access to the GCS bucket that stores your data files, you can skip this section and proceed to Configure automation using GCS Pub/Sub.
+
+You must configure a Snowflake storage integration object to delegate authentication responsibility for cloud storage to a Snowflake identity and access management (IAM) entity.
+
+This section describes how to use storage integrations to allow Snowflake to read data from and write to a Google Cloud Storage bucket referenced in an external (that is, Cloud Storage) stage. Integrations are named, first-class Snowflake objects that avoid the need for passing explicit cloud provider credentials such as secret keys or access tokens; instead, integration objects reference a Cloud Storage service account. An administrator in your organization grants the service account permissions in the Cloud Storage account.
+
+Administrators can also restrict users to a specific set of Cloud Storage buckets (and optional paths) accessed by external stages that use the integration.
+
+Note
+
+Completing the instructions in this section requires access to your Cloud Storage project as a project editor. If you are not a project editor, ask your Cloud Storage administrator to perform these tasks.
+
+Confirm that Snowflake supports the Google Cloud Storage region that your storage is hosted in. For more information, see Supported cloud regions.
+
+The following diagram shows the integration flow for a Cloud Storage stage:
+
+Google Cloud Storage Stage Integration Flow
+An external (that is, Cloud Storage) stage references a storage integration object in its definition.
+
+Snowflake automatically associates the storage integration with a Cloud Storage service account created for your account. Snowflake creates a single service account that is referenced by all GCS storage integrations in your Snowflake account.
+
+A project editor for your Cloud Storage project grants permissions to the service account to access the bucket referenced in the stage definition. Note that many external stage objects can reference different buckets and paths and use the same integration for authentication.
+
+When a user loads or unloads data from or to a stage, Snowflake verifies the permissions granted to the service account on the bucket before allowing or denying access.
+
+In this Section:
+
+Step 1: Create a Cloud Storage integration in Snowflake
+
+Step 2: Retrieve the Cloud Storage service account for your Snowflake account
+
+Step 3: Grant the service account permissions to access bucket objects
+
+Create a custom IAM role
+
+Assign the custom role to the Cloud Storage Service Account
+
+Grant the Cloud Storage service account permissions on the Cloud Key Management Service cryptographic keys
+
+Step 1: Create a Cloud Storage integration in Snowflake
+Create an integration using the CREATE STORAGE INTEGRATION command. An integration is a Snowflake object that delegates authentication responsibility for external cloud storage to a Snowflake-generated entity (that is, a Cloud Storage service account). For accessing Cloud Storage buckets, Snowflake creates a service account that can be granted permissions to access the bucket(s) that store your data files.
+
+A single storage integration can support multiple external (that is, GCS) stages. The URL in the stage definition must align with the GCS buckets (and optional paths) specified for the STORAGE_ALLOWED_LOCATIONS parameter.
+
+Note
+
+Only account administrators (users with the ACCOUNTADMIN role) or a role with the global CREATE INTEGRATION privilege can execute this SQL command.
+
+CREATE STORAGE INTEGRATION <integration_name>
+  TYPE = EXTERNAL_STAGE
+  STORAGE_PROVIDER = 'GCS'
+  ENABLED = TRUE
+  STORAGE_ALLOWED_LOCATIONS = ('gcs://<bucket>/<path>/', 'gcs://<bucket>/<path>/')
+  [ STORAGE_BLOCKED_LOCATIONS = ('gcs://<bucket>/<path>/', 'gcs://<bucket>/<path>/') ]
+Where:
+
+integration_name is the name of the new integration.
+
+bucket is the name of a Cloud Storage bucket that stores your data files (for example, mybucket). The required STORAGE_ALLOWED_LOCATIONS parameter and optional STORAGE_BLOCKED_LOCATIONS parameter restrict or block access to these buckets, respectively, when stages that reference this integration are created or modified.
+
+path is an optional path that can be used to provide granular control over objects in the bucket.
+
+The following example creates an integration that explicitly limits external stages that use the integration to reference either of two buckets and paths. In a later step, we will create an external stage that references one of these buckets and paths.
+
+Additional external stages that also use this integration can reference the allowed buckets and paths:
+
+CREATE STORAGE INTEGRATION gcs_int
+  TYPE = EXTERNAL_STAGE
+  STORAGE_PROVIDER = 'GCS'
+  ENABLED = TRUE
+  STORAGE_ALLOWED_LOCATIONS = ('gcs://mybucket1/path1/', 'gcs://mybucket2/path2/')
+  STORAGE_BLOCKED_LOCATIONS = ('gcs://mybucket1/path1/sensitivedata/', 'gcs://mybucket2/path2/sensitivedata/');
+Step 2: Retrieve the Cloud Storage service account for your Snowflake account
+Execute the DESCRIBE INTEGRATION command to retrieve the ID for the Cloud Storage service account that was created automatically for your Snowflake account:
+
+DESC STORAGE INTEGRATION <integration_name>;
+Where:
+
+integration_name is the name of the integration you created in Step 1: Create a Cloud Storage integration in Snowflake (in this topic).
+
+For example:
+
+DESC STORAGE INTEGRATION gcs_int;
+
++-----------------------------+---------------+-----------------------------------------------------------------------------+------------------+
+| property                    | property_type | property_value                                                              | property_default |
++-----------------------------+---------------+-----------------------------------------------------------------------------+------------------|
+| ENABLED                     | Boolean       | true                                                                        | false            |
+| STORAGE_ALLOWED_LOCATIONS   | List          | gcs://mybucket1/path1/,gcs://mybucket2/path2/                               | []               |
+| STORAGE_BLOCKED_LOCATIONS   | List          | gcs://mybucket1/path1/sensitivedata/,gcs://mybucket2/path2/sensitivedata/   | []               |
+| STORAGE_GCP_SERVICE_ACCOUNT | String        | service-account-id@project1-123456.iam.gserviceaccount.com                  |                  |
++-----------------------------+---------------+-----------------------------------------------------------------------------+------------------+
+The STORAGE_GCP_SERVICE_ACCOUNT property in the output shows the Cloud Storage service account created for your Snowflake account (that is, service-account-id@project1-123456.iam.gserviceaccount.com). We provision a single Cloud Storage service account for your entire Snowflake account. All Cloud Storage integrations use that service account.
+
+Step 3: Grant the service account permissions to access bucket objects
+The following step-by-step instructions describe how to configure IAM access permissions for Snowflake in your Google Cloud console so that you can use a Cloud Storage bucket to load and unload data:
+
+Create a custom IAM role
+Create a custom role that has the permissions required to access the bucket and get objects.
+
+Sign in to the Google Cloud console as a project editor.
+
+From the home dashboard, select IAM & Admin » Roles.
+
+Select Create Role.
+
+Enter a Title and optional Description for the custom role.
+
+Select Add Permissions.
+
+Filter the list of permissions, and add the following from the list:
+
+Action(s)
+
+Required permissions
+
+Data loading only
+
+storage.buckets.get
+
+storage.objects.get
+
+storage.objects.list
+
+Data loading with purge option, executing the REMOVE command on the stage
+
+storage.buckets.get
+
+storage.objects.delete
+
+storage.objects.get
+
+storage.objects.list
+
+Data loading and unloading
+
+storage.buckets.get (for calculating data transfer costs)
+
+storage.objects.create
+
+storage.objects.delete
+
+storage.objects.get
+
+storage.objects.list
+
+Data unloading only
+
+storage.buckets.get
+
+storage.objects.create
+
+storage.objects.delete
+
+storage.objects.list
+
+Using COPY FILES to copy files to an external stage
+
+You must have the following additional permissions:
+
+storage.multipartUploads.abort
+
+storage.multipartUploads.create
+
+storage.multipartUploads.list
+
+storage.multipartUploads.listParts
+
+Select Add.
+
+Select Create.
+
+Assign the custom role to the Cloud Storage Service Account
+Sign in to the Google Cloud console as a project editor.
+
+From the home dashboard, select Cloud Storage » Buckets.
+
+Filter the list of buckets, and select the bucket that you specified when you created your storage integration.
+
+Select Permissions » View by principals, then select Grant access.
+
+Under Add principals, paste the name of the service account name that you retrieved from the DESC STORAGE INTEGRATION command output.
+
+Under Assign roles, select the custom IAM role that you created previously, then select Save.
+
+Important
+
+If your Google Cloud organization was created on or after May 3, 2024, Google Cloud enforces a domain restriction constraint in project organization policies. The default constraint lists your domain as the only allowed value.
+
+To allow the Snowflake service account access to your storage, you must update the domain restriction.
+
+Grant the Cloud Storage service account permissions on the Cloud Key Management Service cryptographic keys
+Note
+
+This step is required only if your GCS bucket is encrypted using a key stored in the Google Cloud Key Management Service (Cloud KMS).
+
+Sign in to the Google Cloud console as a project editor.
+
+From the home dashboard, search for and select Security » Key Management.
+
+Select the key ring that is assigned to your GCS bucket.
+
+Click SHOW INFO PANEL in the upper-right corner. The information panel for the key ring slides out.
+
+Click the ADD PRINCIPAL button.
+
+In the New principals field, search for the service account name from the DESCRIBE INTEGRATION output in Step 2: Retrieve the Cloud Storage service account for your Snowflake account (in this topic).
+
+From the Select a role dropdown, select the Cloud KMS CrytoKey Encryptor/Decryptor role.
+
+Click the Save button. The service account name is added to the Cloud KMS CrytoKey Encryptor/Decryptor role dropdown in the information panel.
+
+Note
+
+You can use the SYSTEM$VALIDATE_STORAGE_INTEGRATION function to validate the configuration for your storage integration.
+
+Configure automation using GCS Pub/Sub
+Prerequisites
+The instructions in this topic assume the following items have been created and configured:
+
+GCP account
+Pub/Sub topic that receives event messages from the GCS bucket. For more information, see Create the Pub/Sub topic (in this topic).
+
+Subscription that receives event messages from the Pub/Sub topic. For more information, see Create the Pub/Sub subscription (in this topic).
+
+For instructions, see the Pub/Sub documentation.
+
+Snowflake
+Target table in the Snowflake database where your data will be loaded.
+
+Create the Pub/Sub topic
+Create a Pub/Sub topic using Cloud Shell or Cloud SDK.
+
+Execute the following command to create the topic and enable it to listen for activity in the specified GCS bucket:
+
+$ gsutil notification create -t <topic> -f json -e OBJECT_FINALIZE -e OBJECT_DELETE gs://<bucket-name>
+Where:
+
+<topic> is the name for the topic.
+
+<bucket-name> is the name of your GCS bucket.
+
+If the topic already exists, the command uses it; otherwise, a new topic is created.
+
+For more information, see Using Pub/Sub notifications for Cloud Storage in the Pub/Sub documentation.
+
+Create the Pub/Sub subscription
+Create a subscription with pull delivery to the Pub/Sub topic using the Cloud Console, gcloud command-line tool, or the Cloud Pub/Sub API. For instructions, see Managing topics and subscriptions in the Pub/Sub documentation.
+
+Note
+
+Only Pub/Sub subscriptions that use the default pull delivery are supported with Snowflake. Push delivery is not supported.
+
+Retrieve the Pub/Sub subscription ID
+The Pub/Sub topic subscription ID is used in these instructions to allow Snowflake access to event messages.
+
+Log into the Google Cloud Platform Console as a project editor.
+
+From the home dashboard, choose Big Data » Pub/Sub » Subscriptions.
+
+Copy the ID in the Subscription ID column for the topic subscription
+
+Step 1: Create a notification integration in Snowflake
+Create a notification integration using the CREATE NOTIFICATION INTEGRATION command.
+
+The notification integration references your Pub/Sub subscription. Snowflake associates the notification integration with a GCS service account created for your account. Snowflake creates a single service account that is referenced by all GCS notification integrations in your Snowflake account.
+
+Note
+
+Only account administrators (users with the ACCOUNTADMIN role) or a role with the global CREATE INTEGRATION privilege can execute this SQL command.
+
+The GCS service account for notification integrations is different from the service account created for storage integrations.
+
+A single notification integration supports a single Google Cloud Pub/Sub subscription. Referencing the same Pub/Sub subscription in multiple notification integrations can result in missing data in target tables because event notifications are split between notification integrations.
+
+CREATE NOTIFICATION INTEGRATION <integration_name>
+  TYPE = QUEUE
+  NOTIFICATION_PROVIDER = GCP_PUBSUB
+  ENABLED = true
+  GCP_PUBSUB_SUBSCRIPTION_NAME = '<subscription_id>';
+Where:
+
+integration_name is the name of the new integration.
+
+subscription_id is the subscription name you recorded in Retrieve the Pub/Sub subscription ID.
+
+For example:
+
+CREATE NOTIFICATION INTEGRATION my_notification_int
+  TYPE = QUEUE
+  NOTIFICATION_PROVIDER = GCP_PUBSUB
+  ENABLED = true
+  GCP_PUBSUB_SUBSCRIPTION_NAME = 'projects/project-1234/subscriptions/sub2';
+Step 2: Grant Snowflake access to the Pub/Sub subscription
+Execute the DESCRIBE INTEGRATION command to retrieve the Snowflake service account ID:
+
+DESC NOTIFICATION INTEGRATION <integration_name>;
+Where:
+
+integration_name is the name of the integration you created in Step 1: Create a Notification Integration in Snowflake.
+
+For example:
+
+DESC NOTIFICATION INTEGRATION my_notification_int;
+Record the service account name in the GCP_PUBSUB_SERVICE_ACCOUNT column, which has the following format:
+
+<service_account>@<project_id>.iam.gserviceaccount.com
+Log into the Google Cloud Platform Console as a project editor.
+
+From the home dashboard, choose Big Data » Pub/Sub » Subscriptions.
+
+Select the subscription to configure for access.
+
+Click SHOW INFO PANEL in the upper-right corner. The information panel for the subscription slides out.
+
+Click the ADD PRINCIPAL button.
+
+In the New principals field, search for the service account name you recorded.
+
+From the Select a role dropdown, select Pub/Sub Subscriber.
+
+Click the Save button. The service account name is added to the Pub/Sub Subscriber role dropdown in the information panel.
+
+Navigate to the Dashboard page in the Cloud Console, and select your project from the dropdown list.
+
+Click the ADD PEOPLE TO THIS PROJECT button.
+
+Add the service account name you recorded.
+
+From the Select a role dropdown, select Monitoring Viewer.
+
+Click the Save button. The service account name is added to the Monitoring Viewer role.
+
+(Optional) Step 3: Create a stage
+Create an external stage that references your GCS bucket by using the CREATE STAGE command. Snowflake reads your staged data files into the external table metadata. Alternatively, you can use an existing external stage.
+
+Note
+
+To configure secure access to the cloud storage location, see Configure secure access to Cloud Storage earlier in this topic.
+
+To reference a storage integration in the CREATE STAGE statement, the role must have the USAGE privilege on the storage integration object.
+
+The following example creates a stage named mystage in the active schema for the user session. The cloud storage URL includes the path files. The stage references a storage integration named my_storage_int:
+
+USE SCHEMA mydb.public;
+
+CREATE STAGE mystage
+  URL='gcs://load/files/'
+  STORAGE_INTEGRATION = my_storage_int;
+Step 4: Create an external table
+Create an external table by using the CREATE EXTERNAL TABLE command.
+
+For example, create an external table in the mydb.public schema that reads JSON data from files staged in the mystage stage with the path1/ path.
+
+The INTEGRATION parameter references the my_notification_int notification integration you created in Step 1: Create a notification integration in Snowflake. You must enter the integration name in all uppercase letters.
+
+The AUTO_REFRESH parameter is TRUE by default:
+
+CREATE OR REPLACE EXTERNAL TABLE ext_table
+ INTEGRATION = 'MY_NOTIFICATION_INT'
+ WITH LOCATION = @mystage/path1/
+ FILE_FORMAT = (TYPE = JSON);
+After you complete this step, the external stage with auto-refresh is configured.
+
+When new or updated data files are added to the GCS bucket, the event notification informs Snowflake to scan them into the external table metadata.
+
+Step 5: Manually refresh the external table metadata
+Manually refresh the external table metadata once by using ALTER EXTERNAL TABLE with the REFRESH parameter; for example:
+
+ALTER EXTERNAL TABLE ext_table REFRESH;
+
++---------------------------------------------+----------------+-------------------------------+
+| file                                        | status         | description                   |
+|---------------------------------------------+----------------+-------------------------------|
+| files/path1/file1.json                      | REGISTERED_NEW | File registered successfully. |
+| files/path1/file2.json                      | REGISTERED_NEW | File registered successfully. |
+| files/path1/file3.json                      | REGISTERED_NEW | File registered successfully. |
++---------------------------------------------+----------------+-------------------------------+
+This step synchronizes the metadata with the list of files in the stage and path in the external table definition. Also, this step ensures that the external table can read the data files in the specified stage and path, and that no files were missed in the external table definition.
+
+If the list of files in the file column doesn’t match your expectations, verify the paths in the external table definition and external stage definition. Any path in the external table definition is appended to any path specified in the stage definition. For more information, see CREATE EXTERNAL TABLE.
+
+Important
+
+If this step is not completed successfully at least once after the external table is created, querying the external table returns no results until a Pub/Sub notification refreshes the external table metadata automatically for the first time.
+
+This step ensures that the metadata is synchronized with any changes to the file list that occurred after Step 4. Thereafter, Pub/Sub notifications trigger the metadata refresh automatically.
+
+Step 6: Configure security
+For each additional role that you will use to query the external table, grant sufficient access control privileges on the various objects (that is, the databases, schemas, stage, and table) by using GRANT <privileges> … TO ROLE:
+
+Object
+
+Privilege
+
+Notes
+
+Database
+
+USAGE
+
+Schema
+
+USAGE
+
+Named stage
+
+USAGE , READ
+
+Named file format
+
+USAGE
+
+Optional; only needed if the stage you created in (Optional) Step 3: Create a stage references a named file format.
+
+External table
+
+SELECT
+
+Refresh external tables automatically for Azure Blob Storage
+You can create external tables and refresh the external table metadata automatically by using Microsoft Azure Event Grid notifications for an Azure container. This operation synchronizes the metadata with the latest set of associated files in the external stage and path.
+
+The following list shows how the state of files in the path affects the table metadata:
+
+New files in the path are added to the table metadata.
+
+Changes to files in the path are updated in the table metadata.
+
+Files no longer in the path are removed from the table metadata.
+
+Supported accounts, APIs, and schemas
+Snowflake supports the following types of blob storage accounts:
+
+Blob storage
+
+Data Lake Storage Gen2
+
+General-purpose v2
+
+Automatic refresh of external table isn’t supported for Microsoft Fabric OneLake. For OneLake external tables, you must manually refresh a table with ALTER EXTERNAL TABLE with the REFRESH parameter.
+
+Note
+
+Only Microsoft.Storage.BlobCreated and Microsoft.Storage.BlobDeleted events trigger the refreshing of external table metadata. Adding new objects to blob storage triggers these events. Renaming a directory or object doesn’t trigger these events. Snowflake recommends that you only send supported events for external tables to reduce costs, event noise, and latency.
+
+For cloud platform support, triggering automated external metadata refreshes using Azure Event Grid messages is supported by Snowflake accounts hosted on Microsoft Azure (Azure).
+
+Snowflake supports the following Microsoft.Storage.BlobCreated APIs:
+
+CopyBlob
+
+PutBlob
+
+PutBlockList
+
+FlushWithClose
+
+SftpCommit
+
+Snowflake supports the following Microsoft.Storage.BlobDeleted APIs:
+
+DeleteBlob
+
+DeleteFile
+
+SftpRemove
+
+For Data Lake Storage Gen2 storage accounts, Microsoft.Storage.BlobCreated events are triggered when clients use the CreateFile and FlushWithClose operations. If the SSH File Transfer Protocol (SFTP) is used, Microsoft.Storage.BlobCreated events are triggered with SftpCreate and SftpCommit operations. The CreateFile or SftpCreate API alone does not indicate a commit of a file in the storage account. If the FlushWithClose or SftpCommit message is not sent, Snowflake does not refresh the external table metadata.
+
+Snowflake only supports the Azure Event Grid event schema; it doesn’t support the CloudEvents schema with Azure Event Grid.
+
+External tables don’t support storage versioning (S3 versioning, Object Versioning in Google Cloud Storage, or versioning for Azure Storage).
+
+Prerequisites
+Before you proceed, ensure you meet the following prerequisites:
+
+A role that has the CREATE STAGE and CREATE EXTERNAL TABLE privileges on a schema.
+
+Administrative access to Microsoft Azure. If you aren’t an Azure administrator, ask your Azure administrator to complete the steps in Step 1: Configure the Event Grid subscription.
+
+A notification integration so that you can refresh external tables automatically for Azure Blob Storage.
+
+Configure secure access to Cloud Storage
+Important
+
+If you already configured secure access to the Azure blob storage container that stores your data files, you can skip this section, and proceed to Step 1: Configure the Event Grid subscription.
+
+You must configure a Snowflake storage integration object to delegate authentication responsibility for cloud storage to a Snowflake identity and access management (IAM) entity.
+
+Note
+
+Snowflake strongly recommends that you configure secure access so that you don’t need to supply IAM credentials when you access cloud storage. For information about additional storage access options, see Configure an Azure container for loading data.
+
+This section describes how to use storage integrations to allow Snowflake to read data from and write data to an Azure container referenced in an external (Azure) stage. Integrations are named, first-class Snowflake objects that avoid the need for passing explicit cloud provider credentials such as secret keys or access tokens. Integration objects store an Azure identity and access management (IAM) user ID called the app registration. An administrator in your organization grants this app the necessary permissions in the Azure account.
+
+An integration must also specify containers (and optional paths) that limit the locations users can specify when creating external stages that use the integration.
+
+Note
+
+Completing the instructions in this section requires permissions in Azure to manage storage accounts. If you are not an Azure administrator, ask your Azure administrator to perform these tasks.
+
+In this Section:
+
+Step 1: Create a cloud storage integration in Snowflake
+
+Step 2: Grant Snowflake Access to the Storage Locations
+
+Step 1: Create a cloud storage integration in Snowflake
+Create a storage integration using the CREATE STORAGE INTEGRATION command. A storage integration is a Snowflake object that stores a generated service principal for your Azure cloud storage, along with an optional set of allowed or blocked storage locations (that is, containers). Cloud provider administrators in your organization grant permissions on the storage locations to the generated service principal. This option allows users to avoid supplying credentials when creating stages or loading data.
+
+A single storage integration can support multiple external (that is, Azure) stages. The URL in the stage definition must align with the Azure containers (and optional paths) specified for the STORAGE_ALLOWED_LOCATIONS parameter.
+
+Note
+
+Only account administrators (users with the ACCOUNTADMIN role) or a role with the global CREATE INTEGRATION privilege can execute this SQL command.
+
+CREATE STORAGE INTEGRATION <integration_name>
+  TYPE = EXTERNAL_STAGE
+  STORAGE_PROVIDER = 'AZURE'
+  ENABLED = TRUE
+  AZURE_TENANT_ID = '<tenant_id>'
+  STORAGE_ALLOWED_LOCATIONS = ('azure://<account>.blob.core.windows.net/<container>/<path>/', 'azure://<account>.blob.core.windows.net/<container>/<path>/')
+  [ STORAGE_BLOCKED_LOCATIONS = ('azure://<account>.blob.core.windows.net/<container>/<path>/', 'azure://<account>.blob.core.windows.net/<container>/<path>/') ]
+Where:
+
+integration_name is the name of the new integration.
+
+tenant_id is the ID for your Office 365 tenant that the allowed and blocked storage accounts belong to. A storage integration can authenticate to only one tenant, so the allowed and blocked storage locations must refer to storage accounts that all belong this tenant.
+
+To find your tenant ID, sign in to the Azure portal and click Azure Active Directory » Properties. The tenant ID is displayed in the Tenant ID field.
+
+container is the name of an Azure container that stores your data files (for example, mycontainer). The STORAGE_ALLOWED_LOCATIONS and STORAGE_BLOCKED_LOCATIONS parameters allow or block access to these containers, respectively, when stages that reference this integration are created or modified.
+
+path is an optional path that can be used to provide granular control over logical directories in the container.
+
+The following example creates an integration that explicitly limits external stages that use the integration to reference either of two containers and paths. In a later step, we will create an external stage that references one of these containers and paths. Multiple external stages that use this integration can reference the allowed containers and paths:
+
+CREATE STORAGE INTEGRATION azure_int
+  TYPE = EXTERNAL_STAGE
+  STORAGE_PROVIDER = 'AZURE'
+  ENABLED = TRUE
+  AZURE_TENANT_ID = 'a123b4c5-1234-123a-a12b-1a23b45678c9'
+  STORAGE_ALLOWED_LOCATIONS = ('azure://myaccount.blob.core.windows.net/mycontainer1/mypath1/', 'azure://myaccount.blob.core.windows.net/mycontainer2/mypath2/')
+  STORAGE_BLOCKED_LOCATIONS = ('azure://myaccount.blob.core.windows.net/mycontainer1/mypath1/sensitivedata/', 'azure://myaccount.blob.core.windows.net/mycontainer2/mypath2/sensitivedata/');
+Step 2: Grant Snowflake Access to the Storage Locations
+Execute the DESCRIBE INTEGRATION command to retrieve the consent URL:
+
+DESC STORAGE INTEGRATION <integration_name>;
+Where:
+
+integration_name is the name of the integration you created in Step 1: Create a Cloud Storage Integration in Snowflake.
+
+Note the values in the following columns:
+
+AZURE_CONSENT_URL
+URL to the Microsoft permissions request page.
+
+AZURE_MULTI_TENANT_APP_NAME
+Name of the Snowflake client application created for your account. In a later step in this section, you will need to grant this application the permissions necessary to obtain an access token on your allowed storage locations.
+
+In a web browser, navigate to the URL in the AZURE_CONSENT_URL column. The page displays a Microsoft permissions request page.
+
+Click the Accept button. This action allows the Azure service principal created for your Snowflake account to be granted an access token on specified resources inside your tenant. Obtaining an access token succeeds only if you grant the service principal the appropriate permissions on the container (see the next step).
+
+The Microsoft permissions request page redirects to the Snowflake corporate site (snowflake.com).
+
+Sign in to the Microsoft Azure portal.
+
+Navigate to Azure Services » Storage Accounts. Click the name of the storage account you are granting the Snowflake service principal access to.
+
+Click Access Control (IAM) » Add role assignment.
+
+Select the desired role to grant to the Snowflake service principal:
+
+Storage Blob Data Reader grants read access only. This allows loading data from files staged in the storage account.
+
+Storage Blob Data Contributor grants read and write access. This allows loading data from or unloading data to files staged in the storage account. The role also allows executing the REMOVE command to remove files staged in the storage account.
+
+Search for the Snowflake service principal. This is the identity in the AZURE_MULTI_TENANT_APP_NAME property in the DESC STORAGE INTEGRATION output (in Step 1). Search for the string before the underscore in the AZURE_MULTI_TENANT_APP_NAME property.
+
+Important
+
+It can take an hour or longer for Azure to create the Snowflake service principal requested through the Microsoft request page in this section. If the service principal is not available immediately, we recommend waiting an hour or two and then searching again.
+
+If you delete the service principal, the storage integration stops working.
+
+Add role assignment in Azure Storage Console
+Click the Review + assign button.
+
+Note
+
+According to the Microsoft Azure documentation, role assignments may take up to five minutes to propagate.
+
+Snowflake caches the temporary credentials for a period that cannot exceed the 60 minute expiration time. If you revoke access from Snowflake, users might be able to list files and load data from the cloud storage location until the cache expires.
+
+Note
+
+You can use the SYSTEM$VALIDATE_STORAGE_INTEGRATION function to validate the configuration for your storage integration.
+
+Configure automation with Azure Event Grid
+Step 1: Configure the Event Grid subscription
+This section describes how to set up an Event Grid subscription for Azure Storage events using the Azure CLI. For more information about the steps described in this section, see the following articles in the Azure documentation:
+
+https://docs.microsoft.com/en-us/azure/event-grid/custom-event-to-queue-storage
+
+https://docs.microsoft.com/en-us/azure/storage/blobs/storage-blob-event-quickstart
+
+Create a resource group
+An Event Grid topic provides an endpoint where the source (that is, Azure Storage) sends events. A topic is used for a collection of related events. Event Grid topics are Azure resources, and must be placed in an Azure resource group.
+
+Execute the following command to create a resource group:
+
+az group create --name <resource_group_name> --location <location>
+Where:
+
+resource_group_name is the name of the new resource group.
+
+location is the location, or region in Snowflake terminology, of your Azure Storage account.
+
+Enable the Event Grid resource provider
+Execute the following command to register the Event Grid resource provider. Note that this step is only required if you have not previously used Event Grid with your Azure account:
+
+az provider register --namespace Microsoft.EventGrid
+az provider show --namespace Microsoft.EventGrid --query "registrationState"
+Create a storage account for data files
+Execute the following command to create a storage account to store your data files. This account must be either a Blob storage (that is, a BlobStorage kind) or GPv2 (that is, a StorageV2 kind) account, because only these two account types support event messages.
+
+Note
+
+If you already have a Blob storage or GPv2 account, you can use that account instead.
+
+For example, create a Blob storage account:
+
+az storage account create --resource-group <resource_group_name> --name <storage_account_name> --sku Standard_LRS --location <location> --kind BlobStorage --access-tier Hot
+Where:
+
+resource_group_name is the name of the resource group you created in Create a Resource Group.
+
+storage_account_name is the name of the new storage account.
+
+location is the location of your Azure Storage account.
+
+Create a storage account for the storage queue
+Execute the following command to create a storage account to host your storage queue. This account must be a GPv2 account, because only this kind of account supports event messages to a storage queue.
+
+Note
+
+If you already have a GPv2 account, you can use that account to host both your data files and your storage queue.
+
+For example, create a GPv2 account:
+
+az storage account create --resource-group <resource_group_name> --name <storage_account_name> --sku Standard_LRS --location <location> --kind StorageV2
+Where:
+
+resource_group_name is the name of the resource group you created in Create a resource group.
+
+storage_account_name is the name of the new storage account.
+
+location is the location of your Azure Storage account.
+
+Create a storage queue
+A single Azure Queue Storage queue can collect the event messages for many Event Grid subscriptions. For best performance, Snowflake recommends creating a single storage queue to accommodate all of your subscriptions related to Snowflake.
+
+Execute the following command to create a storage queue. A storage queue stores a set of messages, in this case event messages from Event Grid:
+
+az storage queue create --name <storage_queue_name> --account-name <storage_account_name>
+Where:
+
+storage_queue_name is the name of the new storage queue.
+
+storage_account_name is the name of the storage account you created in Create a storage account for the storage queue.
+
+Export the storage account and queue IDs for Reference
+Execute the following commands to set environment variables for the storage account and queue IDs that will be requested later in these instructions:
+
+Linux or macOS:
+
+export storageid=$(az storage account show --name <data_storage_account_name> --resource-group <resource_group_name> --query id --output tsv)
+export queuestorageid=$(az storage account show --name <queue_storage_account_name> --resource-group <resource_group_name> --query id --output tsv)
+export queueid="$queuestorageid/queueservices/default/queues/<storage_queue_name>"
+Windows:
+
+set storageid=$(az storage account show --name <data_storage_account_name> --resource-group <resource_group_name> --query id --output tsv)
+set queuestorageid=$(az storage account show --name <queue_storage_account_name> --resource-group <resource_group_name> --query id --output tsv)
+set queueid="%queuestorageid%/queueservices/default/queues/<storage_queue_name>"
+Where:
+
+data_storage_account_name is the name of the storage account you created in Create a storage account for data files.
+
+queue_storage_account_name is the name of the storage account you created in Create a storage account for the storage queue.
+
+resource_group_name is the name of the resource group you created in Create a resource group.
+
+storage_queue_name is the name of the storage queue you created in Create a storage queue.
+
+Install the Event Grid extension
+Execute the following command to install the Event Grid extension for Azure CLI:
+
+az extension add --name eventgrid
+Create the Event Grid subscription
+Execute the following command to create the Event Grid subscription. Subscribing to a topic informs Event Grid which events to track:
+
+Linux or macOS:
+
+az eventgrid event-subscription create \
+--source-resource-id $storageid \
+--name <subscription_name> --endpoint-type storagequeue \
+--endpoint $queueid \
+--advanced-filter data.api stringin CopyBlob PutBlob PutBlockList FlushWithClose SftpCommit DeleteBlob DeleteFile SftpRemove
+Windows:
+
+az eventgrid event-subscription create \
+--source-resource-id %storageid% \
+--name <subscription_name> --endpoint-type storagequeue \
+--endpoint %queueid% \
+-advanced-filter data.api stringin CopyBlob PutBlob PutBlockList FlushWithClose SftpCommit DeleteBlob DeleteFile SftpRemove
+Where:
+
+storageid and queueid are the storage account and queue ID environment variables you set in Export the storage account and queue IDs for reference.
+
+subscription_name is the name of the new Event Grid subscription.
+
+Step 2: Create the notification integration
+A notification integration is a Snowflake object that provides an interface between Snowflake and a third-party cloud message queuing service such as Azure Event Grid.
+
+Note
+
+A single notification integration supports a single Azure Storage queue. Referencing the same storage queue in multiple notification integrations can result in missing data in target tables because event notifications are split between notification integrations.
+
+Retrieve the storage queue URL and tenant ID
+Sign in to the Microsoft Azure portal.
+
+Navigate to Storage account » Queue service » Queues. Record the URL for the queue you created in Create a storage queue for reference later. The URL has the following format:
+
+https://<storage_account_name>.queue.core.windows.net/<storage_queue_name>
+Navigate to Azure Active Directory » Properties. Record the Tenant ID value for reference later. The directory ID, or tenant ID, is needed to generate the consent URL that grants Snowflake access to the Event Grid subscription.
+
+Create the notification integration
+Create a notification integration using the CREATE NOTIFICATION INTEGRATION command.
+
+Note
+
+Only account administrators (users with the ACCOUNTADMIN role) or a role with the global CREATE INTEGRATION privilege can execute this SQL command.
+
+The Azure service principal for notification integrations is different from the service principal created for storage integrations.
+
+CREATE NOTIFICATION INTEGRATION <integration_name>
+  ENABLED = true
+  TYPE = QUEUE
+  NOTIFICATION_PROVIDER = AZURE_STORAGE_QUEUE
+  AZURE_STORAGE_QUEUE_PRIMARY_URI = '<queue_URL>'
+  AZURE_TENANT_ID = '<directory_ID>';
+Where:
+
+integration_name is the name of the new integration.
+
+queue_URL and directory_ID are the queue URL and tenant ID you recorded in Retrieve the storage queue URL and tenant ID.
+
+For example:
+
+CREATE NOTIFICATION INTEGRATION my_notification_int
+  ENABLED = true
+  TYPE = QUEUE
+  NOTIFICATION_PROVIDER = AZURE_STORAGE_QUEUE
+  AZURE_STORAGE_QUEUE_PRIMARY_URI = 'https://myqueue.queue.core.windows.net/mystoragequeue'
+  AZURE_TENANT_ID = 'a123bcde-1234-5678-abc1-9abc12345678';
+Grant Snowflake access to the storage queue
+Note that specific steps in this section require a local installation of the Azure CLI.
+
+Execute the DESCRIBE INTEGRATION command to retrieve the consent URL:
+
+DESC NOTIFICATION INTEGRATION <integration_name>;
+Where:
+
+integration_name is the name of the integration you created in Create the notification integration.
+
+Note the values in the following columns:
+
+AZURE_CONSENT_URL
+URL to the Microsoft permissions request page.
+
+AZURE_MULTI_TENANT_APP_NAME
+Name of the Snowflake client application created for your account. In a later step in this section, you will need to grant this application the permissions necessary to obtain an access token on your allowed topic.
+
+In a web browser, navigate to the URL in the AZURE_CONSENT_URL column. The page displays a Microsoft permissions request page.
+
+Click the Accept button. This action allows the Azure service principal created for your Snowflake account to obtain an access token on any resource inside your tenant. Obtaining an access token succeeds only if you grant the service principal the appropriate permissions on the container (see the next step).
+
+The Microsoft permissions request page redirects to the Snowflake corporate site (snowflake.com).
+
+Sign in to the Microsoft Azure portal.
+
+Navigate to Azure Active Directory » Enterprise applications. Verify that the Snowflake application identifier you recorded in Step 2 in this section is listed.
+
+Important
+
+If you delete the Snowflake application in Azure Active Directory at a later time, the notification integration stops working.
+
+Navigate to Queues » storage_queue_name, where storage_queue_name is the name of the storage queue you created in Create a storage queue.
+
+Click Access Control (IAM) » Add role assignment.
+
+Search for the Snowflake service principal. This is the identity in the AZURE_MULTI_TENANT_APP_NAME property in the DESC NOTIFICATION INTEGRATION output (in Step 1). Search for the string before the underscore in the AZURE_MULTI_TENANT_APP_NAME property.
+
+Important
+
+It can take an hour or longer for Azure to create the Snowflake service principal requested through the Microsoft request page in this section. If the service principal is not available immediately, we recommend waiting an hour or two and then searching again.
+
+If you delete the service principal, the notification integration stops working.
+
+Grant the Snowflake app the following permissions:
+
+Role: Storage Queue Data Message Processor (the minimum required role), or Storage Queue Data Contributor.
+
+Assign access to: Azure AD user, group, or service principal.
+
+Select: The appDisplayName value.
+
+The Snowflake application identifier should now be listed under Storage Queue Data Message Processor or Storage Queue Data Contributor (on the same dialog).
+
+(Optional) Step 3: Creating a stage
+Create an external stage that references your Azure container by using the CREATE STAGE command. Snowflake reads your staged data files into the external table metadata. Alternatively, you can use an existing external stage.
+
+Note
+
+To configure secure access to the cloud storage location, see Configure Secure Access to Cloud Storage earlier in this topic.
+
+To reference a storage integration in the CREATE STAGE statement, the role must have the USAGE privilege on the storage integration object.
+
+The following example creates a stage named mystage in the active schema for the user session. The cloud storage URL includes the path files. The stage references a storage integration named my_storage_int:
+
+USE SCHEMA mydb.public;
+
+CREATE STAGE mystage
+  URL='azure://myaccount.blob.core.windows.net/mycontainer/files/'
+  STORAGE_INTEGRATION = my_storage_int;
+Note
+
+Use the blob.core.windows.net endpoint for all supported types of Azure blob storage accounts, including Data Lake Storage Gen2.
+
+Step 4: Create an external table
+Create an external table by using the CREATE EXTERNAL TABLE command.
+
+For example, create an external table in the mydb.public schema that reads JSON data from files staged in the mystage stage with the path1/ path:
+
+CREATE OR REPLACE EXTERNAL TABLE ext_table
+ INTEGRATION = 'MY_NOTIFICATION_INT'
+ WITH LOCATION = @mystage/path1/
+ FILE_FORMAT = (TYPE = JSON);
+The INTEGRATION parameter references the my_notification_int notification integration you created in Step 2: Create the notification integration. You must enter the integration name in all uppercase letters.
+
+When a notification integration is provided, the AUTO_REFRESH parameter is TRUE by default. If there is no notification integration, AUTO_REFRESH is always FALSE.
+
+After you complete this step, the external stage with auto-refresh is configured.
+
+When new or updated data files are added to the Azure container, the event notification informs Snowflake to scan them into the external table metadata.
+
+Step 5: Manually refresh the external table metadata
+Manually refresh the external table metadata once by using ALTER EXTERNAL TABLE with the REFRESH parameter; for example:
+
+ALTER EXTERNAL TABLE ext_table REFRESH;
+
++---------------------------------------------+----------------+-------------------------------+
+| file                                        | status         | description                   |
+|---------------------------------------------+----------------+-------------------------------|
+| files/path1/file1.json                      | REGISTERED_NEW | File registered successfully. |
+| files/path1/file2.json                      | REGISTERED_NEW | File registered successfully. |
+| files/path1/file3.json                      | REGISTERED_NEW | File registered successfully. |
++---------------------------------------------+----------------+-------------------------------+
+This step synchronizes the metadata with the list of files in the stage and path in the external table definition. Also, this step ensures that the external table can read the data files in the specified stage and path, and that no files were missed in the external table definition.
+
+If the list of files in the file column doesn’t match your expectations, verify the paths in the external table definition and external stage definition. Any path in the external table definition is appended to any path specified in the stage definition. For more information, see CREATE EXTERNAL TABLE.
+
+Important
+
+If this step is not completed successfully at least once after the external table is created, querying the external table returns no results until an Event Grid notification refreshes the external table metadata automatically for the first time.
+
+This step ensures that the metadata is synchronized with any changes to the file list that occurred after Step 4. Thereafter, Event Grid notifications trigger the metadata refresh automatically.
+
+Step 6: Configure security
+For each additional role that you will use to query the external table, grant sufficient access control privileges on the various objects (that is, the databases, schemas, stage, and table) by using GRANT <privileges> … TO ROLE:
+
+Object
+
+Privilege
+
+Notes
+
+Database
+
+USAGE
+
+Schema
+
+USAGE
+
+Named stage
+
+USAGE , READ
+
+Named file format
+
+USAGE
+
+Optional; only needed if the stage you created in (Optional) Step 3: Creating a stage references a named file format.
+
+External table
+
+SELECT
+
+Troubleshooting external tables
+This topic describes how to troubleshoot issues with external tables.
+
+Automatic metadata refreshing is disabled
+If ownership of an external table (that is, the OWNERSHIP privilege on the external table) is transferred to a different role, the AUTO_REFRESH parameter for the external table is set to FALSE by default. To re-enable automatic refreshing of the external table metadata, set the AUTO_REFRESH parameter to TRUE by using an ALTER EXTERNAL TABLE statement.
+
+Verify that the configured settings for the external cloud messaging service are still accurate. For more information, see the instructions for your cloud storage provider:
+
+Refresh external tables automatically for Amazon S3
+
+Refresh external tables automatically for Azure Blob Storage
+
+Checking the progress of automatic metadata refreshes
+Retrieve the current status of the internal, hidden pipe used by the external table to refresh its metadata. The results are displayed in JSON format. For information, see SYSTEM$EXTERNAL_TABLE_PIPE_STATUS.
+
+Verify the following values:
+
+lastReceivedMessageTimestamp
+Specifies the timestamp of the last event message received from the message queue.
+
+If the timestamp is earlier than expected, this likely indicates an issue with either the cloud event notification service configuration or the service itself. If the field is empty, verify your service configuration settings. If the field contains a timestamp but it’s earlier than expected, verify whether any settings were changed in your service configuration.
+
+lastForwardedMessageTimestamp
+Specifies the timestamp of the last event message that was forwarded to the pipe.
+
+Error: Integration {0} associated with the stage {1} cannot be found
+003139=SQL compilation error:\nIntegration ''{0}'' associated with the stage ''{1}'' cannot be found.
+This error can occur when the association between the external stage and the storage integration linked to the stage has been broken. This happens when the storage integration object has been recreated (using CREATE OR REPLACE STORAGE INTEGRATION). A stage links to a storage integration using a hidden ID rather than the name of the storage integration. Behind the scenes, the CREATE OR REPLACE syntax drops the object and recreates it with a different hidden ID.
+
+If you must recreate a storage integration after it has been linked to one or more stages, you must reestablish the association between each stage and the storage integration by executing ALTER STAGE stage_name SET STORAGE_INTEGRATION = storage_integration_name, where:
+
+stage_name is the name of the stage.
+
+storage_integration_name is the name of the storage integration.
+
+Error: External table {0} marked invalid. Stage {1} location altered
+Querying an external table might produce an error similar to the following error:
+
+091093 (55000): External table ''{0}'' marked invalid. Stage ''{1}'' location altered.
+This error can occur when the URL for the referenced stage is modified after the external table was created (by using ALTER STAGE … SET URL).
+
+If you must modify the stage URL, you must recreate any existing external tables that reference the stage (by using CREATE OR REPLACE EXTERNAL TABLE).
+
+Was this page helpful?
+
+Yes
+
+
+Integrate Apache Hive metastores with Snowflake
+You can use the Hive metastore connector for Snowflake to integrate Apache Hive metastores with Snowflake by using external tables. The connector detects metastore events and transmits the events to Snowflake to keep the external tables synchronized with the Hive metastore. With this capability, users can manage their schema in Hive while querying the metastore from Snowflake.
+
+The Apache Hive metastore must be integrated with cloud storage on one of the following cloud platforms:
+
+Amazon Web Services
+
+Google Cloud
+
+Microsoft Azure
+
+Install and configure the Hive metastore connector
+This section describes how to install and configure the Hive metastore connector for Snowflake.
+
+Prerequisites
+The Hive connector for Snowflake has the following prerequisites:
+
+Snowflake database and schemas
+Store the external tables that map to the Hive tables in the metastore.
+
+Designated Snowflake user
+The connector is configured to execute operations on the external tables as this user.
+
+Storage integration
+With storage integrations, you can configure secure access to external cloud storage without passing explicit cloud provider credentials, such as secret keys or access tokens. Create a storage integration to access cloud storage locations referenced in Hive tables using CREATE STORAGE INTEGRATION.
+
+The STORAGE_ALLOWED_LOCATIONS parameter for the storage integration must list the same storage containers as the ones referenced in the Location parameter of the Hive tables in your metastore.
+
+Role
+The role must be assigned to the designated Snowflake user and include the following object privileges on the other Snowflake objects identified in this section:
+
+Object
+
+Privileges
+
+Database
+
+USAGE
+
+Schema
+
+USAGE , CREATE STAGE , CREATE EXTERNAL TABLE
+
+Storage integration
+
+USAGE
+
+Step 1: Install the connector
+Complete the following steps to install the connector:
+
+From the Maven Central Repository (Sonatype or https://repo1.maven.org/maven2/net/snowflake/snowflake-hive-metastore-connector/), download the connector JAR file and configuration XML file.
+
+Copy the JAR file to the following directory:
+
+Amazon S3 or Google Cloud Storage
+lib directory in the Hive classpath. The location can vary depending on the Hive installation. To determine the classpath, check the HIVE_AUX_JARS_PATH environment variable.
+
+Microsoft Azure HDInsight
+hive directory in the user directory; for example, /usr/hdp/<hdinsight_version>/atlas/hook/hive/. The location can vary depending on the Azure HDInsight version and installation choices.
+
+Tip
+
+An example custom script is available in the scripts folder on the GitHub project page for Hive. The script adds the JAR file and configuration files to the correct directories.
+
+Create a file named snowflake-config.xml in the following directory:
+
+Amazon S3 or Google Cloud Storage
+conf directory in the Hive classpath.
+
+Microsoft Azure HDInsight
+conf/conf.server directory in the Hive classpath.
+
+In a text editor, open the snowflake-config.xml file, and then populate the file with the following <name> properties and corresponding <values>:
+
+snowflake.jdbc.username
+Specifies the sign-in name of the Snowflake user designated for refresh operations on the external tables.
+
+snowflake.jdbc.password
+Specifies the password for the sign-in name.
+
+Note
+
+You can set a placeholder for the password based on a system property or environment variable, depending on your Hadoop version. The configuration behaves like other Hadoop configurations. For more information, see the Hadoop documentation.
+
+snowflake.jdbc.privateKey
+
+Alternatively, authenticate by using key-pair authentication. For instructions about how to generate the key pair and aassign the public key to a user, see Key-pair authentication and key-pair rotation.
+
+To pass the private key to Snowflake, add the snowflake.jdbc.privateKey property to the snowflake-config.xml file. Open the private key file (for example, rsa_key.p8) in a text editor. Copy the lines between -----BEGIN RSA PRIVATE KEY----- and -----END RSA PRIVATE KEY----- as the property or environment variable value.
+
+snowflake.jdbc.account
+Specifies the name of your account (provided by Snowflake); for example, xy12345.
+
+snowflake.jdbc.db
+Specifies an existing Snowflake database to use for the Hive metastore integration. For more information, see the Prerequisites section earlier in this topic.
+
+snowflake.jdbc.schema
+Specifies an existing Snowflake schema in the specified database. For more information, see the Prerequisites section earlier in this topic.
+
+To map multiple schemas in your Hive metastore to corresponding schemas in your Snowflake database, set the snowflake.hive-metastore-listener.schemas property in addition to the current property. Specify the default Snowflake schema in the snowflake.jdbc.schema property.
+
+snowflake.jdbc.role
+Specifies the access-control role to use by the Hive connector. The role should be an existing role that was already assigned to the specified user.
+
+If no role is specified here, then the Hive connector uses the default role for the specified user.
+
+snowflake.jdbc.connection
+Specifies the connection string for your Snowflake account in the following format:
+
+jdbc:snowflake://<account_identifier>.snowflakecomputing.com
+
+Where:
+
+<account_identifier>
+Unique identifier for your Snowflake account.
+
+The following example shows the preferred format of the account identifier:
+
+organization_name-account_name
+Names of your Snowflake organization and account. For information, see Format 1 (preferred): Account name in your organization.
+
+Alternatively, specify your account locator and the geographical region, and possibly the cloud platform, where the account is hosted. For more information, see Format 2: Account locator in a region.
+
+snowflake.hive-metastore-connector.integration
+Specifies the name of the storage integration object to use for secure access to the external storage locations referenced in Hive tables in the metastore. For more information, see the Prerequisites section earlier in this topic.
+
+snowflake.hive-metastore-listener.schemas
+Specifies a comma-separated list of Snowflake schemas that exist in the Snowflake database specified in snowflake.jdbc.db.
+
+When a table is created in the Hive metastore, the connector checks whether this property lists a Snowflake schema with the same name as the Hive schema or database that contains the new table:
+
+If a Snowflake schema with the same name is listed, the connector creates an external table in this schema.
+
+If a Snowflake schema with the same name is not listed, the connector creates an external table in the default schema, which is defined in the snowflake.jdbc.schema property.
+
+The external table has the same name as the new Hive table.
+
+Note
+
+This property requires version 0.5.0 (or higher) of the Hive Connector.
+
+(Optional) Add the following property:
+
+snowflake.hive-metastore-listener.database-filter-regex
+Specifies the names of any databases in the Hive metastore to skip with the integration. With this property, you can control which databases to integrate with Snowflake. This option is especially useful when multiple tables have the same name across Hive databases. Currently, in this situation, the Hive connector creates the first table with the name in the Snowflake target database but skips additional tables with the same name.
+
+For example, suppose databases mydb1, mydb2, and mydb3 all contain a table named table1. You can omit all databases with the naming convention mydb<number> except for mydb1 by adding the regular expression mydb[^1] as the property value.
+
+Example property node
+
+<configuration>
+  ..
+  <property>
+    <name>snowflake.hive-metastore-listener.database-filter-regex</name>
+    <value>mydb[^1]</value>
+  </property>
+</configuration>
+Example snowflake-config.xml file
+
+<configuration>
+  <property>
+    <name>snowflake.jdbc.username</name>
+    <value>jsmith</value>
+  </property>
+  <property>
+    <name>snowflake.jdbc.password</name>
+    <value>mySecurePassword</value>
+  </property>
+  <property>
+    <name>snowflake.jdbc.role</name>
+    <value>custom_role1</value>
+  </property>
+  <property>
+    <name>snowflake.jdbc.account</name>
+    <value>myaccount</value>
+  </property>
+  <property>
+    <name>snowflake.jdbc.db</name>
+    <value>mydb</value>
+  </property>
+  <property>
+    <name>snowflake.jdbc.schema</name>
+    <value>myschema</value>
+  </property>
+  <property>
+    <name>snowflake.jdbc.connection</name>
+    <value>jdbc:snowflake://myaccount.snowflakecomputing.com</value>
+  </property>
+  <property>
+    <name>snowflake.hive-metastore-listener.integration</name>
+    <value>s3_int</value>
+  </property>
+  <property>
+    <name>snowflake.hive-metastore-listener.schemas</name>
+    <value>myschema1,myschema2</value>
+  </property>
+</configuration>
+Save the changes to the file.
+
+Edit the existing Hive configuration file (hive-site.xml):
+
+Amazon S3 or Google Cloud Storage
+Open the hive-site.xml file in a text editor. Add the connector to the configuration file as follows:
+
+<configuration>
+ ...
+ <property>
+  <name>hive.metastore.event.listeners</name>
+  <value>net.snowflake.hivemetastoreconnector.SnowflakeHiveListener</value>
+ </property>
+</configuration>
+Microsoft Azure HDInsight
+Complete the steps in the Azure HDInsight documentation to edit the hive-site.xml file. Add the following custom property to the cluster configuration:
+
+hive.metastore.event.listeners=net.snowflake.hivemetastoreconnector.SnowflakeHiveListener
+
+Alternatively, add the custom property in the HDInsight Cluster Management Portal:
+
+Click the Hive tab in the left-hand menu » Configs » Advanced.
+
+Scroll down to the Custom Hive Site tab.
+
+Add the custom property.
+
+Note
+
+If there are other connectors already configured in this file, add the Hive connector for Snowflake in a comma-separated list in the <value> node.
+
+Save the changes to the file.
+
+Restart the Hive metastore service.
+
+Step 2: Validate the installation
+In Hive, create a new table.
+
+In your Snowflake database and schema, query the list of external tables by using SHOW EXTERNAL TABLES:
+
+SHOW EXTERNAL TABLES IN <database>.<schema>;
+Where database and schema are the database and schema you specified in the snowflake-config.xml file in Step 1: Install the Connector earlier in this topic.
+
+The results should show an external table with the same name as the new Hive table.
+
+Connector records are written to the Hive metastore logs. You can view queries run by the connector in the Snowflake QUERY_HISTORY view/function output similar to other queries.
+
+Integrate existing Hive tables and partitions with Snowflake
+To integrate existing Hive tables and partitions with Snowflake, run the following command in Hive for each table and partition:
+
+ALTER TABLE <table_name> TOUCH [PARTITION partition_spec];
+For more information, see the Hive documentation.
+
+Alternatively, Snowflake provides a script for synching existing Hive tables and partitions. For information, see the GitHub project page.
+
+Important
+
+If an external table with the same name as the Hive table already exists in the corresponding Snowflake schema in the database specified in the snowflake.jdbc.db property, the ALTER TABLE … TOUCH command does not recreate the external table. If you need to recreate the external table, drop the external table (by using DROP EXTERNAL TABLE) before you run the ALTER TABLE … TOUCH command in the Hive metastore.
+
+Supported and unsupported features
+The following sections list supported and unsupported features of the Apache Hive metastores integration with the Hive metastore connector for Snowflake.
+
+Supported Hive operations and table types
+Hive operations
+The connector supports the following Hive operations:
+
+Create table
+
+Drop table
+
+Alter table add column
+
+Alter table drop column
+
+Alter (that is, touch) table
+
+Add partition
+
+Drop partition
+
+Alter (touch) partition
+
+Hive table types
+The connector supports the following types of Hive tables:
+
+External and managed tables
+
+Partitioned and unpartitioned tables
+
+Hive and Snowflake data types
+The following table shows the mapping between Hive and Snowflake data types:
+
+Hive
+
+Snowflake
+
+BIGINT
+
+BIGINT
+
+BINARY
+
+BINARY
+
+BOOLEAN
+
+BOOLEAN
+
+CHAR
+
+CHAR
+
+DATE
+
+DATE
+
+DECIMAL
+
+DECIMAL
+
+DOUBLE
+
+DOUBLE
+
+DOUBLE PRECISION
+
+DOUBLE
+
+FLOAT
+
+FLOAT
+
+INT
+
+INT
+
+INTEGER
+
+INT
+
+NUMERIC
+
+DECIMAL
+
+SMALLINT
+
+SMALLINT
+
+STRING
+
+STRING
+
+TIMESTAMP
+
+TIMESTAMP
+
+TINYINT
+
+SMALLINT
+
+VARCHAR
+
+VARCHAR
+
+All other data types
+
+VARIANT
+
+Supported file formats and options
+The following data file formats and Hive file format options are supported:
+
+CSV
+
+The following options are supported using the SerDe (Serializer/Deserializer) properties:
+
+field.delim / separatorChar
+
+line.delim
+
+escape.delim / escapeChar
+
+JSON
+
+AVRO
+
+ORC
+
+PARQUET
+
+The following options are supported using the table properties:
+
+parquet.compression.
+
+Unsupported Hive commands, features, and use cases
+The connector does not support the following Hive commands, features, and use cases:
+
+Hive views
+
+ALTER statements other than TOUCH, ADD COLUMNS, and DROP COLUMNS
+
+Custom SerDe properties.
+
+Modifying an existing managed Hive table to become an external Hive table, or vice versa
+
+Refresh external table metadata to reflect Cloud Storage events
+When any of the Hive operations listed in Supported Hive Operations and Table Types earlier in this topic are run on a table, the Hive connector listens to the Hive events and then refreshes the metadata for the corresponding external table in Snowflake.
+
+However, the connector does not refresh the external table metadata based on events in cloud storage, such as adding or removing data files.
+
+To refresh the metadata for an external table to reflect events in the cloud storage, run the respective ALTER TABLE … TOUCH command for your partitioned or unpartitioned Hive table. TOUCH reads the metadata and writes it back. For more information about the command, see the Hive documentation:
+
+Partitioned Hive table
+Run the following command:
+
+ALTER TABLE <table_name> TOUCH PARTITION <partition_spec>;
+Unpartitioned Hive table
+Run the following command:
+
+ALTER TABLE <table_name> TOUCH;
+Differences between Hive tables and Snowflake external tables
+The following list describes the main differences between Hive tables and Snowflake external tables:
+
+Partitions
+Snowflake partitions are composed of subpaths of the storage location referenced by the table, while Hive partitions don’t have this constraint. If partitions are added in Hive tables that are not subpaths of the storage location, those partitions aren’t added to the corresponding external tables in Snowflake.
+
+For example, if the storage location associated with the Hive table (and corresponding Snowflake external table) is s3://path/, then all partition locations in the Hive table must also be prefixed by s3://path/.
+
+Two Snowflake partitions in a single external table can’t point to the exact same storage location. For example, the following partitions conflict with each other:
+
+ALTER EXTERNAL TABLE exttable ADD PARTITION(partcol='1') LOCATION 's3:///files/2019/05/12';
+
+ALTER EXTERNAL TABLE exttable ADD PARTITION(partcol='2') LOCATION 's3:///files/2019/05/12';
+Column names
+Hive column names are case-insensitive, but Snowflake virtual columns derived from VALUES are case-sensitive. If Hive tables contain columns with mixed-case names, the data in those columns might be NULL in the corresponding columns in the Snowflake external tables.

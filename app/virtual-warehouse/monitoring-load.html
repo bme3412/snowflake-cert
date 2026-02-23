@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Snowflake Study Guide — Monitoring warehouse load</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body data-guide-id="monitoring-load">
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../index.html" class="logo">❄️ Snowflake Learn</a>
+      <nav class="topic-nav" aria-label="Study topics">
+        <a href="../index.html">Home</a>
+        <a href="index.html">Virtual Warehouse</a>
+      </nav>
+      <button type="button" class="nav-toggle" aria-label="Open menu" aria-expanded="false">
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+      </button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar" aria-label="Study guide navigation">
+      <details class="sidebar-group" open>
+        <summary>Guides — 01-virtual-warehouse</summary>
+        <div class="sidebar-group-content">
+          <ul class="guide-list chapter-list">
+            <li><a href="index.html">Category index</a></li>
+            <li><a href="overview.html">Overview</a><span class="sidebar-doc">00-overview.md</span></li>
+            <li><a href="multi-cluster.html">Multi-cluster</a><span class="sidebar-doc">01-multi-cluster.md</span></li>
+            <li><a href="considerations.html">Considerations</a><span class="sidebar-doc">02-considerations.md</span></li>
+            <li><a href="working-with-warehouses.html">Working with</a><span class="sidebar-doc">03-working-with-warehouses.md</span></li>
+            <li><a href="next-gen-warehouses.html">Gen2</a><span class="sidebar-doc">04-next-gen-standard-warehouses.md</span></li>
+            <li><a href="query-acceleration.html">Query Acceleration (QAS)</a><span class="sidebar-doc">05-query-acceleration.md</span></li>
+            <li><a href="monitoring-load.html" class="is-active">Monitoring load</a><span class="sidebar-doc">06-monitoring-load.md</span></li>
+            <li><a href="snowpark-optimized-warehouses.html">Snowpark-optimized</a><span class="sidebar-doc">07-snowpark-optimized-warehouses.md</span></li>
+            <li><a href="interactive-tables.html">Interactive tables</a><span class="sidebar-doc">08-interactive-tables.md</span></li>
+            <li><a href="example-workflow-equity-research.html">Example workflow</a><span class="sidebar-doc">09-example-workflow-equity-research.md</span></li>
+          </ul>
+        </div>
+      </details>
+      <details class="sidebar-group" open>
+        <summary>In this guide</summary>
+        <div class="sidebar-group-content">
+          <ul class="chapter-list">
+            <li><a href="#intro" class="nav-link" data-section="intro">Introduction</a></li>
+            <li><a href="#viewing-chart" class="nav-link" data-section="viewing-chart">Viewing the load chart</a></li>
+            <li><a href="#bar-chart" class="nav-link" data-section="bar-chart">Understanding the bar chart</a></li>
+            <li><a href="#how-calculated" class="nav-link" data-section="how-calculated">How query load is calculated</a></li>
+            <li><a href="#using-chart" class="nav-link" data-section="using-chart">Using the chart to make decisions</a></li>
+            <li><a href="#query-history" class="nav-link" data-section="query-history">QUERY_HISTORY for performance</a></li>
+          </ul>
+        </div>
+      </details>
+      <div class="sidebar-footer">
+        <p class="progress-label">Your progress</p>
+        <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="6" aria-label="Sections completed">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <p class="progress-count" id="progress-count">0/6 sections</p>
+      </div>
+    </aside>
+
+    <main id="main" class="content">
+      <article class="guide">
+        <p class="breadcrumb"><a href="../index.html">Home</a> <span>›</span> <a href="index.html">Virtual Warehouse</a> <span>›</span> Monitoring load</p>
+        <div class="guide-header">
+          <h1>Monitoring warehouse load</h1>
+          <p class="lead">The web interface provides a query load chart showing concurrent queries over a two-week period. You can also use Account Usage views to evaluate warehouse performance.</p>
+        </div>
+
+        <section id="intro" class="section" data-section="intro">
+          <h2>Introduction</h2>
+          <p>Warehouse query load measures the average number of queries that were running or queued within a specific interval. You can customize the time period and time interval by querying the Account Usage <strong>QUERY_HISTORY</strong> view.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="intro" aria-label="Mark Introduction as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="viewing-chart" class="section" data-section="viewing-chart">
+          <h2>Viewing the load monitoring chart</h2>
+          <div class="callout note">
+            <p><strong>Note:</strong> To view the load monitoring chart, you must be using a role that has the <strong>MONITOR</strong> privilege on the warehouse.</p>
+          </div>
+          <p>To view the chart:</p>
+          <ol>
+            <li>In the navigation menu, select <strong>Compute » Warehouses » &lt;warehouse_name&gt;</strong>.</li>
+            <li>The <strong>Warehouse Activity</strong> tile appears with a bar chart and lets you select a window of time. By default, the chart displays the past two weeks in 1-day intervals.</li>
+            <li>You can select a range from 1 hour (minimum) to 2 weeks (maximum). The chart displays the total query load in intervals of 1 minute to 1 day, depending on the range you selected.</li>
+          </ol>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="viewing-chart" aria-label="Mark Viewing the load chart as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="bar-chart" class="section" data-section="bar-chart">
+          <h2>Understanding the bar chart</h2>
+          <p>Hover over a bar to view the average number of queries processed by the warehouse during the time period represented. The bar displays the individual load for each query status that occurred within the interval:</p>
+          <table>
+            <thead>
+              <tr>
+                <th>Query status</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Running</strong></td>
+                <td>Queries that were actively running during the interval. They may have started before and continued after the interval.</td>
+              </tr>
+              <tr>
+                <td><strong>Queued (Provisioning)</strong></td>
+                <td>Queries waiting while the warehouse provisioned compute resources. Typically only in the first few minutes after a warehouse resumes.</td>
+              </tr>
+              <tr>
+                <td><strong>Blocked</strong></td>
+                <td>Queries that were blocked during the interval due to a transaction lock.</td>
+              </tr>
+              <tr>
+                <td><strong>Queued</strong></td>
+                <td>Queries waiting to run due to warehouse overload (waiting for other queries to finish and free compute resources).</td>
+              </tr>
+            </tbody>
+          </table>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="bar-chart" aria-label="Mark Understanding the bar chart as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="how-calculated" class="section" data-section="how-calculated">
+          <h2>How query load is calculated</h2>
+          <p>Query load is calculated by dividing the execution time (in seconds) of all queries in an interval by the total time (in seconds) for the interval.</p>
+          <p>For example, the following table illustrates how query load is calculated based on 5 queries that contributed to the warehouse load during a 5-minute interval. The load from running queries was 0.92 and queued queries (due to warehouse overload) was 0.08.</p>
+          <table>
+            <thead>
+              <tr>
+                <th>Query</th>
+                <th>Status</th>
+                <th>Execution time / interval (seconds)</th>
+                <th>Query load</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Query 1</td>
+                <td>Running</td>
+                <td>30 / 300</td>
+                <td>0.10</td>
+              </tr>
+              <tr>
+                <td>Query 2</td>
+                <td>Running</td>
+                <td>201 / 300</td>
+                <td>0.67</td>
+              </tr>
+              <tr>
+                <td>Query 3</td>
+                <td>Running</td>
+                <td>15 / 300</td>
+                <td>0.05</td>
+              </tr>
+              <tr>
+                <td>Query 4</td>
+                <td>Running</td>
+                <td>30 / 300</td>
+                <td>0.10</td>
+              </tr>
+              <tr>
+                <td colspan="2"><strong>Running load</strong></td>
+                <td></td>
+                <td>0.92</td>
+              </tr>
+              <tr>
+                <td>Query 5</td>
+                <td>Queued</td>
+                <td>24 / 300</td>
+                <td>0.08</td>
+              </tr>
+              <tr>
+                <td colspan="2"><strong>Queued load</strong></td>
+                <td></td>
+                <td>0.08</td>
+              </tr>
+              <tr>
+                <td colspan="2"><strong>Total warehouse load</strong></td>
+                <td></td>
+                <td>1.00</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>To determine the actual number of running queries (and the duration of each) during a specific interval, use the <strong>History</strong> tab. Filter the query history by warehouse, then scroll to the interval you specified in the load monitoring chart.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="how-calculated" aria-label="Mark How query load is calculated as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="using-chart" class="section" data-section="using-chart">
+          <h2>Using the load monitoring chart to make decisions</h2>
+          <p>The load monitoring chart can help you manage warehouses by showing current and historic usage patterns.</p>
+
+          <h3>Slow query performance</h3>
+          <p>When a query is running slowly, check whether an overloaded warehouse is causing it to compete for resources or get queued:</p>
+          <ul>
+            <li><strong>If running query load is high or there's queuing:</strong> Consider starting a separate warehouse and moving queued queries there. If you use multi-cluster warehouses, you could add additional clusters to handle higher concurrency.</li>
+            <li><strong>If running query load is low and performance is slow:</strong> Consider resizing the warehouse to provide more compute. Restart the query after new resources are fully provisioned to use the added capacity.</li>
+          </ul>
+
+          <h3>Peak query performance</h3>
+          <p>Analyze the daily workload over the previous two weeks. If you see recurring usage spikes, consider moving some of the peak workload to its own warehouse and running the rest on a smaller warehouse. Alternatively, change multi-cluster settings to add clusters for higher concurrency.</p>
+          <p>If current workload is considerably higher than normal, open the <strong>History</strong> tab to see which queries are contributing to the higher load.</p>
+
+          <h3>Excessive credit usage</h3>
+          <p>If the chart shows recurring periods when the warehouse was running and consuming credits but total query load was less than 1 for substantial periods, use is inefficient. Consider:</p>
+          <ul>
+            <li>Decreasing the warehouse size (note: this generally increases query execution time).</li>
+            <li>For a multi-cluster warehouse, decreasing the <strong>MIN_CLUSTER_COUNT</strong> parameter value.</li>
+          </ul>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="using-chart" aria-label="Mark Using the chart to make decisions as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="query-history" class="section" data-section="query-history">
+          <h2>Using Account Usage QUERY_HISTORY view to evaluate warehouse performance</h2>
+          <p>You can query the <strong>QUERY_HISTORY</strong> view to calculate virtual warehouse performance metrics such as throughput and latency for specific statement types. For more information, see <strong>Examples: Warehouse performance</strong> in Snowflake documentation.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="query-history" aria-label="Mark QUERY_HISTORY for performance as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <footer class="guide-footer">
+          <p>You've finished the Monitoring load guide. <a href="index.html">All Virtual Warehouse guides</a></p>
+          <p class="guide-footer-links"><a href="overview.html">Overview</a> · <a href="multi-cluster.html">Multi-cluster</a> · <a href="considerations.html">Considerations</a> · <a href="working-with-warehouses.html">Working with</a> · <a href="next-gen-warehouses.html">Gen2</a> · <a href="query-acceleration.html">Query Acceleration (QAS)</a> · <a href="snowpark-optimized-warehouses.html">Snowpark-optimized</a> · <a href="interactive-tables.html">Interactive tables</a> · <a href="example-workflow-equity-research.html">Example workflow</a></p>
+        </footer>
+      </article>
+    </main>
+  </div>
+
+  <script src="../js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hybrid tables — Snowflake Learn</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body data-guide-id="hybrid-tables">
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../index.html" class="logo">❄️ Snowflake Learn</a>
+      <nav class="topic-nav" aria-label="Study topics">
+        <a href="../index.html">Home</a>
+        <a href="index.html">Databases, Tables &amp; Views</a>
+      </nav>
+      <button type="button" class="nav-toggle" aria-label="Open menu" aria-expanded="false">
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+      </button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar" aria-label="Study guide navigation">
+      <details class="sidebar-group" open>
+        <summary>Guides — 02-databases-tables-views</summary>
+        <div class="sidebar-group-content">
+          <ul class="guide-list chapter-list">
+            <li><a href="index.html">Category index</a></li>
+            <li><a href="table-structures.html">Table structures</a><span class="sidebar-doc">01-table-structures.md</span></li>
+            <li><a href="temporary-transient-tables.html">Temporary &amp; transient</a><span class="sidebar-doc">02-temporary-transient-tables.md</span></li>
+            <li><a href="external-tables.html">External tables</a><span class="sidebar-doc">03-external-tables.md</span></li>
+            <li><a href="hybrid-tables.html" class="is-active">Hybrid tables</a><span class="sidebar-doc">04-hybrid-tables.md</span></li>
+            <li><a href="interactive-tables.html">Interactive tables</a><span class="sidebar-doc">05-interactive-tables.md</span></li>
+            <li><a href="tables-snowsight.html">Tables in Snowsight</a><span class="sidebar-doc">06-tables-Snowsight.md</span></li>
+            <li><a href="search-optimization.html">Search optimization</a><span class="sidebar-doc">07-search-optimization.md</span></li>
+          </ul>
+        </div>
+      </details>
+      <details class="sidebar-group" open>
+        <summary>In this guide</summary>
+        <div class="sidebar-group-content">
+          <ul class="chapter-list">
+            <li><a href="#intro" class="nav-link" data-section="intro">Introduction</a></li>
+            <li><a href="#what-are" class="nav-link" data-section="what-are">What are hybrid tables?</a></li>
+            <li><a href="#creating" class="nav-link" data-section="creating">Creating hybrid tables</a></li>
+            <li><a href="#loading" class="nav-link" data-section="loading">Loading data</a></li>
+            <li><a href="#indexing" class="nav-link" data-section="indexing">Indexing</a></li>
+            <li><a href="#best-practices" class="nav-link" data-section="best-practices">Best practices</a></li>
+            <li><a href="#performance-profiles" class="nav-link" data-section="performance-profiles">Query profiles &amp; monitoring</a></li>
+            <li><a href="#cloning" class="nav-link" data-section="cloning">Cloning</a></li>
+            <li><a href="#cost" class="nav-link" data-section="cost">Cost</a></li>
+            <li><a href="#limitations" class="nav-link" data-section="limitations">Limitations &amp; unsupported</a></li>
+            <li><a href="#tss" class="nav-link" data-section="tss">TSS (Tri-Secret Secure)</a></li>
+          </ul>
+        </div>
+      </details>
+      <div class="sidebar-footer">
+        <p class="progress-label">Your progress</p>
+        <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="11" aria-label="Sections completed">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <p class="progress-count" id="progress-count">0/11 sections</p>
+      </div>
+    </aside>
+
+    <main id="main" class="content">
+      <article class="guide">
+        <p class="breadcrumb"><a href="../index.html">Home</a> <span>›</span> <a href="index.html">Databases, Tables &amp; Views</a> <span>›</span> Hybrid tables</p>
+        <div class="guide-header">
+          <h1>Hybrid tables</h1>
+          <p class="lead">Unistore hybrid tables combine a row store (for low-latency operational queries and point lookups) with a columnar copy in object storage, supporting both transactional and analytical workloads. They require a primary key and are available in AWS and Azure commercial regions.</p>
+        </div>
+
+        <section id="intro" class="section" data-section="intro">
+          <h2>Introduction</h2>
+          <p><strong>Hybrid tables</strong> are a Snowflake table type that store data in a <strong>row store</strong> for fast point reads and writes (e.g. by primary key) and also maintain a <strong>columnar copy</strong> in object storage for analytical queries. They are part of Unistore and are suited to operational workloads that need single-row DML and indexed lookups while still allowing aggregations and scans.</p>
+          <div class="callout note">
+            <p>You must have a running warehouse set as the current warehouse for your session when creating a hybrid table. Hybrid tables are available in AWS and Microsoft Azure commercial regions only; they are not available in Google Cloud, U.S. SnowGov regions, or trial accounts.</p>
+          </div>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="intro" aria-label="Mark Introduction as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="what-are" class="section" data-section="what-are">
+          <h2>What are hybrid tables?</h2>
+          <p>Every hybrid table has a <strong>PRIMARY KEY</strong> (required); data is ordered by this key. You can add <strong>UNIQUE</strong> and <strong>FOREIGN KEY</strong> constraints. Indexes are created automatically for primary key, unique, and foreign key columns; you can also define <strong>secondary indexes</strong> on other columns to speed up predicates (=, IN, BETWEEN). Queries can read from the row store (ROW_BASED scan) or the column store (COLUMN_BASED scan); the optimizer chooses based on the query and indexes.</p>
+          <p>Use hybrid tables when you need low-latency point lookups and single-row DML (INSERT, UPDATE, DELETE) with optional analytical queries on the same data. They typically have a larger storage footprint than standard tables because row storage compresses less than columnar.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="what-are" aria-label="Mark What are hybrid tables as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="creating" class="section" data-section="creating">
+          <h2>Creating hybrid tables</h2>
+          <p>Use <code>CREATE HYBRID TABLE</code> with at least a primary key. You can use <code>CREATE HYBRID TABLE ... AS SELECT</code> (CTAS) or <code>CREATE HYBRID TABLE ... LIKE</code> to create from existing data or structure. Example:</p>
+          <pre><code>CREATE OR REPLACE HYBRID TABLE application_log (
+  id NUMBER PRIMARY KEY AUTOINCREMENT,
+  col1 VARCHAR(20),
+  col2 VARCHAR(20) NOT NULL
+);</code></pre>
+          <p>CTAS does not support FOREIGN KEY constraints; if the table needs foreign keys, create the table first then load with <code>COPY INTO</code> or <code>INSERT INTO ... SELECT</code>.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="creating" aria-label="Mark Creating hybrid tables as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="loading" class="section" data-section="loading">
+          <h2>Loading data</h2>
+          <p>When a hybrid table is <strong>empty</strong>, CTAS, <code>COPY INTO</code>, and <code>INSERT INTO ... SELECT</code> use <strong>optimized bulk loading</strong> (up to ~1 million records per minute in many cases; actual speed depends on record size and table structure). After the table has data, incremental loads do not use this fast path and are slower. Verify bulk load usage in Snowsight query profiles: look for "Number of rows bulk loaded" in statistics.</p>
+          <div class="callout important">
+            <p>CTAS does not support FOREIGN KEY constraints. For tables with foreign keys, use COPY or INSERT INTO ... SELECT to load. Other methods such as Snowpipe are not currently supported for hybrid tables.</p>
+          </div>
+          <p>If index-building fails during load (e.g. "The value is too long for index"), reduce indexed column width or use fewer indexed columns; consider INCLUDE columns on secondary indexes instead of indexing wide columns.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="loading" aria-label="Mark Loading data as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="indexing" class="section" data-section="indexing">
+          <h2>Indexing</h2>
+          <p>Hybrid tables get automatic indexes for <strong>PRIMARY KEY</strong>, <strong>UNIQUE</strong>, and <strong>FOREIGN KEY</strong> columns. Add <strong>secondary indexes</strong> on other columns (or composite columns) that are used in predicates with =, IN, or BETWEEN to reduce rows scanned. Create them in <code>CREATE HYBRID TABLE</code> or later with <code>CREATE INDEX</code> (online, non-blocking). Only one index build at a time is supported; use <code>SHOW INDEXES</code> to check status.</p>
+          <p><strong>INCLUDE columns</strong> store extra columns with the index so queries that filter on the index key and select only those columns can avoid a full table probe. This increases storage. Design composite indexes to match full query patterns and consider cardinality—low-cardinality single-column indexes have limited benefit. Indexes add write overhead; balance read vs. write performance.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="indexing" aria-label="Mark Indexing as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="best-practices" class="section" data-section="best-practices">
+          <h2>Best practices</h2>
+          <p><strong>Drivers and latency:</strong> Use supported client drivers (see Snowflake docs for minimum versions). Snowsight latency is not representative of driver-based latency; use drivers and prepared statements for production. Use connection pooling, colocate clients in the same region as the account, and prefer multi-cluster warehouses (Standard scaling) for throughput.</p>
+          <p><strong>Foreign keys:</strong> Defining FOREIGN KEY constraints helps the optimizer (e.g. one-to-many join pushdown) and enforces referential integrity.</p>
+          <p><strong>Caching and warm-up:</strong> Dedicated warehouses for hybrid table workloads avoid cache interference. Expect a warm-up period (seconds to a few minutes) before steady-state latency; configure auto-suspend and scaling to balance cost and cache warmth. Hybrid tables do not use the result cache.</p>
+          <p><strong>Monitoring:</strong> Use <code>AGGREGATE_QUERY_HISTORY</code> for workload health, throughput, and throttling. Monitor hybrid storage via <code>STORAGE_USAGE</code> (HYBRID_TABLE_STORAGE_BYTES) and request quota increases if you consistently use more than ~70% of quota.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="best-practices" aria-label="Mark Best practices as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="performance-profiles" class="section" data-section="performance-profiles">
+          <h2>Query profiles and monitoring</h2>
+          <p>In Snowsight query profiles, hybrid table scans show a <strong>Scan Mode</strong> attribute: <strong>ROW_BASED</strong> (row store or index) or <strong>COLUMN_BASED</strong> (object storage). Primary key lookups use a TableScan with ROW_BASED; secondary index use shows an IndexScan. Check "Percentage scanned from cache" for columnar cache usage. The profile overview can show "Hybrid Table Requests Throttling" when approaching request quotas.</p>
+          <p>Use <code>AGGREGATE_QUERY_HISTORY</code> to monitor throughput, latency trends, errors, queueing, and throttling. For transaction monitoring, use <code>SHOW TRANSACTIONS</code>, <code>SHOW LOCKS</code> (including row locks for hybrid tables), and <code>LOCK_WAIT_HISTORY</code>.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="performance-profiles" aria-label="Mark Query profiles and monitoring as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="cloning" class="section" data-section="cloning">
+          <h2>Cloning</h2>
+          <p>Hybrid tables can be cloned only at the <strong>database level</strong>: <code>CREATE DATABASE clone_db CLONE source_db;</code>. You cannot clone at the schema or table level. Use <code>AT TIMESTAMP</code> for point-in-time clone (no AT BEFORE, OFFSET, or STATEMENT). Cloning a database that contains hybrid tables is a <strong>size-of-data</strong> operation (data is physically copied into the row store), so it takes longer and costs more than metadata-only standard table clones.</p>
+          <p>To clone a schema that has hybrid tables without including them, use <code>CREATE SCHEMA ... CLONE ... IGNORE HYBRID TABLES</code>. The same parameter applies to database clones. Cloned hybrid tables do not retain the source's Time Travel history.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="cloning" aria-label="Mark Cloning as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="cost" class="section" data-section="cost">
+          <h2>Cost</h2>
+          <p>Hybrid table consumption has three components:</p>
+          <ul>
+            <li><strong>Hybrid table storage:</strong> Monthly rate per GB for row store (and hybrid table storage in object storage); typically higher than standard table storage. Time Travel data for hybrid tables is stored in object storage at the standard table rate.</li>
+            <li><strong>Virtual warehouse compute:</strong> Same as for other tables when queries run on a warehouse.</li>
+            <li><strong>Hybrid table requests:</strong> Serverless credits for reads/writes to the row store and background operations (e.g. compaction). Minimum 4 KB per small operation. Monitor via <code>HYBRID_TABLE_USAGE_HISTORY</code> and <code>AGGREGATE_QUERY_HISTORY</code>.</li>
+          </ul>
+          <p>Monitor storage with <code>STORAGE_USAGE</code> (HYBRID_TABLE_STORAGE_BYTES), <code>DATABASE_STORAGE_USAGE_HISTORY</code>, and <code>HYBRID_TABLES</code> (BYTES per table).</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="cost" aria-label="Mark Cost as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="limitations" class="section" data-section="limitations">
+          <h2>Limitations and unsupported features</h2>
+          <p><strong>Quotas:</strong> Default hybrid storage is 2 TB per database; hybrid table requests ~8,000 ops/sec per database (balanced 80% read / 20% write). Databases that contain hybrid tables are limited (e.g. 200 per account). Throttling can occur when approaching these limits.</p>
+          <p><strong>Constraints and types:</strong> PRIMARY KEY, UNIQUE, and FOREIGN KEY are supported with some limits. GEOGRAPHY, GEOMETRY, ARRAY, OBJECT, VARIANT, and VECTOR cannot be indexed; TIMESTAMP_TZ is not supported for PK/UNIQUE/FK indexed columns (TIMESTAMP_NTZ is supported for secondary indexes).</p>
+          <p><strong>Time Travel:</strong> Only <code>AT TIMESTAMP</code> is supported; same timestamp for all tables in the same database. No OFFSET, STATEMENT, BEFORE, or UNDROP TABLE.</p>
+          <p><strong>Transactions:</strong> All hybrid tables in a transaction must be in the same database; standard tables in the same transaction can be in other databases.</p>
+          <p><strong>Not supported:</strong> Temporary or transient hybrid tables (or hybrid tables in transient schemas/databases); clustering keys; data sharing; dynamic tables; fail-safe; materialized views; Query Acceleration Service; replication; Search Optimization; Snowpipe; Snowpipe Streaming; streams; UNDROP of hybrid tables. COPY INTO supports only ON_ERROR=ABORT_STATEMENT. MERGE is less efficient than single-row INSERT/UPDATE/DELETE for small changes. FILTER, REDUCE, TRANSFORM higher-order functions are not supported on hybrid tables.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="limitations" aria-label="Mark Limitations as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <section id="tss" class="section" data-section="tss">
+          <h2>TSS (Tri-Secret Secure)</h2>
+          <p>To use hybrid tables with <strong>Tri-Secret Secure (TSS)</strong> encryption, the account must use <strong>Hybrid Tables Dedicated Storage Mode</strong>. Standard multi-tenant hybrid storage cannot hold TSS-protected data. Enabling TSS for hybrid tables is a one-time account configuration: contact your account team to enable Dedicated Storage Mode (and TSS if not already enabled).</p>
+          <p>You cannot enable TSS if the account already has hybrid tables; drop all hybrid tables (or databases containing them) and set data retention to 0 first. Data written to hybrid tables before TSS and Dedicated Storage Mode is enabled cannot be migrated to TSS encryption. Disabling Dedicated Storage Mode also requires dropping all hybrid tables first. Billing for this mode may differ; consult your account team.</p>
+          <label class="section-done">
+            <input type="checkbox" name="done" value="tss" aria-label="Mark TSS as complete" />
+            <span>I've read this</span>
+          </label>
+        </section>
+
+        <footer class="guide-footer">
+          <p>You've finished the Hybrid tables guide. <a href="index.html">All Databases, Tables &amp; Views guides</a></p>
+          <p class="guide-footer-links"><a href="table-structures.html">Table structures</a> · <a href="temporary-transient-tables.html">Temporary &amp; transient tables</a> · <a href="external-tables.html">External tables</a> · <a href="interactive-tables.html">Interactive tables</a> · <a href="tables-snowsight.html">Tables in Snowsight</a> · <a href="search-optimization.html">Search optimization</a></p>
+        </footer>
+      </article>
+    </main>
+  </div>
+
+  <script src="../js/app.js"></script>
+</body>
+</html>
